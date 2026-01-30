@@ -250,7 +250,7 @@ export default function MainHeader() {
               </>
             ) : (
               <>
-                <Image src="/CultiLand.png" alt="InSoil" width={28} height={28} className="h-7 w-7 md:h-8 md:w-8" />
+                <Image src="/hicon.png" alt="InSoil" width={28} height={28} className="h-7 w-7 md:h-8 md:w-8" />
                 <span className="text-sm md:text-base font-semibold tracking-tight text-zinc-900">Fieldly</span>
               </>
             )}

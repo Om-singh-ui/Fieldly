@@ -283,7 +283,7 @@ export default function AuthHeader() {
               <>
                 <div className="flex items-center gap-2">
                   <Image
-                    src="/CultiLand.png"
+                    src="/hicon.png"
                     alt="Fieldly"
                     width={28}
                     height={28}
@@ -320,8 +320,8 @@ export default function AuthHeader() {
             ) : (
               <div className="flex h-16 items-center rounded-full bg-white/90 px-8 shadow-xl backdrop-blur-md">
                 <Image
-                  src="/CultiLand.png"
-                  alt="CultiLand"
+                  src="/hicon.png"
+                  alt="Fieldly"
                   width={32}
                   height={32}
                 />
