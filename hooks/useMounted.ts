@@ -1,0 +1,13 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+// hooks/useMounted.ts
+import { useEffect, useState } from "react";
+
+export function useMounted() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  return mounted;
+}
