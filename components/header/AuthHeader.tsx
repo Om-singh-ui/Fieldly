@@ -25,6 +25,8 @@ import Link from "next/link";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import { useHeaderVisibility } from "./HeaderVisibility";
+import { SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 /* ================= TYPES ================= */
 
@@ -155,6 +157,194 @@ const NAV_DATA: Record<NavKey, NavSection> = {
   },
 };
 
+// ================= AUTH CTA COMPONENT =================
+function AuthCTA() {
+  const [isChecking, setIsChecking] = useState(false);
+  const router = useRouter();
+  const { userId, isLoaded } = useAuth();
+
+  const handleDashboardRedirect = async () => {
+    if (!isLoaded) return;
+
+    if (!userId) {
+      router.push("/sign-in");
+      return;
+    }
+
+    setIsChecking(true);
+
+    try {
+      const response = await fetch(`/api/user/status?userId=${userId}`, {
+        cache: "no-store",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        if (!data.user.role) {
+          router.push("/onboarding/role");
+        } else if (!data.user.isOnboarded) {
+          const onboardingPath =
+            data.user.role === "FARMER"
+              ? "/onboarding/farmer"
+              : "/onboarding/landowner";
+
+          router.push(onboardingPath);
+        } else {
+          const dashboardPath =
+            data.user.role === "FARMER"
+              ? "/farmer/dashboard"
+              : "/landowner/dashboard";
+
+          router.push(dashboardPath);
+        }
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.error("Error navigating to dashboard:", error);
+      router.push("/dashboard");
+    } finally {
+      setIsChecking(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-3">
+      <button
+        onClick={handleDashboardRedirect}
+        disabled={isChecking}
+        aria-busy={isChecking}
+        className="flex items-center justify-center gap-2 rounded-full bg-[#b7cf8a] px-6 py-2.5 text-sm font-medium min-w-[44px] hover:bg-[#a8c07a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isChecking ? (
+          <>
+            {/* Spinner */}
+            <span className="inline-block size-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+          </>
+        ) : (
+          <>
+            {/* Dashboard Icon */}
+            <Image
+              src="/icons/dashb.png"
+              alt="Dashboard"
+              width={18}
+              height={18}
+              className="object-contain"
+            />
+          </>
+        )}
+      </button>
+
+      <UserButton
+        appearance={{
+          elements: {
+            avatarBox: "h-9 w-9",
+            userButtonAvatarBox: "h-9 w-9",
+          },
+        }}
+      />
+    </div>
+  );
+}
+
+// ================= MOBILE AUTH SECTION =================
+function MobileAuthSection({ onClose }: { onClose: () => void }) {
+  const [isChecking, setIsChecking] = useState(false);
+  const router = useRouter();
+  const { userId, isLoaded } = useAuth();
+
+  const handleDashboardRedirect = async () => {
+    if (!isLoaded) return;
+
+    if (!userId) {
+      router.push("/sign-in");
+      onClose();
+      return;
+    }
+
+    setIsChecking(true);
+
+    try {
+      const response = await fetch(`/api/user/status?userId=${userId}`, {
+        cache: "no-store",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        if (!data.user.role) {
+          router.push("/onboarding/role");
+        } else if (!data.user.isOnboarded) {
+          const onboardingPath =
+            data.user.role === "FARMER"
+              ? "/onboarding/farmer"
+              : "/onboarding/landowner";
+
+          router.push(onboardingPath);
+        } else {
+          const dashboardPath =
+            data.user.role === "FARMER"
+              ? "/farmer/dashboard"
+              : "/landowner/dashboard";
+
+          router.push(dashboardPath);
+        }
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.error("Error navigating to dashboard:", error);
+      router.push("/dashboard");
+    } finally {
+      setIsChecking(false);
+      onClose();
+    }
+  };
+
+  return (
+    <div className="mt-6">
+      <SignedOut>
+        <Link
+          href="/sign-in"
+          onClick={onClose}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#b7cf8a] py-3 text-sm font-medium text-black hover:bg-[#a8c07a] transition-colors"
+        >
+          Sign In
+          <ArrowUpRight className="h-4 w-4" />
+        </Link>
+      </SignedOut>
+      <SignedIn>
+        <div className="flex items-center gap-4">
+          <UserButton
+            appearance={{
+              elements: {
+                avatarBox: "h-10 w-10",
+                userButtonAvatarBox: "h-10 w-10",
+              },
+            }}
+          />
+          <button
+            onClick={handleDashboardRedirect}
+            disabled={isChecking}
+            aria-busy={isChecking}
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#b7cf8a] py-3 text-sm font-medium text-black hover:bg-[#a8c07a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isChecking ? (
+              <span className="inline-block size-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                Go to Dashboard
+                <ArrowUpRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
+        </div>
+      </SignedIn>
+    </div>
+  );
+}
+
 export default function AuthHeader() {
   const { scrollY } = useScroll();
   const { setAuthHidden, mainVisible } = useHeaderVisibility();
@@ -167,14 +357,15 @@ export default function AuthHeader() {
   const lastScrollY = useRef(0);
 
   // Mobile dropdown state
-  const [mobileActiveDropdown, setMobileActiveDropdown] = useState<NavKey | null>(null);
+  const [mobileActiveDropdown, setMobileActiveDropdown] =
+    useState<NavKey | null>(null);
 
-  // Simulate loading delay
+  // Remove loading simulation - make it instant - FIX FOR HYDRATION
   useEffect(() => {
+    // Use setTimeout to ensure this runs after hydration
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 800);
-
+    }, 0);
     return () => clearTimeout(timer);
   }, []);
 
@@ -200,13 +391,14 @@ export default function AuthHeader() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [activeDropdown, languageOpen]);
 
-  // Scroll hide/show logic
+  // Scroll hide/show logic - optimized
   useMotionValueEvent(scrollY, "change", (latest) => {
     const scrollDirection = latest > lastScrollY.current ? "down" : "up";
     lastScrollY.current = latest;
 
-    const shouldHide = scrollDirection === "down" && latest > 400;
-    const shouldShow = scrollDirection === "up" && latest < 100;
+    // Use more aggressive thresholds for smoother experience
+    const shouldHide = scrollDirection === "down" && latest > 100;
+    const shouldShow = scrollDirection === "up" || latest < 50;
 
     if (shouldHide) {
       setHidden(true);
@@ -253,6 +445,12 @@ export default function AuthHeader() {
     }
   }, [mobileOpen]);
 
+  const handleMobileMenuClose = () => {
+    setMobileOpen(false);
+    setMobileActiveDropdown(null);
+    setLanguageOpen(false);
+  };
+
   return (
     <>
       <motion.header
@@ -262,7 +460,7 @@ export default function AuthHeader() {
           visible: { y: 0, opacity: 1 },
           hidden: { y: -80, opacity: 0 },
         }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
         className="fixed top-4 inset-x-0 z-50"
       >
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 md:px-8">
@@ -271,12 +469,12 @@ export default function AuthHeader() {
             {loading ? (
               <>
                 <div className="flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-full bg-gray-200 animate-pulse" />
-                  <div className="h-5 w-20 rounded-full bg-gray-200 animate-pulse" />
+                  <div className="h-7 w-7 rounded-full bg-gray-200" />
+                  <div className="h-5 w-20 rounded-full bg-gray-200" />
                 </div>
                 <div className="flex items-center gap-1 rounded-full bg-black/5 p-1">
-                  <div className="h-9 w-16 rounded-full bg-gray-200 animate-pulse" />
-                  <div className="h-9 w-9 rounded-full bg-gray-200 animate-pulse" />
+                  <div className="h-9 w-16 rounded-full bg-gray-200" />
+                  <div className="h-9 w-9 rounded-full bg-gray-200" />
                 </div>
               </>
             ) : (
@@ -287,20 +485,17 @@ export default function AuthHeader() {
                     alt="Fieldly"
                     width={28}
                     height={28}
+                    priority
                   />
                   <span className="text-base font-semibold">Fieldly</span>
                 </div>
 
                 <div className="flex items-center gap-1 rounded-full bg-black/5 p-1">
-                  <Link
-                    href="/login"
-                    className="flex h-9 items-center gap-1 rounded-full bg-[#b7cf8a] px-3 text-xs font-medium"
-                  >
-                    Sign In <ArrowUpRight className="h-3 w-3" />
-                  </Link>
+                  {/* Mobile header only shows hamburger menu, auth is in mobile menu */}
                   <button
                     onClick={() => setMobileOpen(!mobileOpen)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-black/10"
+                    className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-black/10 transition-colors"
+                    aria-label={mobileOpen ? "Close menu" : "Open menu"}
                   >
                     {mobileOpen ? <X /> : <Menu />}
                   </button>
@@ -313,25 +508,29 @@ export default function AuthHeader() {
           <div className="hidden md:flex items-center justify-between gap-8">
             {/* ========== CONTAINER 1: LOGO ========== */}
             {loading ? (
-              <div className="flex h-16 items-center rounded-full bg-gray-100 px-8 shadow-xl backdrop-blur-md animate-pulse">
+              <div className="flex h-16 items-center rounded-full bg-gray-100 px-8 shadow-xl backdrop-blur-md">
                 <div className="h-8 w-8 rounded-full bg-gray-300" />
                 <div className="ml-3 h-6 w-24 rounded-full bg-gray-300" />
               </div>
             ) : (
-              <div className="flex h-16 items-center rounded-full bg-white/90 px-8 shadow-xl backdrop-blur-md">
+              <Link
+                href="/"
+                className="flex h-16 items-center rounded-full bg-white/90 px-8 shadow-xl backdrop-blur-md hover:bg-white/95 transition-colors"
+              >
                 <Image
                   src="/hicon.png"
                   alt="Fieldly"
                   width={32}
                   height={32}
+                  priority
                 />
                 <span className="ml-1 text-xl font-semibold">Fieldly</span>
-              </div>
+              </Link>
             )}
 
             {/* ========== CONTAINER 2: NAVIGATION ========== */}
             {loading ? (
-              <div className="flex h-16 items-center gap-12 rounded-full bg-gray-100 px-8 shadow-xl backdrop-blur-md animate-pulse">
+              <div className="flex h-16 items-center gap-12 rounded-full bg-gray-100 px-8 shadow-xl backdrop-blur-md">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <div className="h-4 w-20 rounded-full bg-gray-300" />
@@ -353,22 +552,26 @@ export default function AuthHeader() {
                   >
                     <button
                       onClick={() => toggleDesktopDropdown(key)}
-                      className="dropdown-trigger flex items-center gap-2 text-base font-medium text-black hover:text-black"
+                      className="dropdown-trigger flex items-center gap-2 text-base font-medium text-black hover:text-black transition-colors"
+                      aria-expanded={activeDropdown === key}
+                      aria-haspopup="true"
                     >
                       {NAV_DATA[key].label}
                       <ChevronDown
-                        className={`h-5 w-5 opacity-70 transition-transform ${activeDropdown === key ? "rotate-180" : ""}`}
+                        className={`h-5 w-5 opacity-70 transition-transform duration-200 ${activeDropdown === key ? "rotate-180" : ""}`}
                       />
                     </button>
 
                     {/* Desktop Dropdown Menu */}
                     {activeDropdown === key && (
                       <motion.div
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
                         className="dropdown-content absolute left-1/2 top-full mt-6 -translate-x-1/2 w-64 rounded-xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-gray-100 z-50"
                         onMouseEnter={() => setActiveDropdown(key)}
                         onMouseLeave={handleMouseLeave}
+                        role="menu"
                       >
                         <div className="p-2">
                           {NAV_DATA[key].items.map((item) => {
@@ -379,14 +582,15 @@ export default function AuthHeader() {
                                 href={item.href}
                                 onClick={() => setActiveDropdown(null)}
                                 className="flex items-center gap-3 px-4 py-3 text-sm text-zinc-700 hover:text-black hover:bg-gray-50 rounded-lg transition-colors"
+                                role="menuitem"
                               >
-                                <Icon className="h-4 w-4" />
-                                <div>
-                                  <div className="font-medium">
+                                <Icon className="h-4 w-4 flex-shrink-0" />
+                                <div className="min-w-0">
+                                  <div className="font-medium truncate">
                                     {item.label}
                                   </div>
                                   {item.desc && (
-                                    <div className="text-xs text-zinc-500 mt-0.5">
+                                    <div className="text-xs text-zinc-500 mt-0.5 line-clamp-2">
                                       {item.desc}
                                     </div>
                                   )}
@@ -404,54 +608,67 @@ export default function AuthHeader() {
 
             {/* ========== CONTAINER 3: CTA ========== */}
             {loading ? (
-              <div className="flex h-16 items-center gap-6 rounded-full bg-gray-100 px-12 shadow-xl backdrop-blur-md animate-pulse">
+              <div className="flex h-16 items-center gap-6 rounded-full bg-gray-100 px-12 shadow-xl backdrop-blur-md">
                 <div className="h-5 w-5 rounded-full bg-gray-300" />
                 <div className="h-4 w-4 rounded-full bg-gray-300" />
                 <div className="h-4 w-32 rounded-full bg-gray-300" />
                 <div className="h-10 w-32 rounded-full bg-gray-300" />
               </div>
             ) : (
-              <div className="flex h-16 items-center gap-4 rounded-full bg-white/90 px-12 shadow-xl backdrop-blur-md">
+              <div className="flex h-16 items-center gap-4 rounded-full bg-white/90 px-12 shadow-xl backdrop-blur-md min-w-[440px] justify-between">
                 {/* Language Dropdown */}
                 <div className="language-container relative">
                   <button
                     onClick={handleLanguageToggle}
-                    className="flex items-center gap-2 text-base font-medium text-black hover:text-black"
-                  >   
+                    className="flex items-center gap-2 text-base font-medium text-black hover:text-black transition-colors"
+                    aria-expanded={languageOpen}
+                  >
                     <Globe className="h-5 w-5" />
                     <ChevronDown className="h-4 w-4" />
                   </button>
 
                   {languageOpen && (
-                    <div className="absolute left-0 top-full mt-6 w-48 rounded-xl bg-white shadow-lg border border-gray-100 overflow-hidden z-50">
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute left-0 top-full mt-6 w-48 rounded-xl bg-white shadow-lg border border-gray-100 overflow-hidden z-50"
+                    >
                       <button
                         onClick={() => setLanguageOpen(false)}
-                        className="w-full px-4 py-3 text-left text-sm text-zinc-700 hover:bg-gray-50 hover:text-black"
+                        className="w-full px-4 py-3 text-left text-sm text-zinc-700 hover:bg-gray-50 hover:text-black transition-colors"
                       >
                         English (EN)
                       </button>
                       <button
                         onClick={() => setLanguageOpen(false)}
-                        className="w-full px-4 py-3 text-left text-sm text-zinc-700 hover:bg-gray-50 hover:text-black border-t border-gray-100"
+                        className="w-full px-4 py-3 text-left text-sm text-zinc-700 hover:bg-gray-50 hover:text-black transition-colors border-t border-gray-100"
                       >
                         Español (ES)
                       </button>
-                    </div>
+                    </motion.div>
                   )}
                 </div>
 
                 {/* Retail Investors Text */}
-                <span className="text-base font-medium text-black min-w-[140px]">
+                <span className="text-base font-medium text-black whitespace-nowrap">
                   Retail Investors
                 </span>
 
-                {/* Login Button */}
-                <Link
-                  href="/login"
-                  className="flex items-center gap-2 rounded-full bg-[#b7cf8a] px-6 py-2.5 text-sm font-medium min-w-[120px] justify-center"
-                >
-                  Sign IN<ArrowUpRight className="h-4 w-4" />
-                </Link>
+                {/* Auth CTA Section - Fixed width container */}
+                <div className="flex items-center gap-3 min-w-[120px]">
+                  <SignedOut>
+                    <Link
+                      href="/sign-in"
+                      className="flex items-center gap-2 rounded-full bg-[#b7cf8a] px-6 py-2.5 text-sm font-medium min-w-[120px] justify-center hover:bg-[#a8c07a] transition-colors whitespace-nowrap"
+                    >
+                      Sign In <ArrowUpRight className="h-4 w-4" />
+                    </Link>
+                  </SignedOut>
+                  <SignedIn>
+                    <AuthCTA />
+                  </SignedIn>
+                </div>
               </div>
             )}
           </div>
@@ -463,7 +680,7 @@ export default function AuthHeader() {
         <>
           <div
             className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
-            onClick={() => setMobileOpen(false)}
+            onClick={handleMobileMenuClose}
           />
 
           <motion.div
@@ -471,16 +688,19 @@ export default function AuthHeader() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="fixed top-24 left-4 right-4 z-50 rounded-2xl bg-white p-6 shadow-[0_30px_80px_rgba(0,0,0,0.18)] md:hidden max-h-[80vh] overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation menu"
           >
             {loading ? (
               <div className="space-y-5">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="flex items-center justify-between">
-                    <div className="h-5 w-32 rounded-full bg-gray-200 animate-pulse" />
-                    <div className="h-4 w-4 rounded-full bg-gray-200 animate-pulse" />
+                    <div className="h-5 w-32 rounded-full bg-gray-200" />
+                    <div className="h-4 w-4 rounded-full bg-gray-200" />
                   </div>
                 ))}
-                <div className="mt-8 w-full h-12 rounded-xl bg-gray-200 animate-pulse" />
+                <div className="mt-8 w-full h-12 rounded-xl bg-gray-200" />
               </div>
             ) : (
               <>
@@ -493,11 +713,12 @@ export default function AuthHeader() {
                     >
                       <button
                         onClick={() => toggleMobileDropdown(key)}
-                        className="flex w-full items-center justify-between py-4 px-2 text-base font-medium text-black hover:text-black"
+                        className="flex w-full items-center justify-between py-4 px-2 text-base font-medium text-black hover:text-black transition-colors"
+                        aria-expanded={mobileActiveDropdown === key}
                       >
                         {NAV_DATA[key].label}
                         <ChevronDown
-                          className={`h-5 w-5 opacity-70 transition-transform ${mobileActiveDropdown === key ? "rotate-180" : ""}`}
+                          className={`h-5 w-5 opacity-70 transition-transform duration-200 ${mobileActiveDropdown === key ? "rotate-180" : ""}`}
                         />
                       </button>
 
@@ -516,17 +737,16 @@ export default function AuthHeader() {
                                 <Link
                                   key={item.label}
                                   href={item.href}
-                                  onClick={() => {
-                                    setMobileOpen(false);
-                                    setMobileActiveDropdown(null);
-                                  }}
-                                  className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-zinc-600 hover:bg-gray-50 hover:text-black mb-1 last:mb-0"
+                                  onClick={handleMobileMenuClose}
+                                  className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-zinc-600 hover:bg-gray-50 hover:text-black mb-1 last:mb-0 transition-colors"
                                 >
                                   <Icon className="h-4 w-4 flex-shrink-0" />
-                                  <div className="flex-1">
-                                    <div className="font-medium">{item.label}</div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-medium truncate">
+                                      {item.label}
+                                    </div>
                                     {item.desc && (
-                                      <div className="text-xs text-zinc-500 mt-0.5">
+                                      <div className="text-xs text-zinc-500 mt-0.5 line-clamp-2">
                                         {item.desc}
                                       </div>
                                     )}
@@ -545,38 +765,41 @@ export default function AuthHeader() {
                 <div className="mt-6 mb-4">
                   <button
                     onClick={handleLanguageToggle}
-                    className="flex w-full items-center justify-between py-3 px-4 rounded-lg bg-gray-50 text-sm font-medium text-zinc-700"
+                    className="flex w-full items-center justify-between py-3 px-4 rounded-lg bg-gray-50 text-sm font-medium text-zinc-700 hover:bg-gray-100 transition-colors"
+                    aria-expanded={languageOpen}
                   >
                     <div className="flex items-center gap-2">
                       <Globe className="h-4 w-4" />
                       Language
                     </div>
                     <ChevronDown
-                      className={`h-4 w-4 transition-transform ${languageOpen ? "rotate-180" : ""}`}
+                      className={`h-4 w-4 transition-transform duration-200 ${languageOpen ? "rotate-180" : ""}`}
                     />
                   </button>
-                  
+
                   {languageOpen && (
-                    <div className="mt-2 rounded-lg bg-gray-50 overflow-hidden">
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="mt-2 rounded-lg bg-gray-50 overflow-hidden"
+                    >
                       <button
                         onClick={() => {
                           setLanguageOpen(false);
-                          // Handle language change
                         }}
-                        className="w-full px-4 py-3 text-left text-sm text-zinc-700 hover:bg-gray-100"
+                        className="w-full px-4 py-3 text-left text-sm text-zinc-700 hover:bg-gray-100 transition-colors"
                       >
                         English (EN)
                       </button>
                       <button
                         onClick={() => {
                           setLanguageOpen(false);
-                          // Handle language change
                         }}
-                        className="w-full px-4 py-3 text-left text-sm text-zinc-700 hover:bg-gray-100 border-t border-gray-200"
+                        className="w-full px-4 py-3 text-left text-sm text-zinc-700 hover:bg-gray-100 transition-colors border-t border-gray-200"
                       >
                         Español (ES)
                       </button>
-                    </div>
+                    </motion.div>
                   )}
                 </div>
 
@@ -587,21 +810,8 @@ export default function AuthHeader() {
                   </span>
                 </div>
 
-                {/* Mobile Login Button */}
-                <Link
-                  href="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="
-                    flex w-full items-center justify-center gap-2
-                    rounded-xl
-                    bg-[#b7cf8a]
-                    py-3
-                    text-sm font-medium text-black
-                  "
-                >
-                  Sign In
-                  <ArrowUpRight className="h-4 w-4" />
-                </Link>
+                {/* Mobile Auth Section - Using separate component for hydration safety */}
+                <MobileAuthSection onClose={handleMobileMenuClose} />
               </>
             )}
           </motion.div>

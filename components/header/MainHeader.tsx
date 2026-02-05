@@ -24,6 +24,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useHeaderVisibility } from "./HeaderVisibility";
+import { SignUpButton } from "@clerk/nextjs";
 
 /* ================= TYPES & DATA ================= */
 
@@ -354,13 +355,12 @@ export default function MainHeader() {
 
                   <span className="text-sm font-medium text-black">Retail Investors</span>
 
-                  <a
-                    href="/login"
-                    className="ml-1 flex h-9 items-center gap-2 rounded-lg bg-[#b7cf8a] px-4 text-sm font-medium text-black transition hover:bg-[#a8c47a]"
-                  >
-                    Sign IN
-                    <ArrowUpRight className="h-4 w-4" />
-                  </a>
+                  <SignUpButton mode="modal">
+                    <button className="ml-1 flex h-9 items-center gap-2 rounded-lg bg-[#b7cf8a] px-4 text-sm font-medium text-black transition hover:bg-[#a8c47a]">
+                      Get Started
+                      <ArrowUpRight className="h-4 w-4" />
+                    </button>
+                  </SignUpButton>
                 </>
               )}
             </div>
@@ -374,13 +374,12 @@ export default function MainHeader() {
                 </>
               ) : (
                 <>
-                  <a
-                    href="/login"
-                    className="flex h-9 items-center gap-1 rounded-lg bg-[#b7cf8a] px-3 text-xs font-medium text-black"
-                  >
-                    Sign IN
-                    <ArrowUpRight className="h-3 w-3" />
-                  </a>
+                  <SignUpButton mode="modal">
+                    <button className="flex h-9 items-center gap-1 rounded-lg bg-[#b7cf8a] px-3 text-xs font-medium text-black">
+                      Get Started
+                      <ArrowUpRight className="h-3 w-3" />
+                    </button>
+                  </SignUpButton>
 
                   <button
                     onClick={() => setMobileOpen(!mobileOpen)}
@@ -510,14 +509,15 @@ export default function MainHeader() {
                   <span className="text-sm font-medium text-zinc-600">Retail Investors</span>
                 </div>
 
-                {/* Login Button */}
-                <a
-                  href="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="block w-full text-center rounded-xl bg-[#b7cf8a] py-3 text-sm font-medium text-black transition hover:bg-[#a8c47a]"
-                >
-                  Sign IN
-                </a>
+                {/* Get Started Button */}
+                <SignUpButton mode="modal">
+                  <button
+                    onClick={() => setMobileOpen(false)}
+                    className="block w-full text-center rounded-xl bg-[#b7cf8a] py-3 text-sm font-medium text-black transition hover:bg-[#a8c47a]"
+                  >
+                    Get Started
+                  </button>
+                </SignUpButton>
               </>
             )}
           </motion.div>

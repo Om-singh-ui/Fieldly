@@ -59,94 +59,6 @@ export default function Home() {
     <main className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
       <HeroSection />
 
-      {/* Trusted By Section - Responsive */}
-      <section className="mx-auto mt-16 sm:mt-20 md:mt-24 lg:mt-4 px-4 sm:px-6 md:px-8 max-w-[1400px]">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 md:gap-8">
-          {/* Left label */}
-          {loading ? (
-            <div className="shrink-0 h-5 w-24 rounded-full bg-gray-200 animate-pulse" />
-          ) : (
-            <span className="shrink-0 text-sm md:text-base font-medium text-zinc-600">
-              Trusted by:
-            </span>
-          )}
-
-          {/* Pill container */}
-          <div className="w-full rounded-2xl sm:rounded-full bg-white px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 md:py-8 shadow-[0_8px_30px_rgba(0,0,0,0.08)] sm:shadow-[0_12px_40px_rgba(0,0,0,0.1)] lg:shadow-[0_18px_50px_rgba(0,0,0,0.12)]">
-            {/* Logos grid - responsive layout */}
-            {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 items-center justify-items-center">
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-center w-full"
-                  >
-                    <div className="h-6 sm:h-7 md:h-8 w-24 sm:w-28 md:w-32 rounded-lg bg-gray-200 animate-pulse" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 items-center justify-items-center">
-                {/* Logo 1 */}
-                <div className="flex items-center justify-center w-full">
-                  <Image
-                    src="/logos/key-carbon.svg"
-                    alt="Key Carbon"
-                    width={100}
-                    height={28}
-                    className="h-6 sm:h-7 md:h-8 w-auto object-contain"
-                  />
-                </div>
-
-                {/* Logo 2 */}
-                <div className="flex items-center justify-center w-full">
-                  <Image
-                    src="/logos/abatable.svg"
-                    alt="Abatable"
-                    width={120}
-                    height={28}
-                    className="h-6 sm:h-7 md:h-8 w-auto object-contain"
-                  />
-                </div>
-
-                {/* Logo 3 */}
-                <div className="flex items-center justify-center w-full">
-                  <Image
-                    src="/logos/multitude.svg"
-                    alt="Multitude"
-                    width={120}
-                    height={28}
-                    className="h-6 sm:h-7 md:h-8 w-auto object-contain"
-                  />
-                </div>
-
-                {/* Logo 4 */}
-                <div className="flex items-center justify-center w-full col-span-2 sm:col-span-3 lg:col-span-1">
-                  <Image
-                    src="/logos/european-investment-fund.svg"
-                    alt="European Investment Fund"
-                    width={160}
-                    height={28}
-                    className="h-6 sm:h-7 md:h-8 w-auto object-contain"
-                  />
-                </div>
-
-                {/* Logo 5 */}
-                <div className="flex items-center justify-center w-full col-span-2 sm:col-span-3 lg:col-span-1">
-                  <Image
-                    src="/logos/co2-effect.svg"
-                    alt="CO2 Effect"
-                    width={100}
-                    height={28}
-                    className="h-6 sm:h-7 md:h-8 w-auto object-contain"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
       {/* News & Image Cards Section - Responsive */}
       <section className="mx-auto mt-16 sm:mt-20 md:mt-24 lg:mt-28 px-4 sm:px-6 md:px-8 max-w-[1400px]">
         {loading ? (
@@ -507,7 +419,7 @@ export default function Home() {
             </motion.div>
           )}
         </div>
-      </section>  
+      </section>
     </main>
   );
 }

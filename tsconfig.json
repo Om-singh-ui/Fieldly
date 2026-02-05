@@ -2,6 +2,8 @@
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
+    "types": ["node"],
+
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -18,6 +20,8 @@
     "paths": {
       "@/*": ["./*"]
     },
+
+    "ignoreDeprecations": "6.0",
 
     "plugins": [{ "name": "next" }]
   },

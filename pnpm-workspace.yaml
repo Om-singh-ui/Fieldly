@@ -1,3 +1,5 @@
 ignoredBuiltDependencies:
+  - '@clerk/shared'
+  - '@prisma/client'
   - sharp
   - unrs-resolver
