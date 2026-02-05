@@ -1,0 +1,317 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================= ENUMS =================
+
+enum UserRole {
+  FARMER
+  LANDOWNER
+  ADMIN
+}
+
+enum FarmingType {
+  SUBSISTENCE
+  COMMERCIAL
+  ORGANIC
+  MIXED
+}
+
+enum LandType {
+  AGRICULTURAL
+  FALLOW
+  ORCHARD
+  PASTURE
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum LeaseStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  TERMINATED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+}
+
+enum NotificationType {
+  SYSTEM
+  LEASE
+  PAYMENT
+  MESSAGE
+}
+
+// ================= USER =================
+
+model User {
+  id          String  @id @default(cuid())
+  clerkUserId String  @unique
+  email       String  @unique
+  name        String
+  imageUrl    String?
+
+  role           UserRole?
+  isOnboarded    Boolean   @default(false)
+  onboardingStep Int       @default(0)
+
+  phone    String?
+  state    String?
+  district String?
+  bio      String?
+
+  farmerProfile    FarmerProfile?
+  landownerProfile LandownerProfile?
+
+  applications   Application[]
+  leasesAsFarmer Lease[]       @relation("FarmerLeases")
+  leasesAsOwner  Lease[]       @relation("OwnerLeases")
+
+  messagesSent     Message[] @relation("MessagesSent")
+  messagesReceived Message[] @relation("MessagesReceived")
+
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  payments      Payment[]
+  subscription  Subscription?
+
+  documents Document[] // ✅ FIX ADDED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ================= FARMER =================
+
+model FarmerProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  primaryCrops      String[]
+  farmingExperience Int
+  farmingType       FarmingType
+
+  requiredLandSize Float
+  leaseDuration    Int
+  irrigationNeeded Boolean @default(false)
+  equipmentAccess  Boolean @default(false)
+
+  isVerified Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ================= LANDOWNER =================
+
+model LandownerProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lands Land[]
+
+  isVerified Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ================= LAND =================
+
+model Land {
+  id          String           @id @default(cuid())
+  landownerId String
+  landowner   LandownerProfile @relation(fields: [landownerId], references: [id], onDelete: Cascade)
+
+  title               String
+  size                Float
+  landType            LandType
+  soilType            String?
+  irrigationAvailable Boolean  @default(false)
+
+  minLeaseDuration Int
+  maxLeaseDuration Int
+  expectedRentMin  Float?
+  expectedRentMax  Float?
+  allowedCropTypes String[]
+
+  applications Application[]
+  leases       Lease[]
+  soilReports  SoilReport[]
+  documents    Document[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ================= APPLICATION =================
+
+model Application {
+  id       String @id @default(cuid())
+  landId   String
+  farmerId String
+
+  land   Land @relation(fields: [landId], references: [id], onDelete: Cascade)
+  farmer User @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+
+  proposedRent Float?
+  duration     Int
+  status       ApplicationStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([landId])
+  @@index([farmerId])
+}
+
+// ================= LEASE =================
+
+model Lease {
+  id       String @id @default(cuid())
+  landId   String
+  farmerId String
+  ownerId  String
+
+  land   Land @relation(fields: [landId], references: [id])
+  farmer User @relation("FarmerLeases", fields: [farmerId], references: [id])
+  owner  User @relation("OwnerLeases", fields: [ownerId], references: [id])
+
+  rent      Float
+  startDate DateTime
+  endDate   DateTime
+  status    LeaseStatus @default(DRAFT)
+
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ================= PAYMENTS =================
+
+model Payment {
+  id      String  @id @default(cuid())
+  userId  String
+  leaseId String?
+
+  user  User   @relation(fields: [userId], references: [id])
+  lease Lease? @relation(fields: [leaseId], references: [id])
+
+  amount      Float
+  currency    String        @default("INR")
+  status      PaymentStatus @default(PENDING)
+  providerRef String?
+
+  createdAt DateTime @default(now())
+}
+
+// ================= SUBSCRIPTION =================
+
+model Subscription {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  plan        String
+  status      SubscriptionStatus @default(ACTIVE)
+  providerRef String?
+
+  startedAt DateTime  @default(now())
+  endsAt    DateTime?
+}
+
+// ================= SOIL =================
+
+model SoilReport {
+  id     String @id @default(cuid())
+  landId String
+  land   Land   @relation(fields: [landId], references: [id], onDelete: Cascade)
+
+  ph        Float?
+  moisture  Float?
+  nutrients String?
+
+  createdAt DateTime @default(now())
+}
+
+// ================= DOCUMENTS =================
+
+model Document {
+  id     String  @id @default(cuid())
+  landId String?
+  userId String?
+
+  land Land? @relation(fields: [landId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
+
+  name String
+  url  String
+
+  createdAt DateTime @default(now())
+}
+
+// ================= MESSAGES =================
+
+model Message {
+  id         String @id @default(cuid())
+  senderId   String
+  receiverId String
+
+  sender   User @relation("MessagesSent", fields: [senderId], references: [id])
+  receiver User @relation("MessagesReceived", fields: [receiverId], references: [id])
+
+  content   String
+  createdAt DateTime @default(now())
+}
+
+// ================= NOTIFICATIONS =================
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  type    NotificationType
+  title   String
+  message String
+  isRead  Boolean          @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+// ================= AUDIT LOG =================
+
+model AuditLog {
+  id     String  @id @default(cuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  action   String
+  metadata Json?
+
+  createdAt DateTime @default(now())
+}

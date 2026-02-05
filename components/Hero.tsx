@@ -3,8 +3,11 @@
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function HeroSection() {
+  const router = useRouter();
+
   return (
     <section className="relative mx-auto max-w-[1440px] px-4 sm:px-6 md:px-7 pt-6 sm:pt-16 md:pt-[64px] -mt-6 sm:-mt-10 md:mt-0">
       <div className="grid grid-cols-1 gap-y-10 gap-x-6 lg:gap-x-8 lg:grid-cols-[1.15fr_0.85fr]">
@@ -27,14 +30,20 @@ export default function HeroSection() {
           </p>
 
           <div className="relative mt-4 sm:mt-6 flex flex-wrap gap-3">
-            <Button className="group h-10 sm:h-11 rounded-full bg-gradient-to-r from-[#b7cf8a] to-[#9fb86d] px-5 sm:px-6 text-sm font-medium text-black shadow-[0_6px_18px_rgba(183,207,138,0.35)] hover:from-[#a8c47a] hover:to-[#93ae63]">
+            {/* For Landowners */}
+            <Button
+              onClick={() => router.push("/sign-in")}
+              className="group h-10 sm:h-11 rounded-full bg-gradient-to-r from-[#b7cf8a] to-[#9fb86d] px-5 sm:px-6 text-sm font-medium text-black shadow-[0_6px_18px_rgba(183,207,138,0.35)] hover:from-[#a8c47a] hover:to-[#93ae63]"
+            >
               For Landowners
               <span className="ml-2 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-white">
                 <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" />
               </span>
             </Button>
 
+            {/* For Farmers */}
             <Button
+              onClick={() => router.push("/sign-in")}
               variant="outline"
               className="group h-10 sm:h-11 rounded-full border-zinc-200 px-5 sm:px-6 text-sm hover:bg-zinc-50"
             >
@@ -47,10 +56,10 @@ export default function HeroSection() {
         </div>
 
         {/* RIGHT */}
-        <div className="z-10 ml-auto w-full max-w-[440px] min-h-[280px] sm:min-h-[360px] md:min-h-[400px] lg:min-h-[520px] overflow-hidden rounded-[24px] sm:rounded-[28px] transition-all duration-300 lg:-translate-y-14 hover:shadow-[0_28px_90px_rgba(255,205,70,0.6),0_0_0_1px_rgba(255,205,70,0.4)]">
+        <div className="z-10 ml-auto w-full max-w-[448px] min-h-[280px] sm:min-h-[360px] md:min-h-[400px] lg:min-h-[555px] overflow-hidden rounded-[24px] sm:rounded-[28px] transition-all duration-300 lg:-translate-y-14 hover:shadow-[0_28px_90px_rgba(255,205,70,0.6),0_0_0_1px_rgba(255,205,70,0.4)]">
           <div className="group relative h-full w-full pt-12 sm:pt-16 md:pt-20">
             <Image
-              src="/HD-wallpaper-golden-fields-of-wheat-hills-wheat-fields-sunset-clouds.jpg"
+              src="/hero.jpg"
               alt="Cultivated farmland"
               fill
               priority
