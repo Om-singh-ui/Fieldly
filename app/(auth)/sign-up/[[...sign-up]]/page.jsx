@@ -65,35 +65,36 @@ export default function SignUpPage() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
-      {/* GRID */}
-      <div className="mx-auto grid min-h-screen max-w-[1550px] grid-cols-1 lg:grid-cols-[0.85fr_1.15fr]">
+      {/* GRID - Added pt-16 for mobile, removed on desktop */}
+      <div className="mx-auto min-h-screen pt-16 lg:pt-0 lg:grid lg:max-w-[1550px] lg:grid-cols-[0.85fr_1.15fr]">
         {/* LEFT — BRAND / VALUE */}
-        <motion.div 
-          className="relative flex mt-26 flex-col justify-center px-6 sm:px-10 lg:px-16"
+        <motion.div
+          className="relative flex flex-col justify-center px-4 py-8 sm:px-6 sm:py-12 lg:px-16 lg:mt-26 lg:py-0"
           initial="hidden"
           animate="visible"
           variants={containerVariants}
         >
-          {/* Back Button */}
+          {/* Desktop Back Button (Hidden on mobile) */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
+            className="hidden lg:block absolute left-12 top-6"
           >
             <Link
               href="/"
-              className="absolute left-14 top-6 inline-flex items-center gap-1 text-sm text-black hover:text-zinc-600 transition-colors"
+              className="inline-flex items-center gap-1 text-sm text-black hover:text-zinc-600 transition-colors"
             >
               ← Back
             </Link>
           </motion.div>
 
-          <motion.div 
-            className="max-w-xl"
+          <motion.div
+            className="w-full max-w-xl mx-auto lg:mx-0"
             variants={containerVariants}
           >
-            <motion.div 
-              className="mb-10 flex items-center gap-3"
+            <motion.div
+              className="mb-6 lg:mb-10 flex items-center gap-3"
               variants={itemVariants}
             >
               <div className="relative h-10 w-10 overflow-hidden rounded-xl">
@@ -102,6 +103,7 @@ export default function SignUpPage() {
                   alt="Fieldly logo"
                   fill
                   className="object-contain"
+                  sizes="40px"
                 />
               </div>
               <span className="text-xl font-semibold tracking-tight text-zinc-900">
@@ -110,8 +112,8 @@ export default function SignUpPage() {
             </motion.div>
 
             {/* Heading */}
-            <motion.h1 
-              className="text-3xl sm:text-4xl lg:text-[42px] font-semibold leading-tight tracking-tight text-zinc-900"
+            <motion.h1
+              className="text-2xl sm:text-3xl lg:text-[42px] font-semibold leading-tight tracking-tight text-zinc-900"
               variants={itemVariants}
             >
               Grow your wealth.
@@ -122,20 +124,20 @@ export default function SignUpPage() {
             </motion.h1>
 
             {/* Supporting points */}
-            <motion.ul 
-              className="mt-8 space-y-4 text-[15px] leading-relaxed text-zinc-600"
+            <motion.ul
+              className="mt-4 lg:mt-8 space-y-3 lg:space-y-4 text-sm sm:text-[15px] leading-relaxed text-zinc-600"
               variants={containerVariants}
             >
               {points.map((text, index) => (
-                <motion.li 
+                <motion.li
                   key={index}
                   className="flex items-start gap-3"
                   variants={itemVariants}
                 >
-                  <span className="mt-[3px] flex h-5 w-5 items-center justify-center rounded-full bg-[#b7cf8a]/20 text-[#7f9a4f]">
+                  <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#b7cf8a]/20 text-[#7f9a4f]">
                     ✓
                   </span>
-                  {text}
+                  <span className="flex-1">{text}</span>
                 </motion.li>
               ))}
             </motion.ul>
@@ -143,14 +145,14 @@ export default function SignUpPage() {
         </motion.div>
 
         {/* RIGHT — IMAGE + AUTH */}
-        <motion.div 
-          className="relative flex items-center justify-center pl-76"
+        <motion.div
+          className="relative flex items-center justify-center px-4 py-4 sm:px-6 sm:py-8 lg:px-0 lg:py-0 lg:pl-76"
           initial="hidden"
           animate="visible"
         >
-          {/* IMAGE */}
-          <motion.div 
-            className="absolute inset-0"
+          {/* IMAGE - Only show on desktop, background color on mobile */}
+          <motion.div
+            className="absolute inset-0 lg:block hidden"
             variants={imageVariants}
           >
             <Image
@@ -162,26 +164,49 @@ export default function SignUpPage() {
             />
           </motion.div>
 
-          {/* SignUp Card - Smaller container */}
-          <motion.div 
-            className="relative mt-14 z-10 max-w-[400px] w-full mx-4" // Smaller width + margin
+          {/* Mobile Background Color - Same gradient as SignIn */}
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white lg:hidden" />
+
+          {/* SignUp Card - Responsive sizing */}
+          <motion.div
+            className="relative z-10 w-full max-w-md mx-auto lg:mx-0 lg:mt-14"
             variants={cardVariants}
           >
-            <div className="px-2"> {/* Reduced padding */}
+            <div className="lg:rounded-2xl lg:p-2">
               <SignUp
                 appearance={{
                   elements: {
-                    card: "shadow-lg border border-gray-200 w-full", // Full width of container
-                    rootBox: "w-full",
-                    headerTitle: "text-xl", // Slightly smaller title
-                    headerSubtitle: "text-sm", // Smaller subtitle
-                    formButtonPrimary: "text-sm", // Smaller button text
-                    footerActionText: "text-sm", // Smaller footer text
+                    rootBox: "w-full mx-auto",
+                    card: "w-full bg-white lg:bg-transparent lg:shadow-lg lg:border lg:border-gray-100 rounded-xl lg:rounded-2xl",
+                    headerTitle: "text-xl sm:text-2xl",
+                    headerSubtitle: "text-sm sm:text-base",
+                    formFieldInput: "text-sm sm:text-base",
+                    formButtonPrimary: "text-sm sm:text-base",
+                    footerActionText: "text-sm sm:text-base",
+                    socialButtonsBlock__button: "text-sm sm:text-base",
+                  },
+                  variables: {
+                    colorPrimary: "#7f9a4f",
+                    colorText: "#374151",
+                    colorTextSecondary: "#6b7280",
                   },
                 }}
-                redirectUrl="/post-auth" 
-                afterSignUpUrl="/post-auth" 
+                redirectUrl="/post-auth"
+                afterSignUpUrl="/post-auth"
               />
+            </div>
+
+            {/* Mobile-only sign-in suggestion - Match exact styling from SignIn */}
+            <div className="mt-6 text-center lg:hidden">
+              <p className="text-sm text-gray-600">
+                Already have an account?{" "}
+                <Link
+                  href="/sign-in"
+                  className="text-[#7f9a4f] font-medium hover:text-[#6b8840] transition-colors"
+                >
+                  Sign in here
+                </Link>
+              </p>
             </div>
           </motion.div>
         </motion.div>
