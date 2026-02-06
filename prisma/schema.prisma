@@ -96,7 +96,7 @@ model User {
   payments      Payment[]
   subscription  Subscription?
 
-  documents Document[] // ✅ FIX ADDED
+  documents Document[] 
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
