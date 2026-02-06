@@ -91,6 +91,7 @@ interface FarmerFormData {
   phone?: string;
   district?: string;
   state?: string;
+  bio?: string; // ADDED: bio field
   primaryCrops?: string[];
   farmingExperience?: string;
   farmingType?: "SUBSISTENCE" | "COMMERCIAL" | "ORGANIC" | "MIXED";
@@ -106,6 +107,7 @@ interface LandownerFormData {
   phone?: string;
   district?: string;
   state?: string;
+  bio?: string; // ADDED: bio field
   // Land details
   landTitle?: string;
   landSize?: string;
@@ -140,7 +142,7 @@ export async function completeFarmerOnboarding(formData: FarmerFormData) {
       throw new Error("User role is not set to FARMER");
     }
 
-    // Update user basic info
+    // Update user basic info - INCLUDING BIO
     user = await prisma.user.update({
       where: { clerkUserId: userId },
       data: {
@@ -149,6 +151,7 @@ export async function completeFarmerOnboarding(formData: FarmerFormData) {
         phone: formData.phone || user.phone,
         district: formData.district || user.district,
         state: formData.state || user.state,
+        bio: formData.bio || user.bio || null, // ADDED: bio field
         isOnboarded: true,
       },
     });
@@ -206,7 +209,7 @@ export async function completeLandownerOnboarding(formData: LandownerFormData) {
       throw new Error("User role is not set to LANDOWNER");
     }
 
-    // Update user basic info
+    // Update user basic info - INCLUDING BIO
     user = await prisma.user.update({
       where: { clerkUserId: userId },
       data: {
@@ -215,6 +218,7 @@ export async function completeLandownerOnboarding(formData: LandownerFormData) {
         phone: formData.phone || user.phone,
         district: formData.district || user.district,
         state: formData.state || user.state,
+        bio: formData.bio || user.bio || null, // ADDED: bio field
         isOnboarded: true,
       },
     });

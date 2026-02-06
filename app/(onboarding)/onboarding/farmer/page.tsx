@@ -1,4 +1,3 @@
-// app/(onboarding)/onboarding/farmer/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -86,13 +85,16 @@ export default function FarmerOnboardingPage() {
     setError(null);
 
     try {
-      // Convert numeric fields to strings to match FarmerFormData type
+      // Convert numeric fields to strings and ensure bio is included
       const formDataForAction = {
         ...data,
         farmingExperience: data.farmingExperience.toString(),
         requiredLandSize: data.requiredLandSize.toString(),
         leaseDuration: data.leaseDuration.toString(),
+        bio: data.bio || "", // Ensure bio is included even if empty
       };
+      
+      console.log("Submitting form data:", formDataForAction); // Debug log
       
       await completeFarmerOnboarding(formDataForAction);
       // AUTOMATIC REDIRECT after successful onboarding
@@ -223,6 +225,9 @@ export default function FarmerOnboardingPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   placeholder="Tell us about your farming journey..."
                 />
+                {errors.bio && (
+                  <p className="mt-1 text-sm text-red-600">{errors.bio.message}</p>
+                )}
               </div>
             </div>
           </motion.div>

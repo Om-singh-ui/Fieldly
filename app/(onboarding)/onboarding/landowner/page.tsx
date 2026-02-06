@@ -44,12 +44,22 @@ export default function LandownerOnboardingPage() {
     },
   });
 
-  const onSubmit = handleSubmit(async (data: LandownerOnboardingInput) => {
+  const onSubmit = async (data: LandownerOnboardingInput) => {
     setIsSubmitting(true);
     setError(null);
 
     try {
-      await completeLandownerOnboarding(data);
+      // Create the form data to send to server action
+      const formDataForAction = {
+        phone: data.phone,
+        state: data.state,
+        district: data.district,
+        bio: data.bio || "", // Ensure bio is included even if empty
+      };
+      
+      console.log("Submitting landowner data:", formDataForAction); // Debug log
+      
+      await completeLandownerOnboarding(formDataForAction);
       // AUTOMATIC REDIRECT after successful onboarding
       router.push("/post-auth");
     } catch (err) {
@@ -57,7 +67,7 @@ export default function LandownerOnboardingPage() {
     } finally {
       setIsSubmitting(false);
     }
-  });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12 px-4">
@@ -87,7 +97,7 @@ export default function LandownerOnboardingPage() {
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           {/* Section 1: Contact Information */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -190,6 +200,9 @@ export default function LandownerOnboardingPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 placeholder="Share details about your land portfolio, previous leasing experience, management style, or any specific requirements you have for tenants..."
               />
+              {errors.bio && (
+                <p className="mt-1 text-sm text-red-600">{errors.bio.message}</p>
+              )}
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500" />
