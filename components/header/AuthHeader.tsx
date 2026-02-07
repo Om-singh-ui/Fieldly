@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Target,
   LucideIcon,
+  IndianRupee,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -149,9 +150,9 @@ const NAV_DATA: Record<NavKey, NavSection> = {
         href: "/company/contact",
       },
       {
-        label: "Compliance",
-        icon: Shield,
-        href: "/company/compliance",
+        label: "Fieldly Finance",
+        icon: IndianRupee,
+        href: "/company/Finance",
       },
     ],
   },

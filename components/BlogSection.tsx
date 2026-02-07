@@ -70,20 +70,20 @@ export default function BlogSection() {
               {
                 img: "/revitalizing.png",
                 tag: "SOIL & SUSTAINABILITY",
-                title: "Why Soil Health Is Central to CultiLand's Leasing Model",
+                title: "Why Soil Health Is Central to Fieldly's Leasing Model",
                 time: "3 min read",
               },
               {
                 img: "/farmer.jpg",
                 tag: "FARMER EMPOWERMENT",
-                title: "How CultiLand Helps Farmers Scale Without Owning Land",
+                title: "How Fieldly  Helps Farmers Scale Without Owning Land",
                 time: "5 min read",
               },
               {
                 img: "/bh.jpg",
                 tag: "PRODUCT & PLATFORM",
                 title:
-                  "Inside CultiLand's Transparent Land Leasing Infrastructure",
+                  "Inside Fieldly's Transparent Land Leasing Infrastructure",
                 time: "5 min read",
               },
             ].map((card, i) => (
