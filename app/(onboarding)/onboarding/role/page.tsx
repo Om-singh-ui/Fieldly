@@ -1,4 +1,3 @@
-// app/(onboarding)/onboarding/role/page.tsx
 "use client";
 
 import { useState, useTransition } from "react";
@@ -18,181 +17,181 @@ export default function RoleSelectionPage() {
 
     startTransition(async () => {
       try {
-        // Get or create user
         await getOrCreateUser();
-        
-        // Save role to database
         await setUserRole(role);
-        
-        // AUTOMATIC REDIRECT to appropriate onboarding
+
         router.push(
           role === "FARMER"
             ? "/onboarding/farmer"
             : "/onboarding/landowner"
         );
       } catch (err) {
-        console.error("Role selection error:", err);
-        setError(err instanceof Error ? err.message : "Failed to save your role. Please try again.");
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to save your role. Please try again."
+        );
         setSelectedRole(null);
       }
     });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden px-4">
+
+      {/* Background Glow Effects */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-emerald-200/40 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-200/40 blur-[120px] rounded-full" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl w-full"
+        className="relative z-10 w-full max-w-5xl"
       >
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome to Fieldly 🌱
+        {/* Header */}
+        <div className="text-center mb-14">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900">
+            Welcome to <span className="text-emerald-600">Fieldly</span> 🌱
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Tell us about yourself so we can tailor your experience.
-            Choose the role that best describes you.
+
+          <p className="mt-4 text-gray-600 text-lg max-w-xl mx-auto">
+            Let’s personalize your experience. Choose your primary role to get
+            started.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Cards */}
+        <div className="grid md:grid-cols-2 gap-8">
+
           {/* Farmer Card */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
+          <motion.button
+            whileHover={{ y: -6 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => handleRoleSelect("FARMER")}
+            disabled={isPending && selectedRole !== "FARMER"}
+            className={`group relative rounded-3xl p-[1px] transition-all duration-300 ${
+              selectedRole === "FARMER"
+                ? "bg-gradient-to-r from-emerald-400 to-emerald-600"
+                : "bg-transparent"
+            }`}
           >
-            <button
-              onClick={() => handleRoleSelect("FARMER")}
-              disabled={isPending && selectedRole !== "FARMER"}
+            <div
               className={`
-                w-full p-8 rounded-2xl border-3 transition-all duration-300
-                ${selectedRole === "FARMER"
-                  ? "border-green-500 bg-green-50 shadow-lg"
-                  : "border-gray-200 bg-white hover:border-green-300 hover:shadow-md"
+                backdrop-blur-xl rounded-3xl p-8 h-full
+                border border-gray-200 bg-white/80
+                transition-all duration-300
+                group-hover:shadow-xl
+                ${
+                  selectedRole === "FARMER"
+                    ? "shadow-2xl border-emerald-200"
+                    : ""
                 }
-                ${isPending && selectedRole !== "FARMER" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-                flex flex-col items-center text-left
               `}
             >
-              <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
-                <span className="text-4xl">👨‍🌾</span>
-              </div>
-              
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                I&lsquo;m a Farmer
-              </h3>
-              
-              <p className="text-gray-600 mb-6">
-                Looking for agricultural land to lease for cultivation. 
-                You want to grow crops, need farm infrastructure, and 
-                want access to financial support.
-              </p>
+              <div className="flex flex-col items-center text-center">
 
-              <div className="space-y-3 text-left w-full">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-700">Find available land</span>
+                {/* Icon */}
+                <div className="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center mb-6 text-4xl shadow-inner">
+                  👨‍🌾
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-700">Get soil monitoring</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-700">Access loans & subsidies</span>
-                </div>
-              </div>
 
-              {selectedRole === "FARMER" && isPending && (
-                <div className="mt-6 flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
-                  <span className="text-sm text-green-600">Setting up your farmer profile...</span>
-                </div>
-              )}
-            </button>
-          </motion.div>
+                <h3 className="text-2xl font-semibold text-gray-900">
+                  I’m a Farmer
+                </h3>
+
+                <p className="mt-3 text-gray-600">
+                  Looking for land to lease, monitor soil health and access
+                  agriculture financing.
+                </p>
+
+                <ul className="mt-6 space-y-2 text-sm text-gray-700 text-left w-full max-w-xs">
+                  <li>• Discover available farmland</li>
+                  <li>• AI soil monitoring insights</li>
+                  <li>• Loans & government subsidy access</li>
+                </ul>
+
+                {selectedRole === "FARMER" && isPending && (
+                  <div className="mt-6 flex items-center gap-2 text-emerald-600">
+                    <div className="h-5 w-5 animate-spin border-b-2 border-emerald-600 rounded-full" />
+                    Setting up your farmer profile...
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.button>
 
           {/* Landowner Card */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
+          <motion.button
+            whileHover={{ y: -6 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => handleRoleSelect("LANDOWNER")}
+            disabled={isPending && selectedRole !== "LANDOWNER"}
+            className={`group relative rounded-3xl p-[1px] transition-all duration-300 ${
+              selectedRole === "LANDOWNER"
+                ? "bg-gradient-to-r from-blue-400 to-blue-600"
+                : "bg-transparent"
+            }`}
           >
-            <button
-              onClick={() => handleRoleSelect("LANDOWNER")}
-              disabled={isPending && selectedRole !== "LANDOWNER"}
+            <div
               className={`
-                w-full p-8 rounded-2xl border-3 transition-all duration-300
-                ${selectedRole === "LANDOWNER"
-                  ? "border-blue-500 bg-blue-50 shadow-lg"
-                  : "border-gray-200 bg-white hover:border-blue-300 hover:shadow-md"
+                backdrop-blur-xl rounded-3xl p-8 h-full
+                border border-gray-200 bg-white/80
+                transition-all duration-300
+                group-hover:shadow-xl
+                ${
+                  selectedRole === "LANDOWNER"
+                    ? "shadow-2xl border-blue-200"
+                    : ""
                 }
-                ${isPending && selectedRole !== "LANDOWNER" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-                flex flex-col items-center text-left
               `}
             >
-              <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-                <span className="text-4xl">🏢</span>
-              </div>
-              
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                I&lsquo;m a Landowner
-              </h3>
-              
-              <p className="text-gray-600 mb-6">
-                Own agricultural land and want to lease it to farmers. 
-                You&lsquo;re looking for reliable tenants, proper documentation, 
-                and regular rental income.
-              </p>
+              <div className="flex flex-col items-center text-center">
 
-              <div className="space-y-3 text-left w-full">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm text-gray-700">List your land for lease</span>
+                {/* Icon */}
+                <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center mb-6 text-4xl shadow-inner">
+                  🏢
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm text-gray-700">Find verified farmers</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm text-gray-700">Get secure payments</span>
-                </div>
-              </div>
 
-              {selectedRole === "LANDOWNER" && isPending && (
-                <div className="mt-6 flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                  <span className="text-sm text-blue-600">Setting up your landowner profile...</span>
-                </div>
-              )}
-            </button>
-          </motion.div>
+                <h3 className="text-2xl font-semibold text-gray-900">
+                  I’m a Landowner
+                </h3>
+
+                <p className="mt-3 text-gray-600">
+                  Lease your farmland, find verified farmers and receive secure
+                  rental income.
+                </p>
+
+                <ul className="mt-6 space-y-2 text-sm text-gray-700 text-left w-full max-w-xs">
+                  <li>• List land for leasing</li>
+                  <li>• Match with trusted farmers</li>
+                  <li>• Secure & automated payments</li>
+                </ul>
+
+                {selectedRole === "LANDOWNER" && isPending && (
+                  <div className="mt-6 flex items-center gap-2 text-blue-600">
+                    <div className="h-5 w-5 animate-spin border-b-2 border-blue-600 rounded-full" />
+                    Setting up your landowner profile...
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.button>
         </div>
 
+        {/* Error */}
         {error && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mt-8 p-4 bg-red-50 border border-red-200 rounded-xl"
+            className="mt-10 bg-red-50 border border-red-200 rounded-xl p-4 text-center"
           >
-            <p className="text-red-600 text-center">{error}</p>
-            <button
-              onClick={() => {
-                setError(null);
-                setSelectedRole(null);
-              }}
-              className="mt-2 text-sm text-red-500 hover:text-red-700 underline mx-auto block"
-            >
-              Try again
-            </button>
+            <p className="text-red-600">{error}</p>
           </motion.div>
         )}
 
-        <div className="mt-12 text-center">
-          <p className="text-gray-500 text-sm">
-            You can change your role later from settings if needed.
-          </p>
-        </div>
+        <p className="mt-12 text-center text-sm text-gray-500">
+          You can change your role later from settings.
+        </p>
       </motion.div>
     </div>
   );

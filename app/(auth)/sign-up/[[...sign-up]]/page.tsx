@@ -3,11 +3,11 @@
 import { SignUp } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
 export default function SignUpPage() {
-  // Clean animation variants
-  const containerVariants = {
+  // Clean animation variants with proper typing
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -18,7 +18,7 @@ export default function SignUpPage() {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { y: 10, opacity: 0 },
     visible: {
       y: 0,
@@ -30,7 +30,7 @@ export default function SignUpPage() {
     }
   };
 
-  const imageVariants = {
+  const imageVariants: Variants = {
     hidden: { scale: 1.05, opacity: 0 },
     visible: {
       scale: 1,
@@ -42,7 +42,7 @@ export default function SignUpPage() {
     }
   };
 
-  const cardVariants = {
+  const cardVariants: Variants = {
     hidden: { scale: 0.95, opacity: 0 },
     visible: {
       scale: 1,
@@ -56,7 +56,7 @@ export default function SignUpPage() {
     }
   };
 
-  const points = [
+  const points: string[] = [
     "Transparent land leasing with verified ownership",
     "Asset-backed agricultural investment returns",
     "No brokers trust-first, direct platform",
@@ -161,6 +161,7 @@ export default function SignUpPage() {
               fill
               priority
               className="object-cover"
+              sizes="100vw"
             />
           </motion.div>
 

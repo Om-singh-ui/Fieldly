@@ -49,7 +49,7 @@ export default function WhatWeDoSection() {
             >
               <div className="h-1.5 w-6 bg-black/40" />
               <p className="text-sm font-semibold uppercase tracking-[0.15em] text-black/70">
-                What we do
+                Fieldly Finance
               </p>
             </motion.div>
 
@@ -61,13 +61,13 @@ export default function WhatWeDoSection() {
               }}
             >
               <h2 className="max-w-2xl text-[42px] sm:text-[48px] font-semibold leading-[1.05] tracking-[-0.01em]">
-                Connecting Landowners{" "}
-                <span className="text-white">with Farmers</span>
+                Invest in Agriculture{" "}
+                <span className="text-white">With Confidence</span>
               </h2>
 
               <h2 className="max-w-2xl text-[42px] sm:text-[48px] font-semibold leading-[1.05] tracking-[-0.01em]">
-                to Enable Cultivation{" "}
-                <span className="text-black">with ease.</span>
+                Empower Farmers{" "}
+                <span className="text-black">Through Capital</span>
               </h2>
             </motion.div>
 
@@ -78,8 +78,10 @@ export default function WhatWeDoSection() {
                 visible: { opacity: 1, y: 0 },
               }}
             >
-              A trust-first platform that unlocks idle land and enables farmers
-              to cultivate with clarity and confidence.
+              Fieldly enables investors to fund verified agricultural
+              opportunities while helping farmers access financial resources to
+              cultivate land, scale production, and build sustainable
+              livelihoods.
             </motion.p>
           </motion.div>
 
@@ -93,11 +95,13 @@ export default function WhatWeDoSection() {
           >
             <div className="space-y-5">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.96 }}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
                 className="group relative flex items-center gap-3 overflow-hidden rounded-full bg-black px-8 py-4 text-sm font-medium text-white transition-all duration-300 hover:shadow-lg"
               >
-                <span className="relative z-10">Contact Us</span>
+                <span className="relative z-10">
+                  Explore Investment Opportunities
+                </span>
 
                 <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-[#b7cf8a] text-black transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1">
                   <ArrowUpRight className="h-4 w-4" />
@@ -107,12 +111,13 @@ export default function WhatWeDoSection() {
               </motion.button>
 
               <motion.p
-                className="max-w-[200px] text-[13px] leading-relaxed text-black/60"
+                className="max-w-[220px] text-[13px] leading-relaxed text-black/60"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
               >
-                Schedule a consultation with our agricultural experts.
+                Discover stable agricultural investment opportunities curated
+                and verified by Fieldly.
               </motion.p>
 
               <motion.div
@@ -128,9 +133,11 @@ export default function WhatWeDoSection() {
 
                   <div>
                     <p className="text-sm font-medium text-black">
-                      4,000+ Farmers
+                      4,000+ Farmers Funded
                     </p>
-                    <p className="text-xs text-black/50">Already connected</p>
+                    <p className="text-xs text-black/50">
+                      Growing Through Fieldly Capital
+                    </p>
                   </div>
                 </div>
               </motion.div>

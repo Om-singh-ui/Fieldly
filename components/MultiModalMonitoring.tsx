@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 
 const cards = [
   {
@@ -12,7 +13,7 @@ const cards = [
     icon: "/icons/map.png",
     dark: false,
     description:
-      "Direct field-level soil sampling ensures every parcel listed on CultiLand meets baseline soil health standards, protecting both farmers and landowners from long-term degradation.",
+      "Direct field-level soil sampling ensures every parcel listed on Fieldly  meets baseline soil health standards, protecting both farmers and landowners from long-term degradation.",
   },
   {
     id: "02",
@@ -54,6 +55,7 @@ export default function MultiModalMonitoring() {
   return (
     <section className="bg-[#fafafa] py-24">
       <div className="mx-auto max-w-[1400px] px-6">
+
         {/* HEADING */}
         {loading ? (
           <div className="mb-14">
@@ -61,58 +63,48 @@ export default function MultiModalMonitoring() {
             <div className="h-12 w-64 rounded-full bg-gray-200 animate-pulse" />
           </div>
         ) : (
-          <h2 className="mb-14 max-w-xl text-[36px] sm:text-[40px] lg:text-[44px] font-semibold leading-tight text-zinc-900">
+          <motion.h2
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="mb-14 max-w-xl text-[36px] sm:text-[40px] lg:text-[44px] font-semibold leading-tight text-zinc-900"
+          >
             Multi-Modal Monitoring
             <br />
             System
-          </h2>
+          </motion.h2>
         )}
 
-        {/* CARDS CONTAINER */}
-        <div
-          className={cn(
-            "gap-4",
-            "grid grid-cols-1",
-            "sm:grid-cols-2",
-            "lg:flex"
-          )}
-        >
+        {/* CARDS */}
+        <div className={cn("gap-4 grid grid-cols-1 sm:grid-cols-2 lg:flex")}>
+
           {loading
             ? [...Array(4)].map((_, index) => (
                 <div
                   key={index}
                   className="relative h-[300px] sm:h-[340px] md:h-[380px] lg:h-[420px] overflow-hidden rounded-[28px] bg-gray-200 animate-pulse"
-                >
-                  <div className="relative z-10 flex h-full flex-col justify-between p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="h-11 w-11 rounded-full bg-gray-300" />
-                      <div className="h-5 w-6 rounded-full bg-gray-300" />
-                    </div>
-
-                    <div>
-                      <div className="mb-4 h-8 w-48 rounded-full bg-gray-300" />
-                      <div className="mb-2 h-4 w-full rounded-full bg-gray-300" />
-                      <div className="h-4 w-3/4 rounded-full bg-gray-300" />
-                    </div>
-                  </div>
-                </div>
+                />
               ))
-            : cards.map((card) => (
-                <div
+            : cards.map((card, index) => (
+                <motion.div
                   key={card.id}
+                  initial={{ opacity: 0, y: 60 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{
+                    duration: 0.5,
+                    delay: index * 0.1
+                  }}
                   className={cn(
                     "group relative overflow-hidden rounded-[28px]",
                     "transition-all duration-500 ease-out",
-
-                    // Height responsiveness
                     "h-[300px] sm:h-[340px] md:h-[380px] lg:h-[420px]",
-
-                    // Desktop expansion only
                     "lg:flex-1",
                     "lg:hover:flex-[2.4]"
                   )}
                 >
-                  {/* BACKGROUND IMAGE */}
+                  {/* IMAGE */}
                   <Image
                     src={card.image}
                     alt={card.title}
@@ -140,7 +132,8 @@ export default function MultiModalMonitoring() {
 
                   {/* CONTENT */}
                   <div className="relative z-10 flex h-full flex-col justify-between p-6">
-                    {/* TOP ROW */}
+
+                    {/* TOP */}
                     <div className="flex items-center justify-between">
                       <div
                         className={cn(
@@ -153,10 +146,7 @@ export default function MultiModalMonitoring() {
                           alt=""
                           width={20}
                           height={20}
-                          className={cn(
-                            "object-contain",
-                            card.dark && "invert"
-                          )}
+                          className={cn("object-contain", card.dark && "invert")}
                         />
                       </div>
 
@@ -165,7 +155,7 @@ export default function MultiModalMonitoring() {
                       </span>
                     </div>
 
-                    {/* BOTTOM TEXT */}
+                    {/* BOTTOM */}
                     <div>
                       <h3 className="whitespace-pre-line text-[20px] sm:text-[21px] lg:text-[22px] font-semibold leading-snug text-white">
                         {card.title}
@@ -182,8 +172,9 @@ export default function MultiModalMonitoring() {
                         {card.description}
                       </p>
                     </div>
+
                   </div>
-                </div>
+                </motion.div>
               ))}
         </div>
       </div>

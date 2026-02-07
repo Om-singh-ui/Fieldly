@@ -95,7 +95,7 @@ export default function Home() {
                 </h2>
 
                 <p className="mt-3 sm:mt-4 md:mt-5 text-sm sm:text-base md:text-[16.5px] leading-6 sm:leading-7 text-zinc-600">
-                  The rollout confirms that CultiLand&apos;s transparent
+                  The rollout confirms that Fieldly&apos;s transparent
                   land-leasing system empowers farmers and landowners to connect
                   directly, unlocking idle agricultural land while ensuring
                   trust, compliance, and fair access across regions.
@@ -117,7 +117,7 @@ export default function Home() {
               <div className="relative aspect-[4/3] w-full cursor-pointer overflow-hidden rounded-2xl sm:rounded-3xl lg:rounded-[32px] transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.15)] sm:group-hover:shadow-[0_25px_60px_rgba(0,0,0,0.18)]">
                 <Image
                   src="/cnews.jpg"
-                  alt="CultiLand farmland"
+                  alt="Fieldly farmland"
                   fill
                   priority
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
@@ -178,7 +178,7 @@ export default function Home() {
             <div className="absolute inset-0">
               <Image
                 src="/fb01b073e7d70cc8bcbc.jpg"
-                alt="CultiLand background"
+                alt="Fieldly background"
                 fill
                 priority
                 className="object-cover"
@@ -284,7 +284,7 @@ export default function Home() {
                 className="mx-auto mt-16 max-w-4xl text-center"
               >
                 <p className="text-[20px] leading-8 text-white">
-                  CultiLand safeguards agricultural land through transparent,
+                  Fieldly safeguards agricultural land through transparent,
                   broker-free leasing empowering farmers, protecting soil
                   health, and ensuring long-term productivity at scale.
                 </p>

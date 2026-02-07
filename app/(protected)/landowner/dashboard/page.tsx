@@ -2,14 +2,15 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { 
-  Landmark, 
-  Users, 
-  DollarSign, 
+import {
+  Landmark,
+  Users,
+  DollarSign,
   FileText,
   Building,
-  MapPin
+  MapPin,
 } from "lucide-react";
+import { UserButton } from "@clerk/nextjs";
 
 export default async function LandownerDashboardPage() {
   const { userId } = await auth();
@@ -31,22 +32,54 @@ export default async function LandownerDashboardPage() {
   }
 
   const stats = [
-    { label: "Total Lands", value: user.landownerProfile.lands.length.toString(), icon: Landmark, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Active Leases", value: "2", icon: Users, color: "text-green-600", bg: "bg-green-50" },
-    { label: "Monthly Revenue", value: "₹25,000", icon: DollarSign, color: "text-purple-600", bg: "bg-purple-50" },
-    { label: "Pending Applications", value: "5", icon: FileText, color: "text-orange-600", bg: "bg-orange-50" },
+    {
+      label: "Total Lands",
+      value: user.landownerProfile.lands.length.toString(),
+      icon: Landmark,
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+    },
+    {
+      label: "Active Leases",
+      value: "2",
+      icon: Users,
+      color: "text-green-600",
+      bg: "bg-green-50",
+    },
+    {
+      label: "Monthly Revenue",
+      value: "₹25,000",
+      icon: DollarSign,
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+    },
+    {
+      label: "Pending Applications",
+      value: "5",
+      icon: FileText,
+      color: "text-orange-600",
+      bg: "bg-orange-50",
+    },
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-2 mt-24">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {user.name} 🏢
+          Welcome back,
+          <br />
+          <br />
+          <UserButton
+            appearance={{
+              elements: {
+                avatarBox: "h-9 w-9",
+                userButtonAvatarBox: "h-9 w-9",
+              },
+            }}
+          />{"    "}{user.name}
         </h1>
-        <p className="text-gray-600 mt-2">
-          Manage your lands and leases
-        </p>
+        <p className="text-gray-600 mt-2">Manage your lands and leases</p>
       </div>
 
       {/* Stats Grid */}
@@ -54,11 +87,16 @@ export default async function LandownerDashboardPage() {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div
+              key={stat.label}
+              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">{stat.label}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-2">
+                    {stat.value}
+                  </p>
                 </div>
                 <div className={`p-3 rounded-lg ${stat.bg}`}>
                   <Icon className={`h-6 w-6 ${stat.color}`} />
