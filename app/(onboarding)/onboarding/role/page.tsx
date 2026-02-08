@@ -1,20 +1,15 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { setUserRole, getOrCreateUser } from "@/actions/onboarding.actions";
 import { motion } from "framer-motion";
-import {
-  CheckCircle,
-  Leaf,
-  Building,
-  ArrowRight,
-  Star,
-  Calendar,
-  Users,
-} from "lucide-react";
+import { CheckCircle, ArrowRight, Star, Calendar, Users } from "lucide-react";
 import HeroSection from "./_components/hero";
+import FAQSection from "./_components/FAQSection";
+import HowItWorks from "./_components/HowItWorks";
+import { ArrowUpRight } from "lucide-react";
 
 type RoleType = "FARMER" | "LANDOWNER";
 type RoleColor = "emerald" | "blue";
@@ -24,25 +19,144 @@ interface RoleData {
   title: string;
   subtitle: string;
   description: string;
-  icon: React.ReactNode;
+  iconSrc: string;
   gradient: string;
   color: RoleColor;
   features: string[];
   buttonText: string;
-  emoji: string;
   rating: number;
   stats: string;
   duration: string;
   imageBg: string;
   badge: string;
-  badgeColor: string;
 }
+
+// Skeleton Components
+const HeroSkeleton = () => (
+  <section className="relative mx-auto max-w-[1440px] px-4 sm:px-6 md:px-7 pt-6 sm:pt-16 md:pt-[64px] -mt-6 sm:-mt-10 md:mt-0">
+    <div className="grid grid-cols-1 gap-y-10 gap-x-6 lg:gap-x-8 lg:grid-cols-[1.15fr_0.85fr]">
+      {/* Left Skeleton */}
+      <div className="relative mt-24 sm:mt-12 lg:mt-16 w-full max-w-[1240px] self-start rounded-[28px] bg-gradient-to-br from-white via-white/95 to-white px-6 sm:px-8 md:px-10 lg:px-12 py-6 sm:py-7 md:py-8 shadow-[0_25px_50px_rgba(0,0,0,0.08)]">
+        <div className="space-y-4">
+          <div className="h-8 bg-gray-200 rounded-lg w-3/4 animate-pulse" />
+          <div className="h-8 bg-gray-200 rounded-lg w-1/2 animate-pulse" />
+          <div className="h-4 bg-gray-200 rounded-lg w-full animate-pulse mt-6" />
+          <div className="h-4 bg-gray-200 rounded-lg w-2/3 animate-pulse" />
+          <div className="flex gap-4 mt-6">
+            <div className="h-12 bg-gray-200 rounded-lg w-32 animate-pulse" />
+            <div className="h-12 bg-gray-200 rounded-lg w-32 animate-pulse" />
+          </div>
+        </div>
+      </div>
+
+      {/* Right Skeleton */}
+      <div className="group z-10 ml-auto w-full max-w-[448px] min-h-[280px] sm:min-h-[360px] md:min-h-[400px] lg:min-h-[555px] overflow-hidden rounded-[24px] sm:rounded-[28px] bg-gray-200 animate-pulse" />
+    </div>
+  </section>
+);
+
+const RoleCardSkeleton = () => (
+  <div className="relative rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-lg">
+    <div className="relative h-48 bg-gray-100 p-6">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-lg bg-gray-200 animate-pulse" />
+        <div className="space-y-2">
+          <div className="h-6 bg-gray-200 rounded w-32 animate-pulse" />
+          <div className="h-4 bg-gray-200 rounded w-24 animate-pulse" />
+        </div>
+      </div>
+      <div className="flex gap-3 mt-6">
+        <div className="h-10 bg-gray-200 rounded-lg w-24 animate-pulse" />
+        <div className="h-10 bg-gray-200 rounded-lg w-24 animate-pulse" />
+      </div>
+    </div>
+    <div className="p-6">
+      <div className="h-4 bg-gray-200 rounded w-full animate-pulse mb-4" />
+      <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse mb-6" />
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="flex items-center gap-2">
+            <div className="w-5 h-5 bg-gray-200 rounded-full animate-pulse" />
+            <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-gray-200 my-6" />
+      <div className="flex items-center justify-between">
+        <div className="h-6 bg-gray-200 rounded w-20 animate-pulse" />
+        <div className="h-12 bg-gray-200 rounded-xl w-36 animate-pulse" />
+      </div>
+    </div>
+  </div>
+);
+
+const InfoCardSkeleton = () => (
+  <div className="max-w-3xl mx-auto">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+      <div className="flex items-start gap-4">
+        <div className="w-12 h-12 rounded-lg bg-gray-200 animate-pulse" />
+        <div className="flex-1 space-y-2">
+          <div className="h-5 bg-gray-200 rounded w-48 animate-pulse" />
+          <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
+          <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const FAQSectionSkeleton = () => (
+  <section className="relative w-full bg-white py-16 sm:py-20 px-4 sm:px-6 overflow-hidden">
+    <div className="max-w-7xl mx-auto">
+      <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start">
+        {/* Left Content Skeleton */}
+        <div className="lg:w-1/2">
+          <div className="mb-10">
+            <div className="h-8 bg-gray-200 rounded-full w-32 animate-pulse mb-4" />
+            <div className="h-12 bg-gray-200 rounded w-3/4 animate-pulse mb-4" />
+            <div className="h-12 bg-gray-200 rounded w-1/2 animate-pulse mb-4" />
+            <div className="h-4 bg-gray-200 rounded w-full animate-pulse mb-2" />
+            <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse mb-6" />
+            <div className="h-12 bg-gray-200 rounded-full w-36 animate-pulse" />
+          </div>
+        </div>
+
+        {/* Right FAQ Skeleton */}
+        <div className="lg:w-1/2">
+          <div className="rounded-[28px] bg-white shadow-lg p-8 sm:p-10">
+            <div className="space-y-1">
+              {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <div key={i} className="rounded-lg bg-gray-50 p-4 mb-2">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse" />
+                    <div className="h-6 bg-gray-200 rounded w-full animate-pulse" />
+                    <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+);
 
 export default function RoleSelectionPage() {
   const router = useRouter();
   const [selectedRole, setSelectedRole] = useState<RoleType | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate initial page load
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800); // Reduced from 1500ms for better UX
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleRoleSelect = async (role: RoleType) => {
     setSelectedRole(role);
@@ -107,7 +221,7 @@ export default function RoleSelectionPage() {
       subtitle: "Agricultural Producer",
       description:
         "Looking for land to lease, monitor soil health and access agriculture financing.",
-      icon: <Leaf className="w-8 h-8 text-emerald-600" />,
+      iconSrc: "/ilsfarmer.png",
       gradient: colorClasses.emerald.glow,
       color: "emerald",
       features: [
@@ -117,14 +231,11 @@ export default function RoleSelectionPage() {
         "Crop planning tools",
       ],
       buttonText: "Start Farming Journey",
-      emoji: "👨‍🌾",
       rating: 4.8,
       stats: "500+ Farmers Connected",
       duration: "Flexible Leasing",
-      imageBg:
-        "bg-gradient-to-br from-emerald-50/80 to-emerald-100/80 backdrop-blur-sm",
+      imageBg: "bg-white",
       badge: "Most Popular",
-      badgeColor: "bg-emerald-600 text-white", // Updated to use emerald-600
     },
     {
       id: "LANDOWNER",
@@ -132,7 +243,7 @@ export default function RoleSelectionPage() {
       subtitle: "Property Owner",
       description:
         "Lease your farmland, find verified farmers and receive secure rental income.",
-      icon: <Building className="w-8 h-8 text-blue-600" />,
+      iconSrc: "/landownersicon.png",
       gradient: colorClasses.blue.glow,
       color: "blue",
       features: [
@@ -142,16 +253,43 @@ export default function RoleSelectionPage() {
         "Property management tools",
       ],
       buttonText: "Start Leasing Land",
-      emoji: "🏢",
       rating: 4.7,
       stats: "200+ Landowners Registered",
       duration: "Guaranteed Income",
-      imageBg:
-        "bg-gradient-to-br from-blue-50/80 to-blue-100/80 backdrop-blur-sm",
+      imageBg: "bg-white",
       badge: "Guest Favorite",
-      badgeColor: "bg-blue-600 text-white", // Updated to use blue-600
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <HeroSkeleton />
+        <div className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-12 bg-gradient-to-br from-gray-50 via-white to-emerald-50/20">
+          <div className="relative z-10 w-full max-w-6xl">
+            {/* Header Skeleton */}
+            <div className="text-center mb-12">
+              <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto animate-pulse" />
+            </div>
+
+            {/* Cards Grid Skeleton */}
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
+              <RoleCardSkeleton />
+              <RoleCardSkeleton />
+            </div>
+
+            {/* Info Card Skeleton */}
+            <InfoCardSkeleton />
+
+            {/* FAQ Section Skeleton */}
+            <div className="mt-12">
+              <FAQSectionSkeleton />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -237,7 +375,7 @@ export default function RoleSelectionPage() {
                   >
                     {/* Image/Header Section */}
                     <div className={`relative h-48 ${role.imageBg} p-6`}>
-                      {/* Badge - Updated to use colorClass */}
+                      {/* Badge */}
                       {role.badge && (
                         <div
                           className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold ${colorClass.badgeBg} ${colorClass.badgeText} shadow-lg`}
@@ -248,10 +386,16 @@ export default function RoleSelectionPage() {
 
                       {/* Role Icon and Title */}
                       <div className="flex items-center gap-4">
-                        <div
-                          className={`p-3 rounded-xl bg-white/90 backdrop-blur-sm shadow-md border ${colorClass.border}/30`}
-                        >
-                          {role.icon}
+                        <div className="w-12 h-12 rounded-lg bg-emerald-50 border border-emerald-100 p-2.5">
+                          <img
+                            src={role.iconSrc}
+                            alt={`${role.title} icon`}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                            }}
+                          />
                         </div>
                         <div>
                           <h3 className="text-2xl font-bold text-card-foreground">
@@ -314,7 +458,7 @@ export default function RoleSelectionPage() {
                       <div className="border-t border-border my-6" />
 
                       {/* Bottom Section with Button */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center mt-4 justify-between">
                         <div className="flex items-center gap-2">
                           <Calendar className={`w-5 h-5 ${colorClass.text}`} />
                           <span className="text-sm font-medium text-card-foreground">
@@ -413,91 +557,102 @@ export default function RoleSelectionPage() {
               </motion.div>
             )}
 
-            {/* Enhanced Info Card */}
-  <div className="max-w-3xl mx-auto">
-    <div className="relative bg-gradient-to-br from-white to-gray-50 rounded-2xl border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-8 overflow-hidden">
-      
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/20 via-transparent to-blue-50/20" />
-      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl" />
-      
-      <div className="relative z-10">
-        <div className="flex flex-col md:flex-row items-start gap-8">
-          
-          {/* Icon Container with Enhanced Styling */}
-          <div className="relative flex-shrink-0">
-            <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-white to-gray-50 border-2 border-emerald-200/50 shadow-lg p-4 overflow-hidden">
-              {/* Background Pattern */}
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/20 to-blue-100/20" />
-              
-              {/* Icon with Shadow */}
-              <div className="relative w-full h-full flex items-center justify-center">
-                <div className="relative w-12 h-12 rounded-xl bg-white shadow-inner p-2.5">
-                  <img 
-                    src="/icons/google-map-icon.webp" 
-                    alt="Map icon"
-                    className="w-full h-full object-contain drop-shadow-sm"
-                  />
+            {/* Minimal Horizontal Info Card */}
+            <div className="max-w-3xl mx-auto">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-14 h-14 rounded-lg bg-emerald-50 border border-emerald-100 p-2.5">
+                      <img
+                        src="/icons/google-map-icon.webp"
+                        alt="Map"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-base font-semibold text-gray-900 mb-1">
+                      Flexible Role Switching
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      Start with one role, switch anytime. Your data stays safe
+                      when changing between farmer and landowner profiles.
+                    </p>
+                  </div>
                 </div>
               </div>
-              
-              {/* Decorative Corner */}
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-emerald-500/10 rounded-full blur-sm" />
             </div>
-            
-            {/* Animated Ring */}
-            <motion.div
-              animate={{
-                scale: [1, 1.1, 1],
-                opacity: [0.3, 0.5, 0.3],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="absolute -inset-3 rounded-full border border-emerald-300/30"
-            />
-          </div>
-          
-          {/* Content Section */}
-          <div className="flex-1">
-            {/* Header with Badge */}
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-medium text-emerald-700">Flexibility</span>
-              </div>
-              <h4 className="text-xl font-bold text-gray-900">
-                Manage Multiple Roles with Ease
-              </h4>
-            </div>
-            
-            {/* Description */}
-            <p className="text-gray-600 mb-6 leading-relaxed">
-              Start with one role and seamlessly switch between farmer and landowner profiles 
-              anytime. Many successful users leverage both roles to m aximize their agricultural 
-              opportunities while maintaining complete data separation and preferences.
-            </p>
-            
-            
-            {/* Additional Note */}
-            <div className="mt-6 pt-4 border-t border-gray-100">
-              <div className="flex items-start gap-2">
-                <div className="w-4 h-4 rounded bg-amber-50 border border-amber-100 flex items-center justify-center mt-0.5">
-                  <span className="text-xs font-bold text-amber-600">!</span>
+            <section className="mt-12">
+              <HowItWorks />
+            </section>
+            <section className="bg-[#f7f7f7] py-24">
+              <div className="mx-auto max-w-[1300px] px-6">
+                {/* Section Heading */}
+                <h2 className="text-[36px] font-semibold tracking-tight text-black mb-16">
+                  Connecting Farmers & Landowners Seamlessly
+                </h2>
+
+                <div className="grid lg:grid-cols-2 gap-16 items-center">
+                  {/* LEFT IMAGE */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -40 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6 }}
+                    viewport={{ once: true }}
+                    className="w-full"
+                  >
+                    <div className="relative w-full h-[420px] rounded-[32px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.12 p-6">
+                      {/* Fixed Image */}
+                      <img
+                        src="/rolecompare.png"
+                        alt="Farmer and Landowner Connection"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  </motion.div>
+
+                  {/* RIGHT CONTENT */}
+                  <motion.div
+                    initial={{ opacity: 0, x: 40 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6 }}
+                    viewport={{ once: true }}
+                  >
+                    <h3 className="text-[40px] font-semibold tracking-tight text-[#2c3328] mb-6 leading-tight">
+                      Built Around Trust, Access & Opportunity
+                    </h3>
+
+                    <p className="text-gray-700 text-[17px] leading-[1.7] max-w-xl mb-10">
+                      Fieldly bridges the gap between landowners and farmers
+                      through a verified digital ecosystem. Whether you&apos;re
+                      looking to lease unused agricultural land or searching for
+                      cultivable farmland, our platform ensures secure
+                      onboarding, transparent agreements, and streamlined
+                      financial access.
+                    </p>
+
+                    <p className="text-gray-600 text-[16px] leading-[1.7] max-w-xl mb-10">
+                      By simplifying land discovery and verification workflows,
+                      Fieldly empowers farmers to scale cultivation while
+                      helping landowners unlock the true potential of their
+                      assets.
+                    </p>
+
+                    <button className="group inline-flex items-center gap-3 bg-[#b7cf8a] text-black font-medium px-7 py-3.5 rounded-full shadow-md hover:shadow-lg transition-all">
+                      Choose Your Role
+                      <span className="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white group-hover:translate-x-1 transition">
+                        <ArrowUpRight size={16} />
+                      </span>
+                    </button>
+                  </motion.div>
                 </div>
-                <p className="text-sm text-gray-500">
-                  <span className="font-medium text-gray-600">Note:</span> Your existing connections, listings, and preferences remain intact when switching roles.
-                </p>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>  
+            </section>
+
+            {/* FAQ Section */}
+            <section className="mt-12">
+              <FAQSection />
+            </section>
           </motion.div>
         </motion.div>
       </div>
