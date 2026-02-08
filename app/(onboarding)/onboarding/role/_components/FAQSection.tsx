@@ -37,7 +37,7 @@ const FAQSection = () => {
   const [active, setActive] = useState<number | null>(null);
 
   return (
-    <section className="w-full bg-[#ffffff] py-20">
+    <section className="w-full  py-20">
       <div className="max-w-5xl mx-auto px-6 md:px-10">
         {/* Header */}
         <div className="mb-12">

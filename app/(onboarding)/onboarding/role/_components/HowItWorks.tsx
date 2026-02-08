@@ -31,7 +31,7 @@ const steps = [
 
 export default function HowItWorksSection() {
   return (
-    <section className="bg-[#fafafa] py-24">
+    <section className="py-24">
       <div className="mx-auto max-w-[1200px] px-6">
 
         {/* Heading */}

@@ -585,7 +585,7 @@ export default function RoleSelectionPage() {
             <section className="mt-12">
               <HowItWorks />
             </section>
-            <section className="bg-[#f7f7f7] py-24">
+            <section className="py-24">
               <div className="mx-auto max-w-[1300px] px-6">
                 {/* Section Heading */}
                 <h2 className="text-[36px] font-semibold tracking-tight text-black mb-16">
