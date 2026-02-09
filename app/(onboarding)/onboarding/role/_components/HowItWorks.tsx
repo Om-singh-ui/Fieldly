@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
 const steps = [
   {
@@ -29,69 +29,126 @@ const steps = [
   },
 ];
 
+const containerVariant: Variants = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.15,
+    },
+  },
+};
+
+const cardVariant: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 60,
+  },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.16, 1, 0.3, 1], // ✅ TS SAFE easing
+    },
+  },
+};
+
 export default function HowItWorksSection() {
   return (
-    <section className="py-24 bg-white">
+    <section className="relative py-28 bg-white overflow-hidden">
       <div className="mx-auto max-w-[1200px] px-6">
 
         {/* Heading */}
-        <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-14">
-          How It Works
-        </h2>
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{
+            duration: 0.6,
+            ease: [0.16, 1, 0.3, 1],
+          }}
+          className="mb-16"
+        >
+          <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 tracking-tight">
+            How It Works
+          </h2>
+        </motion.div>
 
-        {/* Grid */}
-        <div className="grid md:grid-cols-2 gap-10 justify-items-center">
+        {/* Steps Grid */}
+        <motion.div
+          variants={containerVariant}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-60px" }}
+          className="relative grid md:grid-cols-2 gap-12"
+        >
           {steps.map((step, index) => (
             <motion.div
               key={step.id}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              whileHover={{ y: -6 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.12 }}
-              className="
-                group
-                relative
-                w-full
-                max-w-[560px]
-                min-h-[220px]
-
-                rounded-[30px]
-                bg-white
-                px-10 py-12
-
-                border border-[#e8eddc]
-
-                shadow-[0_10px_30px_rgba(0,0,0,0.04)]
-                hover:shadow-[0_20px_60px_rgba(183,207,138,0.25)]
-
-                transition-all duration-500
-              "
+              variants={cardVariant}
+              whileHover={{
+                y: -10,
+                scale: 1.01,
+              }}
+              className="group relative"
             >
-              {/* Glow Border Effect */}
-              <div className="absolute inset-0 rounded-[30px] p-[1px] bg-gradient-to-tr from-[#b7cf8a]/50 via-transparent to-[#dbe6c2]/50 opacity-0 group-hover:opacity-100 transition duration-500 pointer-events-none">
-                <div className="w-full h-full rounded-[30px] bg-white" />
+              {/* Connector Line */}
+              {index < steps.length - 1 && (
+                <div className="hidden md:block absolute -right-6 top-1/2 w-12 h-[1px] bg-gradient-to-r from-[#c9d8a8] to-transparent" />
+              )}
+
+              {/* Card */}
+              <div
+                className="
+                  relative
+                  rounded-[28px]
+                  border border-[#edf2e4]
+                  bg-white
+                  px-10 py-12
+                  shadow-[0_8px_25px_rgba(0,0,0,0.04)]
+                  transition-all duration-500
+                  group-hover:shadow-[0_20px_60px_rgba(183,207,138,0.25)]
+                "
+              >
+                {/* Hover Glow */}
+                <div className="absolute inset-0 rounded-[28px] opacity-0 group-hover:opacity-100 transition duration-500 pointer-events-none bg-gradient-to-tr from-[#b7cf8a]/10 via-transparent to-transparent" />
+
+                {/* Step Badge */}
+                <motion.div
+                  whileHover={{ rotate: 8, scale: 1.05 }}
+                  className="
+                    absolute top-6 right-6
+                    flex items-center justify-center
+                    h-11 w-11
+                    rounded-full
+                    bg-[#b7cf8a]
+                    text-black
+                  "
+                >
+                  {step.id}
+                </motion.div>
+
+                {/* Title */}
+                <h3 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-4 leading-tight">
+                  {step.title}
+                </h3>
+
+                {/* Description */}
+                <p className="text-gray-600 leading-relaxed max-w-md">
+                  {step.description}
+                </p>
+
+                {/* Bottom Accent Animation */}
+                <motion.div
+                  initial={{ width: 0 }}
+                  whileHover={{ width: "100%" }}
+                  transition={{ duration: 0.4 }}
+                  className="h-[2px] mt-8 bg-gradient-to-r from-[#b7cf8a] to-transparent rounded-full"
+                />
               </div>
-
-              {/* Accent Background Glow */}
-              <div className="pointer-events-none absolute inset-0 rounded-[30px] bg-gradient-to-tr from-[#b7cf8a]/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition duration-500" />
-
-              {/* Step Number */}
-              <span className="absolute top-6 right-6 text-lg text-gray-400 font-medium">
-                {step.id}
-              </span>
-
-              {/* Content */}
-              <h3 className="text-3xl font-semibold text-black mb-4 relative">
-                {step.title}
-              </h3>
-
-              <p className="text-gray-600 leading-relaxed max-w-sm relative">
-                {step.description}
-              </p>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

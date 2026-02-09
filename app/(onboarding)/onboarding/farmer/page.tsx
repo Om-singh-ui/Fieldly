@@ -115,7 +115,7 @@ export default function FarmerOnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white py-12 px-4">
+    <div className="min-h-screen mt-14 py-12 px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

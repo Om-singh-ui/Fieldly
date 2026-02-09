@@ -755,7 +755,7 @@ export default function RoleSelectionPage() {
                       enabling landowners to maximize land value.
                     </p>
 
-                    <button className="group text-black inline-flex items-center gap-3 bg-[#b7cf8a] text-black font-medium px-7 py-3.5 rounded-full shadow-md hover:shadow-lg transition-all">
+                    <button className="group inline-flex items-center gap-3 bg-[#b7cf8a] text-black font-medium px-7 py-3.5 rounded-full shadow-md hover:shadow-lg transition-all">
                       Choose Your Role
                       <span className="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white group-hover:translate-x-1 transition">
                         <ArrowUpRight size={16} />
