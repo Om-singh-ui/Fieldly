@@ -31,7 +31,7 @@ const steps = [
 
 export default function HowItWorksSection() {
   return (
-    <section className="py-24">
+    <section className="py-24 bg-white">
       <div className="mx-auto max-w-[1200px] px-6">
 
         {/* Heading */}
@@ -40,12 +40,13 @@ export default function HowItWorksSection() {
         </h2>
 
         {/* Grid */}
-        <div className="grid md:grid-cols-2 gap-8 justify-items-center">
+        <div className="grid md:grid-cols-2 gap-10 justify-items-center">
           {steps.map((step, index) => (
             <motion.div
               key={step.id}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
+              whileHover={{ y: -6 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.12 }}
               className="
@@ -54,21 +55,29 @@ export default function HowItWorksSection() {
                 w-full
                 max-w-[560px]
                 min-h-[220px]
-                
-                rounded-[28px]
+
+                rounded-[30px]
                 bg-white
                 px-10 py-12
-                
-                border border-gray-900/2
-                
-                shadow-gray-900        
+
+                border border-[#e8eddc]
+
+                shadow-[0_10px_30px_rgba(0,0,0,0.04)]
+                hover:shadow-[0_20px_60px_rgba(183,207,138,0.25)]
+
+                transition-all duration-500
               "
             >
-              {/* Accent Gradient */}
-              <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-tr from-[#b7cf8a]/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition duration-500" />
+              {/* Glow Border Effect */}
+              <div className="absolute inset-0 rounded-[30px] p-[1px] bg-gradient-to-tr from-[#b7cf8a]/50 via-transparent to-[#dbe6c2]/50 opacity-0 group-hover:opacity-100 transition duration-500 pointer-events-none">
+                <div className="w-full h-full rounded-[30px] bg-white" />
+              </div>
+
+              {/* Accent Background Glow */}
+              <div className="pointer-events-none absolute inset-0 rounded-[30px] bg-gradient-to-tr from-[#b7cf8a]/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition duration-500" />
 
               {/* Step Number */}
-              <span className="absolute top-6 right-4 text-lg text-gray-400 font-medium">
+              <span className="absolute top-6 right-6 text-lg text-gray-400 font-medium">
                 {step.id}
               </span>
 
@@ -77,7 +86,7 @@ export default function HowItWorksSection() {
                 {step.title}
               </h3>
 
-              <p className="text-gray-900 leading-relaxed max-w-sm relative">
+              <p className="text-gray-600 leading-relaxed max-w-sm relative">
                 {step.description}
               </p>
             </motion.div>

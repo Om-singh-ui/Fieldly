@@ -4,7 +4,7 @@
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { setUserRole, getOrCreateUser } from "@/actions/onboarding.actions";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { CheckCircle, ArrowRight, Star, Calendar, Users } from "lucide-react";
 import HeroSection from "./_components/hero";
 import FAQSection from "./_components/FAQSection";
@@ -179,6 +179,25 @@ export default function RoleSelectionPage() {
         setSelectedRole(null);
       }
     });
+  };
+
+  const containerVariant: Variants = {
+    hidden: {},
+    show: {
+      transition: { staggerChildren: 0.18 },
+    },
+  };
+
+  const cardVariant: Variants = {
+    hidden: { opacity: 0, y: 40 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.55,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
   };
 
   // Define color mappings with proper typing
@@ -557,41 +576,144 @@ export default function RoleSelectionPage() {
               </motion.div>
             )}
 
-            {/* Minimal Horizontal Info Card */}
-            <div className="max-w-3xl mx-auto">
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-14 h-14 rounded-lg bg-emerald-50 border border-emerald-100 p-2.5">
-                      <img
-                        src="/icons/google-map-icon.webp"
-                        alt="Map"
-                        className="w-full h-full object-contain"
-                      />
+            <section className="mt-12 px-4 sm:px-6">
+              <motion.div
+                variants={containerVariant}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: "-80px" }}
+                className="space-y-4"
+              >
+                {/* ---------- Card 1 ---------- */}
+                <motion.div
+                  variants={cardVariant}
+                  whileHover={{ y: -6 }}
+                  className="group max-w-3xl mx-auto relative"
+                >
+                  <div className="relative bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all duration-300 group-hover:shadow-xl">
+                    {/* Glow Hover */}
+                    <div className="absolute -inset-[1px] rounded-xl  opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-100" />
+
+                    <div className="relative flex items-start gap-4">
+                      {/* Icon */}
+                      <motion.div
+                        whileHover={{ scale: 1.08, rotate: 2 }}
+                        transition={{ type: "spring", stiffness: 260 }}
+                        className="flex-shrink-0"
+                      >
+                        <div className="w-18 h-18 rounded-lg border border-emerald-100  p-2.5 shadow-sm">
+                          <img
+                            src="/icons/google-map-icon.webp"
+                            alt="Role switching"
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      </motion.div>
+
+                      {/* Content */}
+                      <div className="flex-1">
+                        <h4 className="text-base font-semibold text-gray-900 mb-1">
+                          Flexible Role Switching
+                        </h4>
+
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          Start with one role and switch anytime. Your data
+                          remains securely preserved while transitioning between
+                          farmer and landowner profiles.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex-1">
-                    <h4 className="text-base font-semibold text-gray-900 mb-1">
-                      Flexible Role Switching
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      Start with one role, switch anytime. Your data stays safe
-                      when changing between farmer and landowner profiles.
-                    </p>
+                </motion.div>
+
+                {/* ---------- Card 2 ---------- */}
+                <motion.div
+                  variants={cardVariant}
+                  whileHover={{ y: -6 }}
+                  className="group max-w-3xl mx-auto relative"
+                >
+                  <div className="relative bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all duration-300 group-hover:shadow-xl">
+                    {/* Glow Hover */}
+                    <div className="absolute -inset-[1px] rounded-xl opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-100" />
+
+                    <div className="relative flex items-start gap-4">
+                      {/* Icon */}
+                      <motion.div
+                        whileHover={{ scale: 1.08, rotate: -2 }}
+                        transition={{ type: "spring", stiffness: 260 }}
+                        className="flex-shrink-0"
+                      >
+                        <div className="w-18 h-18 rounded-lg border border-emerald-100  p-2.5 shadow-sm">
+                          <img
+                            src="/icon.png"
+                            alt="Verification"
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      </motion.div>
+
+                      {/* Content */}
+                      <div className="flex-1">
+                        <h4 className="text-base font-semibold text-gray-900 mb-1">
+                          Verified Profiles & Land Listings
+                        </h4>
+
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          Fieldly verifies users, land ownership, and legal
+                          documents to ensure safe and transparent agreements
+                          between farmers and landowners.
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
+                </motion.div>
+                {/* ---------- Card 3 ---------- */}
+                <motion.div
+                  variants={cardVariant}
+                  whileHover={{ y: -6 }}
+                  className="group max-w-3xl mx-auto relative"
+                >
+                  <div className="relative bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all duration-300 group-hover:shadow-xl">
+                    <div className="absolute -inset-[1px] rounded-xl opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-100" />
+
+                    <div className="relative flex items-start gap-4">
+                      {/* Icon */}
+                      <motion.div
+                        whileHover={{ scale: 1.08, rotate: 2 }}
+                        transition={{ type: "spring", stiffness: 260 }}
+                        className="flex-shrink-0"
+                      >
+                        <div className="w-18 h-18 rounded-lg border border-emerald-100 p-2.5 shadow-sm">
+                          <img
+                            src="/icons/sponsor-npci.png"
+                            alt="Secure Payments"
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      </motion.div>
+
+                      {/* Content */}
+                      <div className="flex-1">
+                        <h4 className="text-base font-semibold text-gray-900 mb-1">
+                          Secure Payments & Digital Agreements
+                        </h4>
+
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          Manage lease payments, contracts, and financial
+                          transactions through Fieldly’s secure digital system
+                          designed to protect both farmers and landowners.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            </section>
             <section className="mt-12">
               <HowItWorks />
             </section>
             <section className="py-24">
               <div className="mx-auto max-w-[1300px] px-6">
-                {/* Section Heading */}
-                <h2 className="text-[36px] font-semibold tracking-tight text-black mb-16">
-                  Connecting Farmers & Landowners Seamlessly
-                </h2>
-
                 <div className="grid lg:grid-cols-2 gap-16 items-center">
                   {/* LEFT IMAGE */}
                   <motion.div
@@ -601,8 +723,7 @@ export default function RoleSelectionPage() {
                     viewport={{ once: true }}
                     className="w-full"
                   >
-                    <div className="relative w-full h-[420px] rounded-[32px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.12 p-6">
-                      {/* Fixed Image */}
+                    <div className="relative w-full h-[420px] rounded-[32px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
                       <img
                         src="/rolecompare.png"
                         alt="Farmer and Landowner Connection"
@@ -619,26 +740,22 @@ export default function RoleSelectionPage() {
                     viewport={{ once: true }}
                   >
                     <h3 className="text-[40px] font-semibold tracking-tight text-[#2c3328] mb-6 leading-tight">
-                      Built Around Trust, Access & Opportunity
+                      Built Around Trust & Opportunity
                     </h3>
 
-                    <p className="text-gray-700 text-[17px] leading-[1.7] max-w-xl mb-10">
-                      Fieldly bridges the gap between landowners and farmers
-                      through a verified digital ecosystem. Whether you&apos;re
-                      looking to lease unused agricultural land or searching for
-                      cultivable farmland, our platform ensures secure
-                      onboarding, transparent agreements, and streamlined
-                      financial access.
+                    <p className="text-gray-700 text-[17px] leading-[1.7] max-w-xl mb-8">
+                      Fieldly connects verified landowners with farmers through
+                      a secure digital ecosystem for land leasing, discovery,
+                      and collaboration.
                     </p>
 
                     <p className="text-gray-600 text-[16px] leading-[1.7] max-w-xl mb-10">
-                      By simplifying land discovery and verification workflows,
-                      Fieldly empowers farmers to scale cultivation while
-                      helping landowners unlock the true potential of their
-                      assets.
+                      We simplify verification, agreements, and access to
+                      opportunities — helping farmers expand cultivation while
+                      enabling landowners to maximize land value.
                     </p>
 
-                    <button className="group inline-flex items-center gap-3 bg-[#b7cf8a] text-black font-medium px-7 py-3.5 rounded-full shadow-md hover:shadow-lg transition-all">
+                    <button className="group text-black inline-flex items-center gap-3 bg-[#b7cf8a] text-black font-medium px-7 py-3.5 rounded-full shadow-md hover:shadow-lg transition-all">
                       Choose Your Role
                       <span className="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white group-hover:translate-x-1 transition">
                         <ArrowUpRight size={16} />
