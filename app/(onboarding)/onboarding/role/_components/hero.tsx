@@ -29,10 +29,6 @@ export default function HeroSection() {
         >
           {/* Soft Depth Glow (Permanent, Not Hover Based) */}
           <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-br from-gray-200/20 via-transparent to-gray-300/10" />
-
-          {/* Optional Premium Grain Texture */}
-          <div className="pointer-events-none absolute inset-0 rounded-[28px] opacity-[0.03] bg-[url('/noise.png')]" />
-
           <h1 className="relative max-w-3xl text-2xl sm:text-3xl md:text-4xl lg:text-[44px] font-semibold leading-tight tracking-tight text-zinc-900">
             Start Your Agricultural
             <br />
