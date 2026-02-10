@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌾 Fieldly 🔥🔥
 
-## Getting Started
+Digital Farmland Leasing & Agricultural Finance Platform  
+Connecting verified landowners and farmers through secure onboarding, intelligent matching, and automated leasing infrastructure.
 
-First, run the development server:
+<img width="1861" height="749" alt="Screenshot 2026-02-10 085554" src="https://github.com/user-attachments/assets/900d2074-5a55-4245-a332-267279f09737" />
+<img width="1876" height="829" alt="Screenshot 2026-02-10 085631" src="https://github.com/user-attachments/assets/01c656df-a75e-46cf-8750-584ac8d3615e" />
+
+
+
+⚡ Installation & Setup
 
 ```bash
+# Clone the repository
+git clone https://github.com/Om-singh-ui/Fieldly.git
+
+# Navigate to the project directory
+cd Fieldly
+
+# Install dependencies
+pnpm install
+
+# Setup environment variables
+cp .env.example .env
+
+# Run the development server
 npm run dev
-# or
-yarn dev
-# or
+
+# Generate Prisma client
+pnpm prisma generate
+
+# Run development server
 pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
