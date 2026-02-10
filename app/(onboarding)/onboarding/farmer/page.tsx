@@ -2,638 +2,249 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { 
-  farmerOnboardingSchema, 
-  type FarmerOnboardingInput 
-} from "@/lib/validations/onboarding";
-import { completeFarmerOnboarding } from "@/actions/onboarding.actions";
-import { motion } from "framer-motion";
-import { 
-  Leaf, 
-  Calendar, 
-  MapPin, 
-  Crop, 
-  Award, 
+import { useForm, type FieldPath } from "react-hook-form";
+import { motion, AnimatePresence } from "framer-motion";
+
+import {
+  User,
+  Wheat,
+  MapPin,
   Droplets,
-  Tractor,
   CheckCircle,
-  User
+  ChevronRight,
+  AlertCircle,
 } from "lucide-react";
 
-const CROPS = [
-  "Wheat", "Rice", "Maize", "Sugarcane", "Cotton", "Soybean",
-  "Pulses", "Oilseeds", "Vegetables", "Fruits", "Spices", "Flowers",
-  "Tea", "Coffee", "Rubber", "Jute", "Tobacco", "Medicinal Plants"
-];
+import { completeFarmerOnboarding } from "@/actions/onboarding.actions";
 
-const FARMING_TYPES = [
-  { value: "SUBSISTENCE", label: "Subsistence Farming", desc: "Growing food for family consumption" },
-  { value: "COMMERCIAL", label: "Commercial Farming", desc: "Large-scale farming for profit" },
-  { value: "ORGANIC", label: "Organic Farming", desc: "Chemical-free, sustainable practices" },
-  { value: "MIXED", label: "Mixed Farming", desc: "Combination of crops and livestock" },
+import { ProgressStepper } from "./_components/ProgressStepper";
+import { BasicInfoForm } from "./_components/BasicInfoForm";
+import { FarmingDetailsForm } from "./_components/FarmingDetailsForm";
+import { LandRequirementsForm } from "./_components/LandRequirementsForm";
+import { InfrastructureForm } from "./_components/InfrastructureForm";
+import { SuccessScreen } from "./_components/SuccessScreen";
+
+import type { FarmerOnboardingInput } from "./types";
+
+const STEPS = [
+  {
+    title: "Basic Info",
+    icon: User, 
+    image: "/onboarding/user-man-account-person.png",
+  },
+  {
+    title: "Farming Details",
+    icon: Wheat,
+    image: "/onboarding/wheaticon.png",
+  },
+  {
+    title: "Land Needs",
+    icon: MapPin,
+    image: "/onboarding/landreq.png",
+  },
+  {
+    title: "Infrastructure",
+    icon: Droplets,
+    image: "/onboarding/waterirrigation.png",
+  },
+  {
+    title: "Complete",
+    icon: CheckCircle,
+    image: "/onboarding/5290058.png",
+  },
 ];
 
 export default function FarmerOnboardingPage() {
   const router = useRouter();
+
+  const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    getValues,
-    formState: { errors },
-  } = useForm<FarmerOnboardingInput>({
-    resolver: zodResolver(farmerOnboardingSchema),
+  const form = useForm<FarmerOnboardingInput>({
     defaultValues: {
-      primaryCrops: [],
-      farmingExperience: 0,
-      farmingType: "COMMERCIAL",
-      requiredLandSize: 1,
-      leaseDuration: 12,
       phone: "",
       state: "",
       district: "",
       bio: "",
-      irrigationNeeded: false,
+      primaryCrops: [],
+      farmingExperience: 5,
+      farmingType: "COMMERCIAL",
+      requiredLandSize: 5,
+      leaseDuration: 36,
+      irrigationNeeded: true,
       equipmentAccess: false,
     },
+    mode: "onChange",
   });
 
-  const selectedCrops = watch("primaryCrops");
-  const landSize = watch("requiredLandSize");
-  const leaseDuration = watch("leaseDuration");
-  const farmingExperience = watch("farmingExperience");
-  
-  // Get current values for boolean fields
-  const irrigationNeeded = getValues("irrigationNeeded");
-  const equipmentAccess = getValues("equipmentAccess");
-
-  const toggleCrop = (crop: string) => {
-    const newCrops = selectedCrops.includes(crop)
-      ? selectedCrops.filter((c: string) => c !== crop)
-      : [...selectedCrops, crop];
-    setValue("primaryCrops", newCrops);
+  const STEP_FIELDS: Record<
+    number,
+    readonly FieldPath<FarmerOnboardingInput>[]
+  > = {
+    0: ["phone", "state", "district"],
+    1: ["primaryCrops", "farmingExperience", "farmingType"],
+    2: ["requiredLandSize", "leaseDuration"],
+    3: ["irrigationNeeded", "equipmentAccess"],
   };
 
-  const onSubmit = async (data: FarmerOnboardingInput) => {
+  const handleNextStep = async () => {
+    const fields = STEP_FIELDS[currentStep] ?? [];
+    const isValid = await form.trigger(fields);
+
+    if (!isValid) return;
+
+    setError(null);
+    setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
+  };
+
+  const handlePrevStep = () => {
+    setError(null);
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  };
+
+  const handleStepClick = (step: number) => {
+    if (step <= currentStep) {
+      setCurrentStep(step);
+      setError(null);
+    }
+  };
+
+  const handleSubmitForm = async (data: FarmerOnboardingInput) => {
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // Convert numeric fields to strings and ensure bio is included
-      const formDataForAction = {
+      await completeFarmerOnboarding({
         ...data,
-        farmingExperience: data.farmingExperience.toString(),
-        requiredLandSize: data.requiredLandSize.toString(),
-        leaseDuration: data.leaseDuration.toString(),
-        bio: data.bio || "", // Ensure bio is included even if empty
-      };
-      
-      console.log("Submitting form data:", formDataForAction); // Debug log
-      
-      await completeFarmerOnboarding(formDataForAction);
-      // AUTOMATIC REDIRECT after successful onboarding
-      router.push("/post-auth");
+        farmingExperience: String(data.farmingExperience),
+        requiredLandSize: String(data.requiredLandSize),
+        leaseDuration: String(data.leaseDuration),
+        bio: data.bio ?? "",
+      });
+
+      setCurrentStep(4);
+
+      setTimeout(() => {
+        router.push("/post-auth");
+      }, 2500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle range inputs properly
-  const handleRangeChange = (field: keyof FarmerOnboardingInput, value: string) => {
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue)) {
-      setValue(field, numValue);
+  const renderStep = () => {
+    switch (currentStep) {
+      case 0:
+        return <BasicInfoForm form={form} />;
+      case 1:
+        return <FarmingDetailsForm form={form} />;
+      case 2:
+        return <LandRequirementsForm form={form} />;
+      case 3:
+        return <InfrastructureForm form={form} />;
+      case 4:
+        return <SuccessScreen onContinue={() => router.push("/post-auth")} />;
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="min-h-screen mt-14 py-12 px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto"
-      >
+    <div className="min-h-screen bg-gradient-to-b mt-18 py-10 px-4">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
-            <Leaf className="h-10 w-10 text-green-600" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
             Complete Your Farmer Profile
           </h1>
-          <p className="text-gray-600">
-            Tell us about your farming needs to find the perfect land match
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Tell us about your farming needs to get matched with the perfect
+            land
           </p>
-          <div className="mt-6 w-48 h-2 bg-gray-200 rounded-full mx-auto overflow-hidden">
-            <motion.div 
-              className="h-full bg-green-500"
-              initial={{ width: "0%" }}
-              animate={{ width: "100%" }}
-              transition={{ duration: 0.5 }}
-            />
-          </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          {/* Section 1: Basic Information */}
+        {/* Stepper */}
+        <ProgressStepper
+          currentStep={currentStep}
+          steps={STEPS}
+          onStepClick={handleStepClick}
+        />
+
+        {/* Step Content */}
+        <AnimatePresence mode="wait">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <User className="h-5 w-5 text-blue-600" />
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Basic Information
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number *
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500">+91</span>
-                  </div>
-                  <input
-                    type="tel"
-                    {...register("phone")}
-                    className="pl-14 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="9876543210"
-                    maxLength={10}
-                  />
-                </div>
-                {errors.phone && (
-                  <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  State *
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <MapPin className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    {...register("state")}
-                    className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Maharashtra"
-                  />
-                </div>
-                {errors.state && (
-                  <p className="mt-1 text-sm text-red-600">{errors.state.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  District *
-                </label>
-                <input
-                  type="text"
-                  {...register("district")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Pune"
-                />
-                {errors.district && (
-                  <p className="mt-1 text-sm text-red-600">{errors.district.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bio (Optional)
-                </label>
-                <textarea
-                  {...register("bio")}
-                  rows={2}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Tell us about your farming journey..."
-                />
-                {errors.bio && (
-                  <p className="mt-1 text-sm text-red-600">{errors.bio.message}</p>
-                )}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Section 2: Farming Expertise */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Crop className="h-5 w-5 text-green-600" />
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Farming Expertise
-              </h2>
-            </div>
-
-            <div className="space-y-6">
-              {/* Primary Crops */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  What crops do you specialize in? *
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {CROPS.map((crop) => (
-                    <button
-                      key={crop}
-                      type="button"
-                      onClick={() => toggleCrop(crop)}
-                      className={`
-                        px-4 py-3 rounded-lg border transition-all duration-200 text-sm
-                        ${selectedCrops.includes(crop)
-                          ? "bg-green-50 border-green-500 text-green-700"
-                          : "bg-gray-50 border-gray-200 hover:border-green-300"
-                        }
-                      `}
-                    >
-                      {crop}
-                    </button>
-                  ))}
-                </div>
-                {errors.primaryCrops && (
-                  <p className="mt-2 text-sm text-red-600">{errors.primaryCrops.message}</p>
-                )}
-                <p className="mt-2 text-sm text-gray-500">
-                  Selected: {selectedCrops.length} crop{selectedCrops.length !== 1 ? 's' : ''}
-                </p>
-              </div>
-
-              {/* Farming Experience */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Years of Farming Experience *
-                </label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min="0"
-                    max="60"
-                    step="1"
-                    value={farmingExperience}
-                    onChange={(e) => handleRangeChange("farmingExperience", e.target.value)}
-                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  />
-                  <div className="w-24 text-center">
-                    <span className="text-2xl font-bold text-green-600">
-                      {farmingExperience}
-                    </span>
-                    <span className="text-sm text-gray-500 ml-1">years</span>
-                  </div>
-                </div>
-                {errors.farmingExperience && (
-                  <p className="mt-1 text-sm text-red-600">{errors.farmingExperience.message}</p>
-                )}
-              </div>
-
-              {/* Farming Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  What type of farming do you practice? *
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {FARMING_TYPES.map((type) => (
-                    <label
-                      key={type.value}
-                      className={`
-                        p-4 rounded-lg border-2 cursor-pointer transition-all duration-200
-                        ${watch("farmingType") === type.value
-                          ? "border-green-500 bg-green-50"
-                          : "border-gray-200 hover:border-green-300"
-                        }
-                      `}
-                    >
-                      <input
-                        type="radio"
-                        {...register("farmingType")}
-                        value={type.value}
-                        className="sr-only"
-                      />
-                      <div className="flex items-start gap-3">
-                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center mt-0.5 ${
-                          watch("farmingType") === type.value
-                            ? "border-green-500 bg-green-500"
-                            : "border-gray-400"
-                        }`}>
-                          {watch("farmingType") === type.value && (
-                            <div className="w-2 h-2 rounded-full bg-white"></div>
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">{type.label}</div>
-                          <div className="text-sm text-gray-600 mt-1">{type.desc}</div>
-                        </div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Section 3: Land Requirements */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Award className="h-5 w-5 text-purple-600" />
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Land Requirements
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Land Size */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Required Land Size (acres) *
-                  </label>
-                  <span className="text-2xl font-bold text-purple-600">
-                    {landSize} acres
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1000"
-                  step="0.1"
-                  value={landSize}
-                  onChange={(e) => handleRangeChange("requiredLandSize", e.target.value)}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-                <div className="flex justify-between text-sm text-gray-500 mt-2">
-                  <span>0.1 acre</span>
-                  <span>1000 acres</span>
-                </div>
-                {errors.requiredLandSize && (
-                  <p className="mt-1 text-sm text-red-600">{errors.requiredLandSize.message}</p>
-                )}
-              </div>
-
-              {/* Lease Duration */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Preferred Lease Duration (months) *
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-purple-600" />
-                    <span className="text-2xl font-bold text-purple-600">
-                      {leaseDuration} months
-                    </span>
-                  </div>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="120"
-                  step="1"
-                  value={leaseDuration}
-                  onChange={(e) => handleRangeChange("leaseDuration", e.target.value)}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-                <div className="flex justify-between text-sm text-gray-500 mt-2">
-                  <span>1 month</span>
-                  <span>10 years</span>
-                </div>
-                {errors.leaseDuration && (
-                  <p className="mt-1 text-sm text-red-600">{errors.leaseDuration.message}</p>
-                )}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Section 4: Infrastructure Needs */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Droplets className="h-5 w-5 text-orange-600" />
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Infrastructure & Equipment Needs
-              </h2>
-            </div>
-
-            <div className="space-y-6">
-              {/* Irrigation Needs */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-4">
-                  Do you need irrigation facilities on the land? *
-                </label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={irrigationNeeded === true}
-                      onChange={() => setValue("irrigationNeeded", true)}
-                      className="sr-only"
-                    />
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      irrigationNeeded === true
-                        ? "border-green-500 bg-green-500"
-                        : "border-gray-300"
-                    }`}>
-                      {irrigationNeeded === true && (
-                        <CheckCircle className="h-4 w-4 text-white" />
-                      )}
-                    </div>
-                    <span className="text-gray-700">Yes, I need irrigation</span>
-                  </label>
-                  
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={irrigationNeeded === false}
-                      onChange={() => setValue("irrigationNeeded", false)}
-                      className="sr-only"
-                    />
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      irrigationNeeded === false
-                        ? "border-green-500 bg-green-500"
-                        : "border-gray-300"
-                    }`}>
-                      {irrigationNeeded === false && (
-                        <CheckCircle className="h-4 w-4 text-white" />
-                      )}
-                    </div>
-                    <span className="text-gray-700">No, I have my own irrigation</span>
-                  </label>
-                </div>
-                {errors.irrigationNeeded && (
-                  <p className="mt-2 text-sm text-red-600">{errors.irrigationNeeded.message}</p>
-                )}
-              </div>
-
-              {/* Equipment Access */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-4">
-                  Do you have access to farming equipment? *
-                </label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={equipmentAccess === true}
-                      onChange={() => setValue("equipmentAccess", true)}
-                      className="sr-only"
-                    />
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      equipmentAccess === true
-                        ? "border-green-500 bg-green-500"
-                        : "border-gray-300"
-                    }`}>
-                      {equipmentAccess === true && (
-                        <Tractor className="h-4 w-4 text-white" />
-                      )}
-                    </div>
-                    <span className="text-gray-700">Yes, I have equipment</span>
-                  </label>
-                  
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={equipmentAccess === false}
-                      onChange={() => setValue("equipmentAccess", false)}
-                      className="sr-only"
-                    />
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      equipmentAccess === false
-                        ? "border-green-500 bg-green-500"
-                        : "border-gray-300"
-                    }`}>
-                      {equipmentAccess === false && (
-                        <Tractor className="h-4 w-4 text-white" />
-                      )}
-                    </div>
-                    <span className="text-gray-700">No, I need equipment access</span>
-                  </label>
-                </div>
-                {errors.equipmentAccess && (
-                  <p className="mt-2 text-sm text-red-600">{errors.equipmentAccess.message}</p>
-                )}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Benefits Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            key={currentStep}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-8 border border-green-100"
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-3xl shadow-xl border border-gray-200 p-6 md:p-8 mb-8"
           >
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Benefits you&apos;ll get as a Fieldly Farmer:
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-4 bg-white/50 rounded-lg">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <MapPin className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <div className="font-medium text-gray-900">Land Matching</div>
-                  <div className="text-sm text-gray-600">Find land that matches your crop needs</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-white/50 rounded-lg">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Calendar className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <div className="font-medium text-gray-900">Lease Support</div>
-                  <div className="text-sm text-gray-600">Legal agreements & documentation</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-white/50 rounded-lg">
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Droplets className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <div className="font-medium text-gray-900">Soil Monitoring</div>
-                  <div className="text-sm text-gray-600">AI-powered soil health reports</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-white/50 rounded-lg">
-                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                  <Award className="h-5 w-5 text-orange-600" />
-                </div>
-                <div>
-                  <div className="font-medium text-gray-900">Financial Support</div>
-                  <div className="text-sm text-gray-600">Access to loans & subsidies</div>
-                </div>
-              </div>
+            {renderStep()}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Error */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl"
+          >
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <span className="text-red-600 font-medium">{error}</span>
             </div>
           </motion.div>
+        )}
 
-          {/* Submit Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="text-center"
-          >
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-red-600">{error}</p>
-              </div>
-            )}
-
+        {/* Navigation */}
+        {currentStep < 4 && (
+          <div className="flex justify-between items-center">
             <button
-              type="submit"
-              disabled={isSubmitting}
-              className="inline-flex items-center gap-3 px-8 py-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl text-lg"
+              type="button"
+              onClick={handlePrevStep}
+              disabled={currentStep === 0}
+              className={`px-6 py-3 rounded-xl font-medium flex items-center gap-2 ${
+                currentStep === 0
+                  ? "opacity-0"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
             >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                  Setting up your farm profile...
-                </>
-              ) : (
-                <>
-                  <Leaf className="h-6 w-6" />
-                  Complete Farmer Onboarding
-                </>
-              )}
+              <ChevronRight className="rotate-180 h-5 w-5" />
+              Back
             </button>
 
-            <p className="mt-4 text-sm text-gray-500">
-              After submission, you&apos;ll be automatically redirected to your farmer dashboard
-            </p>
-          </motion.div>
-        </form>
-      </motion.div>
+            {currentStep < 3 ? (
+              <button
+                type="button"
+                onClick={handleNextStep}
+                className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold rounded-xl flex items-center gap-2 hover:scale-[1.02]"
+              >
+                Continue
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={form.handleSubmit(handleSubmitForm)}
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold rounded-xl flex items-center gap-2 disabled:opacity-50"
+              >
+                {isSubmitting ? "Creating Profile..." : "Complete Profile"}
+                <CheckCircle className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
