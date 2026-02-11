@@ -58,7 +58,7 @@ export default async function FarmerDashboardPage() {
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-6 mt-16">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
