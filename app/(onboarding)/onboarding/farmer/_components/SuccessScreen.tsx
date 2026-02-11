@@ -1,6 +1,13 @@
 "use client";
 
-import { CheckCircle, ArrowRight, Shield, TrendingUp, Award, Users } from "lucide-react";
+import {
+  CheckCircle,
+  ArrowRight,
+  Shield,
+  TrendingUp,
+  Award,
+  Users,
+} from "lucide-react";
 import { motion } from "framer-motion";
 
 interface SuccessScreenProps {
@@ -12,113 +19,126 @@ export function SuccessScreen({ onContinue }: SuccessScreenProps) {
     {
       icon: Shield,
       title: "Profile Verified",
-      description: "Your profile is now verified and active"
+      description: "Your farmer profile is now active and verified.",
     },
     {
       icon: TrendingUp,
-      title: "Smart Matching",
-      description: "Finding lands that match your criteria"
+      title: "Smart Matching Enabled",
+      description: "We are identifying land opportunities suited to you.",
     },
     {
       icon: Award,
-      title: "Access Granted",
-      description: "Unlocked premium farming resources"
+      title: "Access Unlocked",
+      description: "Premium resources and verified listings are available.",
     },
     {
       icon: Users,
-      title: "Community",
-      description: "Join our network of verified farmers"
-    }
+      title: "Farmer Network",
+      description: "You are now part of our verified farmer ecosystem.",
+    },
   ];
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="py-12"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      className="py-12 space-y-12"
     >
-      {/* Success Animation */}
-      <div className="relative mb-8">
-        <div className="w-32 h-32 bg-gradient-to-br from-emerald-500 to-green-500 rounded-3xl flex items-center justify-center mx-auto">
-          <CheckCircle className="h-16 w-16 text-white" />
+      {/* Success Indicator */}
+      <div className="text-center">
+        <div className="mx-auto w-20 h-20 rounded-2xl bg-[#b7cf8a]/20 flex items-center justify-center mb-6">
+          <CheckCircle className="h-10 w-10 text-[#6c8f3f]" />
         </div>
-        
-        {/* Animated Rings */}
-        <motion.div
-          className="absolute inset-0 rounded-3xl border-4 border-emerald-300"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1.2, opacity: 0 }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        />
-      </div>
 
-      {/* Success Message */}
-      <div className="text-center mb-10">
-        <h2 className="text-3xl font-bold text-gray-900 mb-3">
-          Profile Complete! 🎉
+        <h2 className="text-2xl font-semibold text-gray-900">
+          Profile Completed
         </h2>
-        <p className="text-gray-600 text-lg max-w-md mx-auto mb-6">
-          Your farmer profile has been successfully created and is now active.
+
+        <p className="text-gray-500 mt-2 max-w-md mx-auto">
+          Your onboarding is complete. We are preparing personalized farmland
+          matches for you.
         </p>
-        
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-full mb-8">
-          <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-          <span className="text-emerald-700 font-medium">Processing your matches...</span>
+      </div>
+
+      {/* Status Badge */}
+      <div className="flex justify-center">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#b7cf8a]/40 bg-[#b7cf8a]/10">
+          <span className="w-2 h-2 rounded-full bg-[#6c8f3f] animate-pulse" />
+          <span className="text-sm font-medium text-[#5f7e37]">
+            Matching lands based on your profile
+          </span>
         </div>
       </div>
 
-      {/* Benefits Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+      {/* Benefits */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {benefits.map((benefit, index) => (
           <motion.div
             key={benefit.title}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm"
+            transition={{ delay: index * 0.08 }}
+            className="border border-gray-200 rounded-xl p-5 bg-white"
           >
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-50 to-green-100 flex items-center justify-center mb-4">
-              <benefit.icon className="h-6 w-6 text-emerald-600" />
+            <div className="w-10 h-10 rounded-lg bg-[#b7cf8a]/20 flex items-center justify-center mb-3">
+              <benefit.icon className="h-5 w-5 text-[#6c8f3f]" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">{benefit.title}</h3>
-            <p className="text-sm text-gray-600">{benefit.description}</p>
+
+            <h3 className="font-medium text-gray-900">
+              {benefit.title}
+            </h3>
+
+            <p className="text-sm text-gray-500 mt-1">
+              {benefit.description}
+            </p>
           </motion.div>
         ))}
       </div>
 
       {/* Next Steps */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 max-w-2xl mx-auto mb-10">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-          What&apos;s Next?
+      <div className="max-w-xl mx-auto border border-gray-200 rounded-xl p-6">
+        <h3 className="font-medium text-gray-900 mb-4 text-center">
+          What Happens Next
         </h3>
+
         <div className="space-y-3">
           {[
-            "Land matching algorithm is finding suitable properties",
-            "Verification team will review your profile (24-48 hours)",
-            "You'll receive curated land recommendations",
-            "Schedule site visits with landowners"
+            "Land matching algorithm processes your requirements",
+            "Verification team reviews your profile",
+            "You receive curated land recommendations",
+            "You can connect with landowners and schedule visits",
           ].map((step, index) => (
-            <div key={step} className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-semibold text-blue-600">{index + 1}</span>
+            <div key={step} className="flex gap-3">
+              <div className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center text-xs font-medium text-gray-600">
+                {index + 1}
               </div>
-              <span className="text-gray-700">{step}</span>
+
+              <span className="text-sm text-gray-600">
+                {step}
+              </span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Continue Button */}
+      {/* Continue */}
       <div className="text-center">
         <button
           onClick={onContinue}
-          className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] group"
+          className="
+            inline-flex items-center gap-2 px-6 py-2.5 rounded-lg
+            bg-[#b7cf8a] text-[#2f3d1c] font-medium
+            hover:bg-[#a9c57a]
+            transition-colors duration-200
+          "
         >
           Continue to Dashboard
-          <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+          <ArrowRight className="h-4 w-4" />
         </button>
-        <p className="text-sm text-gray-500 mt-4">
-          You&apos;ll be redirected to your farmer dashboard
+
+        <p className="text-xs text-gray-400 mt-3">
+          You can update your profile anytime from your dashboard.
         </p>
       </div>
     </motion.div>

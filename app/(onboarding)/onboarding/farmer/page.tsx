@@ -29,7 +29,7 @@ import type { FarmerOnboardingInput } from "./types";
 const STEPS = [
   {
     title: "Basic Info",
-    icon: User, 
+    icon: User,
     image: "/onboarding/user-man-account-person.png",
   },
   {
@@ -207,39 +207,56 @@ export default function FarmerOnboardingPage() {
 
         {/* Navigation */}
         {currentStep < 4 && (
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center pt-6">
+            {/* Back Button */}
             <button
               type="button"
               onClick={handlePrevStep}
               disabled={currentStep === 0}
-              className={`px-6 py-3 rounded-xl font-medium flex items-center gap-2 ${
-                currentStep === 0
-                  ? "opacity-0"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
+              className={`
+        px-5 py-2.5 rounded-lg font-medium flex items-center gap-2
+        transition-colors duration-200
+        ${
+          currentStep === 0
+            ? "opacity-0 pointer-events-none"
+            : "text-gray-700 hover:bg-gray-100"
+        }
+      `}
             >
-              <ChevronRight className="rotate-180 h-5 w-5" />
+              <ChevronRight className="rotate-180 h-4 w-4" />
               Back
             </button>
 
+            {/* Primary Action */}
             {currentStep < 3 ? (
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold rounded-xl flex items-center gap-2 hover:scale-[1.02]"
+                className="
+          px-6 py-2.5 rounded-lg font-medium flex items-center gap-2
+          bg-[#b7cf8a] text-[#2f3d1c]
+          hover:bg-[#a9c57a]
+          transition-colors duration-200
+        "
               >
                 Continue
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-4 w-4" />
               </button>
             ) : (
               <button
                 type="button"
                 onClick={form.handleSubmit(handleSubmitForm)}
                 disabled={isSubmitting}
-                className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold rounded-xl flex items-center gap-2 disabled:opacity-50"
+                className="
+          px-6 py-2.5 rounded-lg font-medium flex items-center gap-2
+          bg-[#b7cf8a] text-[#2f3d1c]
+          hover:bg-[#a9c57a]
+          transition-colors duration-200
+          disabled:opacity-50 disabled:cursor-not-allowed
+        "
               >
                 {isSubmitting ? "Creating Profile..." : "Complete Profile"}
-                <CheckCircle className="h-5 w-5" />
+                <CheckCircle className="h-4 w-4" />
               </button>
             )}
           </div>

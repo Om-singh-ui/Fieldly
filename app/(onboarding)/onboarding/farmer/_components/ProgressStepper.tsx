@@ -30,7 +30,7 @@ export function ProgressStepper({
         transition={{ type: "spring", stiffness: 200, damping: 18 }}
         className="
     relative rounded-full p-[2px]
-    shadow-[0_10px_30px_-5px_#b7cf8a80]
+shadow-[0_18px_45px_-12px_rgba(0,0,0,0.22)]
     transition-all duration-300
   "
       >

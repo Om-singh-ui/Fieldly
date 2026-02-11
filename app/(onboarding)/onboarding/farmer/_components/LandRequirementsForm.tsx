@@ -1,61 +1,87 @@
 "use client";
 
-import { MapPin, Calendar, AlertCircle, Check } from "lucide-react";
+import { Calendar, AlertCircle, Check } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { FarmerOnboardingInput } from "@/lib/validations/onboarding";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 interface LandRequirementsFormProps {
   form: UseFormReturn<FarmerOnboardingInput>;
 }
 
 export function LandRequirementsForm({ form }: LandRequirementsFormProps) {
-  const {watch, setValue, formState: { errors } } = form;
-  const landSize = watch("requiredLandSize");
-  const leaseDuration = watch("leaseDuration");
+  const {
+    watch,
+    setValue,
+    formState: { errors },
+  } = form;
+
+  const landSize = watch("requiredLandSize") || 1;
+  const leaseDuration = watch("leaseDuration") || 12;
 
   const landSizePresets = [1, 5, 10, 20, 50];
+
   const leasePresets = [
-    { months: 12, label: '1 Year' },
-    { months: 36, label: '3 Years' },
-    { months: 60, label: '5 Years' },
-    { months: 120, label: '10 Years' },
+    { months: 12, label: "1 Year" },
+    { months: 36, label: "3 Years" },
+    { months: 60, label: "5 Years" },
+    { months: 120, label: "10 Years" },
   ];
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="space-y-8"
+      initial={{ opacity: 0, y: 25 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -25 }}
+      transition={{ duration: 0.35 }}
+      className="space-y-10"
     >
       {/* Header */}
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-2xl mb-5">
-          <MapPin className="h-9 w-9 text-purple-600" />
-        </div>
+        <motion.div
+          initial={{ scale: 0.85, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="inline-flex items-center justify-center w-20 h-20  rounded-2xl shadow-sm mb-5"
+        >
+          <Image
+            src="/onboarding/landreq.png"
+            alt="Farming Icon"
+            width={36}
+            height={36}
+            className="object-contain"
+          />
+        </motion.div>
+
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
           Land Requirements
         </h2>
-        <p className="text-gray-600 max-w-md mx-auto">
-          Specify the land size and lease duration you need
+
+        <p className="text-gray-600 text-sm max-w-md mx-auto">
+          Specify your preferred land size and leasing duration.
         </p>
       </div>
 
       {/* Land Size Card */}
-      <div className="bg-gradient-to-br from-white to-purple-50 rounded-2xl p-6 border border-gray-200">
-        <div className="flex items-center justify-between mb-8">
+      <div className="rounded-2xl border border-[#b7cf8a]/40 bg-[#b7cf8a]/10 p-6">
+        <div className="flex justify-between items-center mb-8">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Land Size Needed</h3>
-            <p className="text-sm text-gray-600 mt-1">Minimum cultivable area required</p>
+            <h3 className="font-semibold text-gray-900 text-lg">
+              Land Size Needed
+            </h3>
+            <p className="text-sm text-gray-600">
+              Minimum cultivable area required
+            </p>
           </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold text-purple-600">{landSize}</div>
-            <div className="text-sm text-gray-500">acres</div>
+
+          <div className="text-right">
+            <div className="text-4xl font-bold text-[#5f7e37]">{landSize}</div>
+            <div className="text-xs text-gray-500">Acres</div>
           </div>
         </div>
 
-        {/* Range Slider */}
+        {/* Slider */}
         <div className="mb-8">
           <input
             type="range"
@@ -63,34 +89,53 @@ export function LandRequirementsForm({ form }: LandRequirementsFormProps) {
             max="100"
             step="0.1"
             value={landSize}
-            onChange={(e) => setValue("requiredLandSize", parseFloat(e.target.value))}
-            className="w-full h-2 bg-gradient-to-r from-purple-100 to-purple-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-600 [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-lg"
+            onChange={(e) =>
+              setValue("requiredLandSize", parseFloat(e.target.value))
+            }
+            className="w-full h-2 bg-[#b7cf8a]/40 rounded-lg appearance-none cursor-pointer
+            [&::-webkit-slider-thumb]:appearance-none
+            [&::-webkit-slider-thumb]:h-6
+            [&::-webkit-slider-thumb]:w-6
+            [&::-webkit-slider-thumb]:rounded-full
+            [&::-webkit-slider-thumb]:bg-[#6c8f3f]
+            [&::-webkit-slider-thumb]:border-4
+            [&::-webkit-slider-thumb]:border-white
+            [&::-webkit-slider-thumb]:shadow"
           />
+
           <div className="flex justify-between text-xs text-gray-500 mt-2">
-            <span>0.1 acre</span>
-            <span>100 acres</span>
+            <span>0.1 Acre</span>
+            <span>100 Acres</span>
           </div>
         </div>
 
-        {/* Quick Presets */}
+        {/* Presets */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Common sizes</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-3">
+            Common Sizes
+          </h4>
+
           <div className="flex flex-wrap gap-3">
-            {landSizePresets.map((size) => (
-              <button
-                key={size}
-                type="button"
-                onClick={() => setValue("requiredLandSize", size)}
-                className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 ${
-                  landSize === size
-                    ? 'bg-purple-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {landSize === size && <Check className="h-4 w-4" />}
-                {size} acre{size !== 1 ? 's' : ''}
-              </button>
-            ))}
+            {landSizePresets.map((size) => {
+              const active = landSize === size;
+
+              return (
+                <motion.button
+                  key={size}
+                  whileTap={{ scale: 0.96 }}
+                  type="button"
+                  onClick={() => setValue("requiredLandSize", size)}
+                  className={`px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 transition ${
+                    active
+                      ? "bg-[#b7cf8a] text-[#3e5324] shadow-sm"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {active && <Check className="h-4 w-4" />}
+                  {size} Acre{size !== 1 && "s"}
+                </motion.button>
+              );
+            })}
           </div>
         </div>
 
@@ -102,59 +147,74 @@ export function LandRequirementsForm({ form }: LandRequirementsFormProps) {
         )}
       </div>
 
-      {/* Lease Duration Card */}
-      <div className="bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6 border border-gray-200">
-        <div className="flex items-center justify-between mb-8">
+      {/* Lease Duration */}
+      <div className="rounded-2xl border border-[#b7cf8a]/40 bg-[#b7cf8a]/10 p-6">
+        <div className="flex justify-between items-center mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Calendar className="h-5 w-5 text-blue-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Lease Duration</h3>
+              <Calendar className="h-5 w-5 text-[#5f7e37]" />
+              <h3 className="font-semibold text-gray-900">Lease Duration</h3>
             </div>
             <p className="text-sm text-gray-600">Preferred leasing period</p>
           </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold text-blue-600">{leaseDuration}</div>
-            <div className="text-sm text-gray-500">months</div>
+
+          <div className="text-right">
+            <div className="text-4xl font-bold text-[#5f7e37]">
+              {leaseDuration}
+            </div>
+            <div className="text-xs text-gray-500">Months</div>
           </div>
         </div>
 
-        {/* Range Slider */}
+        {/* Slider */}
         <div className="mb-8">
           <input
             type="range"
             min="1"
             max="120"
-            step="1"
             value={leaseDuration}
-            onChange={(e) => setValue("leaseDuration", parseInt(e.target.value))}
-            className="w-full h-2 bg-gradient-to-r from-blue-100 to-blue-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600 [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-lg"
+            onChange={(e) =>
+              setValue("leaseDuration", parseInt(e.target.value))
+            }
+            className="w-full h-2 bg-[#b7cf8a]/40 rounded-lg appearance-none cursor-pointer
+            [&::-webkit-slider-thumb]:appearance-none
+            [&::-webkit-slider-thumb]:h-6
+            [&::-webkit-slider-thumb]:w-6
+            [&::-webkit-slider-thumb]:rounded-full
+            [&::-webkit-slider-thumb]:bg-[#6c8f3f]
+            [&::-webkit-slider-thumb]:border-4
+            [&::-webkit-slider-thumb]:border-white
+            [&::-webkit-slider-thumb]:shadow"
           />
+
           <div className="flex justify-between text-xs text-gray-500 mt-2">
-            <span>1 month</span>
-            <span>10 years</span>
+            <span>1 Month</span>
+            <span>10 Years</span>
           </div>
         </div>
 
-        {/* Quick Presets */}
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Common durations</h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {leasePresets.map((duration) => (
-              <button
+        {/* Presets */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {leasePresets.map((duration) => {
+            const active = leaseDuration === duration.months;
+
+            return (
+              <motion.button
                 key={duration.months}
+                whileTap={{ scale: 0.96 }}
                 type="button"
                 onClick={() => setValue("leaseDuration", duration.months)}
-                className={`px-4 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
-                  leaseDuration === duration.months
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                className={`px-4 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition ${
+                  active
+                    ? "bg-[#b7cf8a] text-[#3e5324] shadow-sm"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                {leaseDuration === duration.months && <Check className="h-4 w-4" />}
+                {active && <Check className="h-4 w-4" />}
                 {duration.label}
-              </button>
-            ))}
-          </div>
+              </motion.button>
+            );
+          })}
         </div>
 
         {errors.leaseDuration && (
@@ -165,17 +225,21 @@ export function LandRequirementsForm({ form }: LandRequirementsFormProps) {
         )}
       </div>
 
-      {/* Info Note */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6">
+      {/* Info Card */}
+      <div className="rounded-2xl bg-[#b7cf8a]/15 border border-[#b7cf8a]/30 p-6">
         <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-            <Calendar className="h-5 w-5 text-blue-600" />
+          <div className="w-10 h-10 rounded-xl bg-[#b7cf8a]/40 flex items-center justify-center">
+            <Calendar className="h-5 w-5 text-[#5f7e37]" />
           </div>
+
           <div>
-            <h4 className="font-semibold text-gray-900 mb-1">Flexible Options</h4>
-            <p className="text-sm text-gray-600">
-              Don&apos;t worry about getting this perfect. You can always adjust your requirements later, 
-              and we&apos;ll show you lands that match both your minimum and preferred sizes.
+            <h4 className="font-semibold text-gray-900 mb-1">
+              Flexible Options
+            </h4>
+
+            <p className="text-sm text-gray-700">
+              You can update these preferences later. We’ll recommend land
+              options that match both your minimum and ideal requirements.
             </p>
           </div>
         </div>
