@@ -25,6 +25,7 @@ import { InfrastructureForm } from "./_components/InfrastructureForm";
 import { SuccessScreen } from "./_components/SuccessScreen";
 
 import type { FarmerOnboardingInput } from "./types";
+import { toast } from "sonner";
 
 const STEPS = [
   {
@@ -115,25 +116,35 @@ export default function FarmerOnboardingPage() {
     setError(null);
 
     try {
-      await completeFarmerOnboarding({
-        ...data,
-        farmingExperience: String(data.farmingExperience),
-        requiredLandSize: String(data.requiredLandSize),
-        leaseDuration: String(data.leaseDuration),
-        bio: data.bio ?? "",
-      });
+      // Data is already validated and typed correctly by Zod
+      // No need to convert anything - data already has numbers
+      const result = await completeFarmerOnboarding(data);
 
-      setCurrentStep(4);
+      if (result.success) {
+        setCurrentStep(4);
+        toast.success("🎉 Onboarding Complete!", {
+          description: "Your farmer profile has been created successfully.",
+          duration: 5000,
+        });
 
-      setTimeout(() => {
-        router.push("/post-auth");
-      }, 2500);
+        setTimeout(() => {
+          router.push(result.redirectTo || "/dashboard/farmer");
+        }, 2500);
+      } else {
+        setError(result.error || "Failed to complete onboarding");
+        toast.error("Onboarding Failed", {
+          description: result.error || "Something went wrong",
+        });
+      }
     } catch (err) {
-      setError(
+      const errorMessage =
         err instanceof Error
           ? err.message
-          : "Something went wrong. Please try again.",
-      );
+          : "Something went wrong. Please try again.";
+      setError(errorMessage);
+      toast.error("Error", {
+        description: errorMessage,
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -3,13 +3,12 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { setUserRole, getOrCreateUser } from "@/actions/onboarding.actions";
+import { setUserRole } from "@/actions/onboarding.actions"; // Removed getOrCreateUser import
 import { motion, Variants } from "framer-motion";
-import { CheckCircle, ArrowRight, Star, Calendar, Users } from "lucide-react";
+import { CheckCircle, ArrowRight, Star, Calendar, Users, ArrowUpRight } from "lucide-react";
 import HeroSection from "./_components/hero";
 import FAQSection from "./_components/FAQSection";
 import HowItWorks from "./_components/HowItWorks";
-import { ArrowUpRight } from "lucide-react";
 
 type RoleType = "FARMER" | "LANDOWNER";
 type RoleColor = "emerald" | "blue";
@@ -164,7 +163,7 @@ export default function RoleSelectionPage() {
 
     startTransition(async () => {
       try {
-        await getOrCreateUser();
+        // Removed getOrCreateUser call - user already exists from webhook
         await setUserRole(role);
 
         router.push(
