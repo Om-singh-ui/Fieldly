@@ -7,7 +7,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 export const metadata: Metadata = {
   title: "Fieldly - Empowering Farmers, Unlocking Land",
   description: "Fieldly connects landowners and farmers through transparent land leasing.",
-  icons: "/icon.png",
+  icons: "/image.png",
 };
 
 export default function RootLayout({
