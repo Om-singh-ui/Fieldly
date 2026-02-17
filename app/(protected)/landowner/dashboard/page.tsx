@@ -1,185 +1,173 @@
-// app/(protected)/landowner/dashboard/page.tsx
-import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
-import {
-  Landmark,
-  Users,
-  DollarSign,
-  FileText,
-  Building,
-  MapPin,
-} from "lucide-react";
-import { UserButton } from "@clerk/nextjs";
+  // app/(protected)/landowner/dashboard/page.tsx
 
-export default async function LandownerDashboardPage() {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
+  import { auth } from "@clerk/nextjs/server";
+  import { redirect } from "next/navigation";
+  import { Suspense } from "react";
+  import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  import { Button } from "@/components/ui/button";
 
-  const user = await prisma.user.findUnique({
-    where: { clerkUserId: userId },
-    include: {
-      landownerProfile: {
-        include: {
-          lands: true,
-        },
-      },
-    },
-  });
+  import { Plus, Download, ArrowUpRight, LandPlot } from "lucide-react";
 
-  if (!user || !user.landownerProfile) {
-    redirect("/onboarding/landowner");
+  import { getLandownerDashboardData } from "@/lib/queries/landowner";
+
+  import { StatsCards } from "./_components/StatsCards";
+  import { RevenueChart } from "./_components/RevenueChart";
+  import { LandsTable } from "./_components/LandsTable";
+  import { RecentApplications } from "./_components/RecentApplications";
+  import { ActivityFeed } from "./_components/ActivityFeed";
+  import { QuickActions } from "./_components/QuickActions";
+
+  function DashboardSkeleton() {
+    return (
+      <div className="space-y-6">
+        <div className="h-10 w-72 bg-muted animate-pulse rounded-lg" />
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-36 bg-muted animate-pulse rounded-xl" />
+          ))}
+        </div>
+
+        <div className="h-[400px] bg-muted animate-pulse rounded-xl" />
+      </div>
+    );
   }
 
-  const stats = [
-    {
-      label: "Total Lands",
-      value: user.landownerProfile.lands.length.toString(),
-      icon: Landmark,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-    },
-    {
-      label: "Active Leases",
-      value: "2",
-      icon: Users,
-      color: "text-green-600",
-      bg: "bg-green-50",
-    },
-    {
-      label: "Monthly Revenue",
-      value: "₹25,000",
-      icon: DollarSign,
-      color: "text-purple-600",
-      bg: "bg-purple-50",
-    },
-    {
-      label: "Pending Applications",
-      value: "5",
-      icon: FileText,
-      color: "text-orange-600",
-      bg: "bg-orange-50",
-    },
-  ];
+  export default async function LandownerDashboardPage() {
+    const { userId } = await auth();
 
-  return (
-    <div className="p-2 mt-24">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back,
-          <br />
-          <br />
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "h-9 w-9",
-                userButtonAvatarBox: "h-9 w-9",
-              },
-            }}
-          />{"    "}{user.name}
-        </h1>
-        <p className="text-gray-600 mt-2">Manage your lands and leases</p>
-      </div>
+    if (!userId) redirect("/sign-in");
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={stat.label}
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">{stat.label}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
-                    {stat.value}
-                  </p>
-                </div>
-                <div className={`p-3 rounded-lg ${stat.bg}`}>
-                  <Icon className={`h-6 w-6 ${stat.color}`} />
-                </div>
-              </div>
+    const data = await getLandownerDashboardData(userId);
+
+    if (!data) redirect("/onboarding/landowner");
+
+    const { user, stats, lands, applications, revenueTrend, recentActivities } =
+      data;
+
+    return (
+      <div className="min-h-screen mt-18 bg-background relative">
+        <main className="max-w-7xl mx-auto px-6 py-10">
+          {/* HERO HEADER */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
+            <div>
+              <h1 className="text-4xl font-bold tracking-tight">
+                Welcome back, {user.name}
+              </h1>
+
+              <p className="text-muted-foreground mt-2">
+                Manage your agricultural lands, monitor revenue, and track
+                applications.
+              </p>
             </div>
-          );
-        })}
-      </div>
 
-      {/* Profile Summary */}
-      <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">
-          Your Information
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
+            {/* ACTION BUTTONS */}
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Building className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Name</p>
-                <p className="font-medium text-gray-900">{user.name}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <MapPin className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Location</p>
-                <p className="font-medium text-gray-900">
-                  {user.district}, {user.state}
-                </p>
-              </div>
+              <Button variant="outline" className="gap-2 shadow-sm">
+                <Download className="w-4 h-4" />
+                Export
+              </Button>
+
+              <Button className="gap-2 shadow-lg shadow-emerald-500/20">
+                <Plus className="w-4 h-4" />
+                Add Land
+              </Button>
             </div>
           </div>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <FileText className="h-5 w-5 text-purple-600" />
+
+          {/* STATS */}
+          <Suspense fallback={<DashboardSkeleton />}>
+            <StatsCards stats={stats} />
+          </Suspense>
+
+          {/* TABS */}
+          <Tabs defaultValue="overview" className="mt-10">
+            {/* TAB NAV */}
+            <TabsList className="bg-muted/50 backdrop-blur border rounded-xl p-1">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+
+              <TabsTrigger value="lands">My Lands</TabsTrigger>
+
+              <TabsTrigger value="applications">Applications</TabsTrigger>
+
+              <TabsTrigger value="leases">Active Leases</TabsTrigger>
+            </TabsList>
+
+            {/* OVERVIEW */}
+            <TabsContent value="overview" className="mt-6 space-y-6">
+              <div className="grid gap-6 lg:grid-cols-3">
+                {/* CHART */}
+                <div className="lg:col-span-2 rounded-xl border bg-card/60 backdrop-blur p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-lg">Revenue Trend</h3>
+
+                    <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
+                  </div>
+
+                  <RevenueChart data={revenueTrend} />
+                </div>
+
+                {/* QUICK ACTIONS */}
+                <div className="rounded-xl border bg-card/60 backdrop-blur p-6 shadow-sm">
+                  <QuickActions />
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Contact</p>
-                <p className="font-medium text-gray-900">{user.phone}</p>
+
+              {/* LOWER SECTION */}
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div className="rounded-xl border bg-card/60 backdrop-blur p-6 shadow-sm">
+                  <RecentApplications applications={applications.slice(0, 5)} />
+                </div>
+
+                <div className="rounded-xl border bg-card/60 backdrop-blur p-6 shadow-sm">
+                  <ActivityFeed activities={recentActivities} />
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Landmark className="h-5 w-5 text-orange-600" />
+            </TabsContent>
+
+            {/* LANDS */}
+            <TabsContent value="lands" className="mt-6">
+              <div className="rounded-xl border bg-card/60 backdrop-blur p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <LandPlot className="w-5 h-5 text-emerald-600" />
+                    <h3 className="font-semibold text-lg">Your Lands</h3>
+                  </div>
+
+                  <Button size="sm" className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Land
+                  </Button>
+                </div>
+
+                <LandsTable lands={lands} />
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Lands Registered</p>
-                <p className="font-medium text-gray-900">
-                  {user.landownerProfile.lands.length} lands
+            </TabsContent>
+
+            {/* APPLICATIONS */}
+            <TabsContent value="applications" className="mt-6">
+              <div className="rounded-xl border bg-card/60 backdrop-blur p-6 shadow-sm">
+                <RecentApplications applications={applications} />
+              </div>
+            </TabsContent>
+
+            {/* LEASES */}
+            <TabsContent value="leases" className="mt-6">
+              <div className="rounded-xl border bg-card/60 backdrop-blur p-10 shadow-sm text-center">
+                <h3 className="text-xl font-semibold mb-2">Active Leases</h3>
+
+                <p className="text-muted-foreground">
+                  You currently have{" "}
+                  <span className="font-semibold text-foreground">
+                    {stats.activeLeases}
+                  </span>{" "}
+                  active lease
+                  {stats.activeLeases !== 1 ? "s" : ""}
                 </p>
               </div>
-            </div>
-          </div>
-        </div>
+            </TabsContent>
+          </Tabs>
+        </main>
       </div>
-
-      {/* Quick Actions */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-8 border border-blue-100">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">
-          Quick Actions
-        </h2>
-        <div className="flex flex-wrap gap-4">
-          <button className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
-            Add New Land
-          </button>
-          <button className="px-6 py-3 bg-white text-blue-600 font-medium rounded-lg border border-blue-600 hover:bg-blue-50 transition-colors">
-            View Applications
-          </button>
-          <button className="px-6 py-3 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
-            Manage Leases
-          </button>
-          <button className="px-6 py-3 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
-            Generate Reports
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+    );
+  }
