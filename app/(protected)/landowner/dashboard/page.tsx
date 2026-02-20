@@ -1,173 +1,284 @@
-  // app/(protected)/landowner/dashboard/page.tsx
+// app/(protected)/landowner/dashboard/page.tsx
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { cache } from "react";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { getLandownerDashboardData } from "@/lib/queries/landowner";
+import { DashboardHeroHeader } from "./_components/DashboardHeroHeader";
+import { StatsCards } from "./_components/StatsCards";
+import { RevenueChart } from "./_components/RevenueChart";
+import { LandsTable } from "./_components/LandsTable";
+import { RecentApplications } from "./_components/RecentApplications";
+import { ActivityFeed } from "./_components/ActivityFeed";
+import { QuickActions } from "./_components/QuickActions";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import Link from "next/link";
+import { CapsuleTabs } from "./_components/CapsuleTabs";
+import Image from "next/image";
 
-  import { auth } from "@clerk/nextjs/server";
-  import { redirect } from "next/navigation";
-  import { Suspense } from "react";
-  import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-  import { Button } from "@/components/ui/button";
+// Cache the data fetching function
+const getCachedDashboardData = cache(async (userId: string) => {
+  return getLandownerDashboardData(userId);
+});
 
-  import { Plus, Download, ArrowUpRight, LandPlot } from "lucide-react";
+export default async function LandownerDashboardPage() {
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
 
-  import { getLandownerDashboardData } from "@/lib/queries/landowner";
+  const data = await getCachedDashboardData(userId);
+  if (!data) redirect("/onboarding/landowner");
 
-  import { StatsCards } from "./_components/StatsCards";
-  import { RevenueChart } from "./_components/RevenueChart";
-  import { LandsTable } from "./_components/LandsTable";
-  import { RecentApplications } from "./_components/RecentApplications";
-  import { ActivityFeed } from "./_components/ActivityFeed";
-  import { QuickActions } from "./_components/QuickActions";
+  const { user, stats, lands, applications, revenueTrend, recentActivities } =
+    data;
 
-  function DashboardSkeleton() {
-    return (
-      <div className="space-y-6">
-        <div className="h-10 w-72 bg-muted animate-pulse rounded-lg" />
+  return (
+    <div className="min-h-screen bg-white dark:bg-gray-950">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        {/* Hero Header */}
+        <DashboardHeroHeader name={user.name} />
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-36 bg-muted animate-pulse rounded-xl" />
-          ))}
-        </div>
+        {/* Stats Cards */}
+        <ErrorBoundary fallback={<StatsErrorFallback />}>
+          <StatsCards stats={stats} />
+        </ErrorBoundary>
 
-        <div className="h-[400px] bg-muted animate-pulse rounded-xl" />
-      </div>
-    );
-  }
+        {/* Capsule Tabs with Images */}
+        <CapsuleTabs stats={stats} />
 
-  export default async function LandownerDashboardPage() {
-    const { userId } = await auth();
-
-    if (!userId) redirect("/sign-in");
-
-    const data = await getLandownerDashboardData(userId);
-
-    if (!data) redirect("/onboarding/landowner");
-
-    const { user, stats, lands, applications, revenueTrend, recentActivities } =
-      data;
-
-    return (
-      <div className="min-h-screen mt-18 bg-background relative">
-        <main className="max-w-7xl mx-auto px-6 py-10">
-          {/* HERO HEADER */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
-            <div>
-              <h1 className="text-4xl font-bold tracking-tight">
-                Welcome back, {user.name}
-              </h1>
-
-              <p className="text-muted-foreground mt-2">
-                Manage your agricultural lands, monitor revenue, and track
-                applications.
-              </p>
+        {/* Tab Content Sections */}
+        <div className="mt-8">
+          {/* Overview Section */}
+          <div id="overview" className="space-y-8">
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <ErrorBoundary fallback={<ChartErrorFallback />}>
+                  <RevenueChart data={revenueTrend} />
+                </ErrorBoundary>
+              </div>
+              <div>
+                <ErrorBoundary fallback={<QuickActionsErrorFallback />}>
+                  <QuickActions />
+                </ErrorBoundary>
+              </div>
             </div>
 
-            {/* ACTION BUTTONS */}
-            <div className="flex items-center gap-3">
-              <Button variant="outline" className="gap-2 shadow-sm">
-                <Download className="w-4 h-4" />
-                Export
-              </Button>
-
-              <Button className="gap-2 shadow-lg shadow-emerald-500/20">
-                <Plus className="w-4 h-4" />
-                Add Land
-              </Button>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <ErrorBoundary fallback={<ApplicationsErrorFallback />}>
+                <RecentApplications applications={applications.slice(0, 5)} />
+              </ErrorBoundary>
+              <ErrorBoundary fallback={<ActivityErrorFallback />}>
+                <ActivityFeed activities={recentActivities} />
+              </ErrorBoundary>
             </div>
           </div>
 
-          {/* STATS */}
-          <Suspense fallback={<DashboardSkeleton />}>
-            <StatsCards stats={stats} />
-          </Suspense>
-
-          {/* TABS */}
-          <Tabs defaultValue="overview" className="mt-10">
-            {/* TAB NAV */}
-            <TabsList className="bg-muted/50 backdrop-blur border rounded-xl p-1">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-
-              <TabsTrigger value="lands">My Lands</TabsTrigger>
-
-              <TabsTrigger value="applications">Applications</TabsTrigger>
-
-              <TabsTrigger value="leases">Active Leases</TabsTrigger>
-            </TabsList>
-
-            {/* OVERVIEW */}
-            <TabsContent value="overview" className="mt-6 space-y-6">
-              <div className="grid gap-6 lg:grid-cols-3">
-                {/* CHART */}
-                <div className="lg:col-span-2 rounded-xl border bg-card/60 backdrop-blur p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-lg">Revenue Trend</h3>
-
-                    <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
+          {/* Lands Section */}
+          <div id="lands" className="hidden">
+            <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl">
+                      <div className="relative w-7 h-7">
+                        <Image
+                          src="/onboarding/landreq.png"
+                          alt="Lands"
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 dark:text-white">
+                        Your Lands
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Manage and monitor your property portfolio
+                      </p>
+                    </div>
                   </div>
-
-                  <RevenueChart data={revenueTrend} />
-                </div>
-
-                {/* QUICK ACTIONS */}
-                <div className="rounded-xl border bg-card/60 backdrop-blur p-6 shadow-sm">
-                  <QuickActions />
-                </div>
-              </div>
-
-              {/* LOWER SECTION */}
-              <div className="grid gap-6 lg:grid-cols-2">
-                <div className="rounded-xl border bg-card/60 backdrop-blur p-6 shadow-sm">
-                  <RecentApplications applications={applications.slice(0, 5)} />
-                </div>
-
-                <div className="rounded-xl border bg-card/60 backdrop-blur p-6 shadow-sm">
-                  <ActivityFeed activities={recentActivities} />
+                  <Link href="/landowner/lands/new">
+                    <Button 
+                      size="sm" 
+                      className="gap-2 bg-[#b7cf8a] hover:bg-[#a9c87a] text-gray-900 font-medium border-0 shadow-sm transition-all duration-200 hover:shadow-md rounded-full"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Land
+                    </Button>
+                  </Link>
                 </div>
               </div>
-            </TabsContent>
+              <div className="p-6">
+                <ErrorBoundary fallback={<TableErrorFallback />}>
+                  <LandsTable lands={lands} />
+                </ErrorBoundary>
+              </div>
+            </div>
+          </div>
 
-            {/* LANDS */}
-            <TabsContent value="lands" className="mt-6">
-              <div className="rounded-xl border bg-card/60 backdrop-blur p-6 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2">
-                    <LandPlot className="w-5 h-5 text-emerald-600" />
-                    <h3 className="font-semibold text-lg">Your Lands</h3>
+          {/* Applications Section */}
+          <div id="applications" className="hidden">
+            <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl">
+                    <div className="relative w-7 h-7">
+                      <Image
+                        src="/onboarding/review.png"
+                        alt="Applications"
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
                   </div>
-
-                  <Button size="sm" className="gap-2">
-                    <Plus className="w-4 h-4" />
-                    Add Land
-                  </Button>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                      All Applications
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Review and manage all land applications
+                    </p>
+                  </div>
                 </div>
-
-                <LandsTable lands={lands} />
               </div>
-            </TabsContent>
-
-            {/* APPLICATIONS */}
-            <TabsContent value="applications" className="mt-6">
-              <div className="rounded-xl border bg-card/60 backdrop-blur p-6 shadow-sm">
-                <RecentApplications applications={applications} />
+              <div className="p-6">
+                <ErrorBoundary fallback={<ApplicationsErrorFallback />}>
+                  <RecentApplications applications={applications} />
+                </ErrorBoundary>
               </div>
-            </TabsContent>
+            </div>
+          </div>
 
-            {/* LEASES */}
-            <TabsContent value="leases" className="mt-6">
-              <div className="rounded-xl border bg-card/60 backdrop-blur p-10 shadow-sm text-center">
-                <h3 className="text-xl font-semibold mb-2">Active Leases</h3>
-
-                <p className="text-muted-foreground">
-                  You currently have{" "}
-                  <span className="font-semibold text-foreground">
-                    {stats.activeLeases}
-                  </span>{" "}
-                  active lease
-                  {stats.activeLeases !== 1 ? "s" : ""}
-                </p>
+          {/* Leases Section */}
+          <div id="leases" className="hidden">
+            <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl">
+                    <div className="relative w-7 h-7">
+                      <Image
+                        src="/onboarding/user-man-account-person.png"
+                        alt="Leases"
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                      Active Leases
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      You currently have{" "}
+                      <span className="font-medium text-[#b7cf8a]">
+                        {stats.activeLeases}
+                      </span>{" "}
+                      active lease{stats.activeLeases !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </TabsContent>
-          </Tabs>
-        </main>
-      </div>
-    );
-  }
+              <div className="p-10 text-center">
+                {stats.activeLeases > 0 ? (
+                  <div className="space-y-4">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#b7cf8a]/10 mb-4">
+                      <div className="relative w-8 h-8">
+                        <Image
+                          src="/icons/leases-green.svg"
+                          alt="Leases"
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Manage Your Active Leases
+                    </h4>
+                    <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+                      View all your active leases, track payments, and manage lease agreements
+                    </p>
+                    <Link href="/landowner/leases">
+                      <Button 
+                        variant="outline"
+                        className="mt-2 border-[#b7cf8a] text-[#b7cf8a] hover:bg-[#b7cf8a] hover:text-white transition-colors rounded-full"
+                      >
+                        View All Leases
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="py-12">
+                    <div className="relative w-12 h-12 mx-auto mb-4 opacity-50">
+                      <Image
+                        src="/icons/leases-gray.svg"
+                        alt="No Leases"
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                      No Active Leases
+                    </h4>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      When your lands get applications approved, they&apos;ll appear here
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// Error Fallback Components (keep these the same)
+function StatsErrorFallback() {
+  return (
+    <div className="p-8 text-center bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900/20">
+      <p className="text-red-600 dark:text-red-400">Failed to load statistics</p>
+    </div>
+  );
+}
+
+function ChartErrorFallback() {
+  return (
+    <div className="p-8 text-center bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900/20">
+      <p className="text-red-600 dark:text-red-400">Failed to load revenue chart</p>
+    </div>
+  );
+}
+
+function TableErrorFallback() {
+  return (
+    <div className="p-8 text-center bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900/20">
+      <p className="text-red-600 dark:text-red-400">Failed to load lands data</p>
+    </div>
+  );
+}
+
+function QuickActionsErrorFallback() {
+  return (
+    <div className="p-8 text-center bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900/20">
+      <p className="text-red-600 dark:text-red-400">Quick Actions unavailable</p>
+    </div>
+  );
+}
+
+function ApplicationsErrorFallback() {
+  return (
+    <div className="p-8 text-center bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900/20">
+      <p className="text-red-600 dark:text-red-400">Failed to load applications</p>
+    </div>
+  );
+}
+
+function ActivityErrorFallback() {
+  return (
+    <div className="p-8 text-center bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900/20">
+      <p className="text-red-600 dark:text-red-400">Failed to load activity feed</p>
+    </div>
+  );
+}

@@ -1,7 +1,7 @@
 // app/(protected)/landowner/dashboard/_components/LandsTable.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { 
   Table, 
   TableBody, 
@@ -20,213 +20,401 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, Edit, FileText, Trash, ArrowUpDown } from "lucide-react";
+import { 
+  MoreHorizontal, Eye, Edit, FileText, Trash, 
+  ArrowUpDown, MapPin, Calendar, ExternalLink,
+  AlertCircle, CheckCircle2, Clock, Plus,
+  Ruler, Activity, IndianRupee
+} from "lucide-react";
 import { LandWithDetails } from "@/lib/queries/landowner";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
 
 interface LandsTableProps {
   lands: LandWithDetails[];
 }
 
-type SortField = keyof Pick<LandWithDetails, 'title' | 'size' | 'status' | 'createdAt'>;
+type SortField = keyof Pick<LandWithDetails, 'title' | 'size' | 'status' | 'createdAt' | 'applicationsCount'>;
 type SortDirection = 'asc' | 'desc';
 
-// Helper function for sorting outside component
-function sortLands(lands: LandWithDetails[], field: SortField, direction: SortDirection): LandWithDetails[] {
-  return [...lands].sort((a, b) => {
-    let aValue: string | number | Date = a[field];
-    let bValue: string | number | Date = b[field];
-    
-    // Handle dates
-    if (field === 'createdAt') {
-      aValue = new Date(aValue as string).getTime();
-      bValue = new Date(bValue as string).getTime();
-    }
-    
-    // Handle strings (case-insensitive)
-    if (typeof aValue === 'string' && typeof bValue === 'string') {
-      aValue = aValue.toLowerCase();
-      bValue = bValue.toLowerCase();
-    }
-    
-    // Handle null/undefined
-    if (aValue == null && bValue == null) return 0;
-    if (aValue == null) return 1;
-    if (bValue == null) return -1;
-    
-    // Compare based on type
-    if (typeof aValue === 'number' && typeof bValue === 'number') {
-      return direction === 'asc' ? aValue - bValue : bValue - aValue;
-    }
-    
-    // For strings and other types
-    if (direction === 'asc') {
-      return aValue > bValue ? 1 : -1;
-    }
-    return aValue < bValue ? 1 : -1;
-  });
+interface StatusConfig {
+  color: string;
+  icon: React.ElementType;
+  label: string;
 }
 
-// SortHeader component moved outside to prevent recreation
-interface SortHeaderProps {
+interface SortableHeaderProps {
   field: SortField;
   currentField: SortField;
-  direction: SortDirection;
   onSort: (field: SortField) => void;
   children: React.ReactNode;
+  align?: "left" | "center" | "right";
+  icon?: React.ReactNode;
 }
 
-const SortHeader = ({ field, currentField, onSort, children }: SortHeaderProps) => {
+const statusConfig: Record<string, StatusConfig> = {
+  LEASED: { 
+    color: "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800",
+    icon: CheckCircle2,
+    label: "Leased"
+  },
+  AVAILABLE: { 
+    color: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800",
+    icon: AlertCircle,
+    label: "Available"
+  },
+  PENDING: { 
+    color: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800",
+    icon: Clock,
+    label: "Pending"
+  }
+};
+
+// Sortable Header Component
+function SortableHeader({ 
+  field, 
+  currentField, 
+  onSort, 
+  children,
+  align = "left",
+  icon
+}: SortableHeaderProps) {
   const isActive = currentField === field;
   
   return (
-    <TableHead>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onSort(field)}
-        className={`h-8 px-2 text-xs font-medium ${
-          isActive ? 'bg-muted' : ''
-        }`}
-      >
-        {children}
-        <ArrowUpDown className={`ml-2 h-3 w-3 ${
-          isActive ? 'text-primary' : 'text-muted-foreground'
-        }`} />
-      </Button>
-    </TableHead>
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => onSort(field)}
+      className={cn(
+        "h-8 px-2 text-xs font-medium hover:bg-muted w-full",
+        isActive && "bg-muted text-primary",
+        align === "left" && "justify-start",
+        align === "center" && "justify-center",
+        align === "right" && "justify-end"
+      )}
+    >
+      <div className="flex items-center gap-1.5">
+        {icon && <span className="text-muted-foreground">{icon}</span>}
+        <span className={cn(
+          "uppercase tracking-wider",
+          isActive && "font-semibold"
+        )}>
+          {children}
+        </span>
+        <ArrowUpDown className={cn(
+          "h-3 w-3 transition-colors",
+          isActive ? "text-primary" : "text-muted-foreground/50"
+        )} />
+      </div>
+    </Button>
   );
-};
+}
 
 export function LandsTable({ lands }: LandsTableProps) {
   const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [selectedLand, setSelectedLand] = useState<string | null>(null);
 
-  const handleSort = (field: SortField) => {
+  const handleSort = useCallback((field: SortField) => {
     if (field === sortField) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
       setSortDirection('asc');
     }
-  };
+  }, [sortField]);
 
-  const sortedLands = sortLands(lands, sortField, sortDirection);
+  const sortedLands = useMemo(() => {
+    return [...lands].sort((a, b) => {
+      let aValue: string | number | Date = a[sortField];
+      let bValue: string | number | Date = b[sortField];
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, string> = {
-      LEASED: "bg-green-100 text-green-800 border-green-200",
-      AVAILABLE: "bg-blue-100 text-blue-800 border-blue-200",
-      PENDING: "bg-yellow-100 text-yellow-800 border-yellow-200"
-    };
-    return variants[status] || "bg-gray-100 text-gray-800 border-gray-200";
-  };
+      if (sortField === 'createdAt') {
+        aValue = new Date(aValue as string).getTime();
+        bValue = new Date(bValue as string).getTime();
+      }
+
+      if (sortField === 'applicationsCount') {
+        aValue = a.applicationsCount;
+        bValue = b.applicationsCount;
+      }
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+
+      if (aValue == null) return 1;
+      if (bValue == null) return -1;
+
+      const comparison = aValue > bValue ? 1 : -1;
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [lands, sortField, sortDirection]);
 
   const formatRent = (min: number | null | undefined, max: number | null | undefined) => {
-    if (min == null && max == null) return 'Not specified';
+    if (min == null && max == null) return 'Negotiable';
     if (min != null && max != null) {
       return `₹${min.toLocaleString()} - ₹${max.toLocaleString()}`;
     }
     if (min != null) return `From ₹${min.toLocaleString()}`;
     if (max != null) return `Up to ₹${max.toLocaleString()}`;
-    return 'Not specified';
+    return 'Negotiable';
   };
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-xl border bg-card overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow>
-            <SortHeader
-              field="title"
-              currentField={sortField}
-              direction={sortDirection}
-              onSort={handleSort}
-            >
-              Land Name
-            </SortHeader>
-            <TableHead>Location</TableHead>
-            <SortHeader
-              field="size"
-              currentField={sortField}
-              direction={sortDirection}
-              onSort={handleSort}
-            >
-              Size (acres)
-            </SortHeader>
-            <SortHeader
-              field="status"
-              currentField={sortField}
-              direction={sortDirection}
-              onSort={handleSort}
-            >
-              Status
-            </SortHeader>
-            <TableHead>Expected Rent</TableHead>
-            <TableHead>Applications</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+          <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2 border-muted">
+            {/* Land Name - Left aligned */}
+            <TableHead className="w-[250px] pl-6">
+              <SortableHeader
+                field="title"
+                currentField={sortField}
+                onSort={handleSort}
+                align="left"
+              >
+                Land Name
+              </SortableHeader>
+            </TableHead>
+
+            {/* Location - Left aligned */}
+            <TableHead className="w-[200px]">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <MapPin className="w-3.5 h-3.5" />
+                Location
+              </div>
+            </TableHead>
+
+            {/* Size - Left aligned */}
+            <TableHead className="w-[120px]">
+              <SortableHeader
+                field="size"
+                currentField={sortField}
+                onSort={handleSort}
+                align="left"
+                icon={<Ruler className="w-3.5 h-3.5" />}
+              >
+                Size (acres)
+              </SortableHeader>
+            </TableHead>
+
+            {/* Status - Left aligned */}
+            <TableHead className="w-[120px]">
+              <SortableHeader
+                field="status"
+                currentField={sortField}
+                onSort={handleSort}
+                align="left"
+                icon={<Activity className="w-3.5 h-3.5" />}
+              >
+                Status
+              </SortableHeader>
+            </TableHead>
+
+            {/* Expected Rent - Left aligned */}
+            <TableHead className="w-[150px]">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <IndianRupee className="w-3.5 h-3.5" />
+                Expected Rent
+              </div>
+            </TableHead>
+
+            {/* Applications - Center aligned for badge count */}
+            <TableHead className="w-[120px] text-center">
+              <SortableHeader
+                field="applicationsCount"
+                currentField={sortField}
+                onSort={handleSort}
+                align="center"
+                icon={<FileText className="w-3.5 h-3.5" />}
+              >
+                Applications
+              </SortableHeader>
+            </TableHead>
+
+            {/* Listed Date - Left aligned */}
+            <TableHead className="w-[150px]">
+              <SortableHeader
+                field="createdAt"
+                currentField={sortField}
+                onSort={handleSort}
+                align="left"
+                icon={<Calendar className="w-3.5 h-3.5" />}
+              >
+                Listed
+              </SortableHeader>
+            </TableHead>
+
+            {/* Actions - Right aligned */}
+            <TableHead className="w-[100px] text-right pr-6">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Actions
+              </span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedLands.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                No lands found. Add your first land to get started.
-              </TableCell>
-            </TableRow>
-          ) : (
-            sortedLands.map((land) => (
-              <TableRow key={land.id} className="hover:bg-muted/50">
-                <TableCell className="font-medium">{land.title}</TableCell>
-                <TableCell>{land.location}</TableCell>
-                <TableCell>{land.size?.toFixed(1) ?? 'N/A'}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={getStatusBadge(land.status)}>
-                    {land.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {formatRent(land.expectedRentMin, land.expectedRentMax)}
-                </TableCell>
-                <TableCell>
-                  {land.applicationsCount > 0 ? (
-                    <Badge variant="secondary">
-                      {land.applicationsCount} pending
-                    </Badge>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">None</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
+          <AnimatePresence mode="wait">
+            {sortedLands.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-12">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="p-3 bg-muted rounded-full">
+                      <AlertCircle className="w-6 h-6 text-muted-foreground" />
+                    </div>
+                    <p className="text-muted-foreground font-medium">
+                      No lands found
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Add your first land to start listing in the marketplace
+                    </p>
+                    <Link href="/landowner/lands/new">
+                      <Button size="sm" className="mt-2">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Land
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>
-                        <Eye className="mr-2 h-4 w-4" /> View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Edit className="mr-2 h-4 w-4" /> Edit Land
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <FileText className="mr-2 h-4 w-4" /> View Applications
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-600">
-                        <Trash className="mr-2 h-4 w-4" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </Link>
+                  </div>
                 </TableCell>
               </TableRow>
-            ))
-          )}
+            ) : (
+              sortedLands.map((land, index) => {
+                const statusKey = land.status as keyof typeof statusConfig;
+                const StatusIcon = statusConfig[statusKey]?.icon || AlertCircle;
+                
+                return (
+                  <motion.tr
+                    key={land.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="group hover:bg-muted/50 cursor-pointer transition-colors"
+                    onMouseEnter={() => setSelectedLand(land.id)}
+                    onMouseLeave={() => setSelectedLand(null)}
+                    onClick={() => window.location.href = `/landowner/lands/${land.id}`}
+                  >
+                    <TableCell className="font-medium pl-6">
+                      <div className="flex items-center gap-2">
+                        {land.title}
+                        {selectedLand === land.id && (
+                          <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-sm">
+                        <MapPin className="w-3 h-3 text-muted-foreground" />
+                        {land.location}
+                      </div>
+                    </TableCell>
+                    <TableCell>{land.size?.toFixed(1) ?? 'N/A'}</TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant="outline" 
+                        className={cn(
+                          "gap-1",
+                          statusConfig[statusKey]?.color
+                        )}
+                      >
+                        <StatusIcon className="w-3 h-3" />
+                        {statusConfig[statusKey]?.label || land.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {formatRent(land.expectedRentMin, land.expectedRentMax)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {land.applicationsCount > 0 ? (
+                        <Badge variant="secondary" className="gap-1">
+                          <FileText className="w-3 h-3" />
+                          {land.applicationsCount} pending
+                        </Badge>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">None</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Calendar className="w-3 h-3" />
+                        {formatDistanceToNow(new Date(land.createdAt), { addSuffix: true })}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right pr-6">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                            <Link href={`/landowner/lands/${land.id}`} className="flex items-center w-full">
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                            <Link href={`/landowner/lands/${land.id}/edit`} className="flex items-center w-full">
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit Land
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                            <Link href={`/landowner/lands/${land.id}/applications`} className="flex items-center w-full">
+                              <FileText className="mr-2 h-4 w-4" />
+                              View Applications
+                            </Link>
+                          </DropdownMenuItem>
+                          {land.status === 'AVAILABLE' && (
+                            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                              <Link href={`/landowner/lands/${land.id}/listings/new`} className="flex items-center w-full">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Create Listing
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Handle delete
+                            }}
+                          >
+                            <Trash className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </motion.tr>
+                );
+              })
+            )}
+          </AnimatePresence>
         </TableBody>
       </Table>
+
+      {/* Pagination - if needed */}
+      {sortedLands.length > 0 && (
+        <div className="flex items-center justify-between px-4 py-3 border-t">
+          <p className="text-sm text-muted-foreground">
+            Showing {sortedLands.length} of {lands.length} lands
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" disabled>Previous</Button>
+            <Button variant="outline" size="sm" disabled>Next</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
