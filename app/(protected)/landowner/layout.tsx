@@ -33,7 +33,7 @@ export default async function LandownerLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* You can add landowner-specific header/sidebar here */}
       {children}
     </div>
