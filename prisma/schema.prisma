@@ -1,545 +1,625 @@
-  generator client {
-    provider = "prisma-client-js"
-  }
-
-  datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
-  }
-
-  //////////////////////////////////////////////////
-  // ENUMS
-  //////////////////////////////////////////////////
-
-  enum UserRole {
-    FARMER
-    LANDOWNER
-    ADMIN
-  }
-
-  enum FarmingType {
-    SUBSISTENCE
-    COMMERCIAL
-    ORGANIC
-    MIXED
-  }
-
-  enum LandType {
-    AGRICULTURAL
-    FALLOW
-    ORCHARD
-    PASTURE
-  }
-
-  enum ApplicationStatus {
-    PENDING
-    APPROVED
-    REJECTED
-    WITHDRAWN
-  }
-
-  enum LeaseStatus {
-    DRAFT
-    ACTIVE
-    COMPLETED
-    TERMINATED
-  }
-
-  enum PaymentStatus {
-    PENDING
-    SUCCESS
-    FAILED
-    REFUNDED
-  }
-
-  enum SubscriptionStatus {
-    ACTIVE
-    CANCELED
-    PAST_DUE
-  }
-
-  enum NotificationType {
-    SYSTEM
-    LEASE
-    PAYMENT
-    MESSAGE
-    LISTING
-    BID
-    REVIEW
-  }
-
-  //////////////////////////////////////////////////
-  // MARKETPLACE ENUMS
-  //////////////////////////////////////////////////
-
-  enum ListingStatus {
-    DRAFT
-    ACTIVE
-    CLOSED
-    CANCELLED
-    EXPIRED
-  }
-
-  enum ListingType {
-    OPEN_BIDDING
-    FIXED_PRICE
-  }
-
-  enum BidStatus {
-    ACTIVE
-    OUTBID
-    WITHDRAWN
-    ACCEPTED
-  }
-
-  enum PaymentFrequency {
-    MONTHLY
-    QUARTERLY
-    HALF_YEARLY
-    YEARLY
-    ONE_TIME
-  }
-
-  //////////////////////////////////////////////////
-  // USER (UNCHANGED CORE STRUCTURE)
-  //////////////////////////////////////////////////
-
-  model User {
-    id           String  @id @default(cuid())
-    clerkUserId  String  @unique
-    email        String  @unique
-    name         String
-    imageUrl     String?
-
-    role           UserRole?
-    isOnboarded    Boolean @default(false)
-    onboardingStep Int     @default(0)
-
-    phone    String?
-    state    String?
-    district String?
-    bio      String?
-
-    farmerProfile    FarmerProfile?
-    landownerProfile LandownerProfile?
-
-    applications   Application[]
-    leasesAsFarmer Lease[] @relation("FarmerLeases")
-    leasesAsOwner  Lease[] @relation("OwnerLeases")
-
-    messagesSent     Message[] @relation("MessagesSent")
-    messagesReceived Message[] @relation("MessagesReceived")
-
-    notifications Notification[]
-    auditLogs     AuditLog[]
-    payments      Payment[]
-    subscription  Subscription?
-    documents     Document[]
-
-    // Marketplace Additions (SAFE)
-    listingsOwned LandListing[]
-    bids          Bid[]
-    savedListings SavedListing[]
-    reviewsGiven  Review[] @relation("Reviewer")
-    reviewsReceived Review[] @relation("Reviewee")
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-  }
-
-  //////////////////////////////////////////////////
-  // FARMER PROFILE (UNCHANGED)
-  //////////////////////////////////////////////////
-
-  model FarmerProfile {
-    id     String @id @default(cuid())
-    userId String @unique
-    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-    primaryCrops      String[]
-    farmingExperience Int
-    farmingType       FarmingType
-
-    requiredLandSize Float
-    leaseDuration    Int
-    irrigationNeeded Boolean @default(false)
-    equipmentAccess  Boolean @default(false)
-
-    isVerified Boolean @default(false)
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-  }
+generator client {
+  provider = "prisma-client-js"
+}
 
-  //////////////////////////////////////////////////
-  // LANDOWNER PROFILE (UNCHANGED)
-  //////////////////////////////////////////////////
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-  model LandownerProfile {
-    id     String @id @default(cuid())
-    userId String @unique
-    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-    lands Land[]
-
-    ownershipType String?
-    verificationLevel Int @default(0)
-
-    preferredPaymentFrequency String?
-    preferredContactMethod String?
-
-    isVerified Boolean @default(false)
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-  }
-
-  //////////////////////////////////////////////////
-  // LAND (UNCHANGED + LISTINGS ADDED)
-  //////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// USER
+//////////////////////////////////////////////////
 
-  model Land {
-    id          String           @id @default(cuid())
-    landownerId String
-    landowner   LandownerProfile @relation(fields: [landownerId], references: [id], onDelete: Cascade)
+model User {
+  id               String   @id @default(cuid())
+  clerkUserId     String   @unique
+  email           String   @unique
+  name            String
+  imageUrl        String?
+  role            UserRole?
+  isOnboarded     Boolean  @default(false)
+  onboardingStep  Int      @default(0)
 
-    title        String
-    size         Float
-    landType     LandType
-    soilType     String?
-    irrigationAvailable Boolean @default(false)
+  phone           String?
+  state           String?
+  district        String?
+  bio             String?
 
-    latitude  Float?
-    longitude Float?
-    village   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-    electricityAvailable Boolean?
-    roadAccess Boolean?
-    storageAvailable Boolean?
-    fencingAvailable Boolean?
-    waterSourceType String?
+  farmerProfile    FarmerProfile?
+  landownerProfile LandownerProfile?
+  subscription     Subscription?
 
-    allowsSubleasing Boolean @default(false)
-    securityDepositRequired Boolean @default(true)
-    depositAmount Float?
+  listingsOwned   LandListing[]
+  applications    Application[]
+  bids            Bid[]
 
-    preferredFarmerExperienceMin Int?
-    allowsOrganicFarming Boolean @default(true)
-    allowsInfrastructureModification Boolean @default(false)
+  leasesAsFarmer  Lease[] @relation("FarmerLeases")
+  leasesAsOwner   Lease[] @relation("OwnerLeases")
 
-    minLeaseDuration Int
-    maxLeaseDuration Int
-    expectedRentMin Float?
-    expectedRentMax Float?
-    allowedCropTypes String[]
+  payments        Payment[]
 
-    applications Application[]
-    leases Lease[]
-    soilReports SoilReport[]
-    documents Document[]
+  reviewsGiven    Review[] @relation("Reviewer")
+  reviewsReceived Review[] @relation("Reviewee")
 
-    listings LandListing[]
+  messagesSent     Message[] @relation("MessagesSent")
+  messagesReceived Message[] @relation("MessagesReceived")
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-  }
+  notifications   Notification[]
+  savedListings   SavedListing[]
 
-  //////////////////////////////////////////////////
-  // LAND LISTING (ENHANCED BUT SAFE)
-  //////////////////////////////////////////////////
+  documents       Document[]
+  auditLogs       AuditLog[]
 
-  model LandListing {
-    id        String @id @default(cuid())
+  @@index([clerkUserId])
+}
 
-    landId    String
-    land      Land @relation(fields: [landId], references: [id], onDelete: Cascade)
+//////////////////////////////////////////////////
+// FARMER PROFILE
+//////////////////////////////////////////////////
 
-    ownerId   String
-    owner     User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+model FarmerProfile {
+  id                String @id @default(cuid())
+  userId            String @unique
 
-    title       String
-    description String?
+  primaryCrops      String[]
+  farmingExperience Int
+  farmingType      FarmingType
 
-    listingType ListingType @default(OPEN_BIDDING)
-    status      ListingStatus @default(DRAFT)
+  requiredLandSize Float
+  leaseDuration    Int
 
-    basePrice   Float
-    reservePrice Float?
-    buyNowPrice Float?
+  irrigationNeeded Boolean @default(false)
+  equipmentAccess  Boolean @default(false)
 
-    minimumLeaseDuration Int
-    maximumLeaseDuration Int
+  isVerified Boolean @default(false)
 
-    startDate DateTime
-    endDate   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    totalBids  Int @default(0)
-    highestBid Float?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
 
-    bids        Bid[]
-    savedBy     SavedListing[]
-    applications Application[]
-    leases       Lease[]
-    images       ListingImage[]
-    terms        ListingTerms?
+//////////////////////////////////////////////////
+// LANDOWNER PROFILE
+//////////////////////////////////////////////////
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model LandownerProfile {
+  id        String @id @default(cuid())
+  userId    String @unique
 
-    @@index([status])
-    @@index([ownerId])
-  }
+  ownershipType String?
+  verificationLevel Int @default(0)
 
-  //////////////////////////////////////////////////
-  // LISTING TERMS (Legal Layer)
-  //////////////////////////////////////////////////
+  preferredPaymentFrequency String?
+  preferredContactMethod    String?
 
-  model ListingTerms {
-    id String @id @default(cuid())
+  isVerified Boolean @default(false)
 
-    listingId String @unique
-    listing   LandListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  lands Land[]
 
-    securityDepositRequired Boolean @default(true)
-    depositAmount Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    paymentFrequency PaymentFrequency
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
 
-    maintenanceResponsibility String?
-    electricityCostResponsibility String?
-    waterCostResponsibility String?
+//////////////////////////////////////////////////
+// LAND
+//////////////////////////////////////////////////
 
-    allowsSubleasing Boolean @default(false)
-    allowsInfrastructureModification Boolean @default(false)
+model Land {
+  id          String @id @default(cuid())
+  landownerId String
 
-    additionalTerms String?
+  title   String
+  size    Float
+  landType LandType
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-  }
+  soilType String?
 
-  //////////////////////////////////////////////////
-  // BID
-  //////////////////////////////////////////////////
+  latitude  Float?
+  longitude Float?
 
-  model Bid {
-    id        String @id @default(cuid())
+  village String?
 
-    listingId String
-    listing   LandListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  irrigationAvailable Boolean @default(false)
+  waterSourceType     String?
 
-    farmerId  String
-    farmer    User @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  electricityAvailable Boolean?
+  roadAccess Boolean?
+  fencingAvailable Boolean?
+  storageAvailable Boolean?
 
-    amount Float
-    status BidStatus @default(ACTIVE)
+  allowedCropTypes String[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  allowsInfrastructureModification Boolean @default(false)
+  allowsOrganicFarming Boolean @default(true)
+  allowsSubleasing Boolean @default(false)
 
-    @@index([listingId, amount])
-  }
+  depositAmount Float?
 
-  //////////////////////////////////////////////////
-  // APPLICATION (BACKWARD SAFE + MARKETPLACE READY)
-  //////////////////////////////////////////////////
+  expectedRentMin Float?
+  expectedRentMax Float?
 
-  model Application {
-    id       String @id @default(cuid())
+  minLeaseDuration Int
+  maxLeaseDuration Int
 
-    landId   String
-    land     Land   @relation(fields: [landId], references: [id], onDelete: Cascade)
+  preferredFarmerExperienceMin Int?
 
-    farmerId String
-    farmer   User   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  securityDepositRequired Boolean @default(true)
 
-    listingId String?
-    listing   LandListing? @relation(fields: [listingId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    proposedRent Float?
-    duration     Int
-    cropPlan     String?
-    message      String?
+  landowner LandownerProfile @relation(fields: [landownerId], references: [id], onDelete: Cascade)
 
-    status ApplicationStatus @default(PENDING)
+  listings     LandListing[]
+  leases       Lease[]
+  applications Application[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-  }
+  soilReports SoilReport[]
+  documents   Document[]
 
-  //////////////////////////////////////////////////
-  // LEASE
-  //////////////////////////////////////////////////
+  @@index([landownerId])
+}
 
-  model Lease {
-    id       String @id @default(cuid())
+//////////////////////////////////////////////////
+// LAND LISTING
+//////////////////////////////////////////////////
 
-    landId   String
-    land     Land @relation(fields: [landId], references: [id], onDelete: Cascade)
+model LandListing {
+  id String @id @default(cuid())
 
-    farmerId String
-    farmer   User @relation("FarmerLeases", fields: [farmerId], references: [id], onDelete: Cascade)
+  landId  String
+  ownerId String
 
-    ownerId  String
-    owner    User @relation("OwnerLeases", fields: [ownerId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
 
-    listingId String?
-    listing   LandListing? @relation(fields: [listingId], references: [id])
+  listingType ListingType @default(OPEN_BIDDING)
+  status      ListingStatus @default(DRAFT)
 
-    rent            Float
-    securityDeposit Float?
+  basePrice Float
 
-    startDate DateTime
-    endDate   DateTime
-    status    LeaseStatus @default(DRAFT)
+  reservePrice Float?
+  buyNowPrice Float?
 
-    payments Payment[]
-    review   Review?
+  minimumLeaseDuration Int
+  maximumLeaseDuration Int
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-  }
+  startDate DateTime
+  endDate   DateTime
 
-  //////////////////////////////////////////////////
-  // REVIEW (TRUST LAYER)
-  //////////////////////////////////////////////////
+  totalBids  Int @default(0)
+  highestBid Float?
 
-  model Review {
-    id        String @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    leaseId   String @unique
-    lease     Lease  @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  land  Land @relation(fields: [landId], references: [id], onDelete: Cascade)
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
-    reviewerId String
-    reviewer   User @relation("Reviewer", fields: [reviewerId], references: [id])
+  bids         Bid[]
+  leases       Lease[]
+  applications Application[]
 
-    revieweeId String
-    reviewee   User @relation("Reviewee", fields: [revieweeId], references: [id])
+  images ListingImage[]
+  terms  ListingTerms?
 
-    rating  Int
-    comment String?
+  savedBy SavedListing[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-  }
+  @@index([ownerId])
+  @@index([status])
+}
 
-  //////////////////////////////////////////////////
-  // LISTING IMAGE
-  //////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// LISTING TERMS
+//////////////////////////////////////////////////
 
-  model ListingImage {
-    id        String @id @default(cuid())
-    listingId String
-    listing   LandListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-    url       String
-    caption   String?
-    isPrimary Boolean @default(false)
-  }
+model ListingTerms {
+  id        String @id @default(cuid())
+  listingId String @unique
 
-  //////////////////////////////////////////////////
-  // SAVED LISTING
-  //////////////////////////////////////////////////
+  securityDepositRequired Boolean @default(true)
+  depositAmount Float?
 
-  model SavedListing {
-    id        String @id @default(cuid())
-    listingId String
-    listing   LandListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-    userId    String
-    user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentFrequency PaymentFrequency
 
-    @@unique([listingId, userId])
-  }
+  maintenanceResponsibility String?
+  electricityCostResponsibility String?
+  waterCostResponsibility String?
 
-  //////////////////////////////////////////////////
-  // REMAINING MODELS (UNCHANGED CORE)
-  //////////////////////////////////////////////////
+  allowsSubleasing Boolean @default(false)
+  allowsInfrastructureModification Boolean @default(false)
 
-  model Payment {
-    id      String @id @default(cuid())
-    userId  String
-    leaseId String?
+  additionalTerms String?
 
-    user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-    lease Lease? @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    amount      Float
-    currency    String @default("INR")
-    status      PaymentStatus @default(PENDING)
-    providerRef String?
+  listing LandListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
 
-    createdAt DateTime @default(now())
-  }
+//////////////////////////////////////////////////
+// BID
+//////////////////////////////////////////////////
 
-  model Subscription {
-    id     String @id @default(cuid())
-    userId String @unique
-    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Bid {
+  id String @id @default(cuid())
 
-    plan   String
-    status SubscriptionStatus @default(ACTIVE)
+  listingId String
+  farmerId  String
 
-    startedAt DateTime @default(now())
-    endsAt    DateTime?
-  }
+  amount Float
 
-  model Message {
-    id         String @id @default(cuid())
-    senderId   String
-    receiverId String
+  status BidStatus @default(ACTIVE)
 
-    sender   User @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
-    receiver User @relation("MessagesReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    content   String
-    createdAt DateTime @default(now())
-  }
+  listing LandListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  farmer  User @relation(fields: [farmerId], references: [id], onDelete: Cascade)
 
-  model Notification {
-    id     String @id @default(cuid())
-    userId String
-    user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([listingId])
+  @@index([farmerId])
+}
 
-    type    NotificationType
-    title   String
-    message String
-    isRead  Boolean @default(false)
+//////////////////////////////////////////////////
+// APPLICATION
+//////////////////////////////////////////////////
 
-    createdAt DateTime @default(now())
-  }
+model Application {
+  id String @id @default(cuid())
 
-  model AuditLog {
-    id     String @id @default(cuid())
-    userId String?
-    user   User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  landId   String
+  farmerId String
 
-    action   String
-    metadata Json?
+  listingId String?
 
-    createdAt DateTime @default(now())
-  }
+  proposedRent Float?
 
-  model Document {
-    id     String @id @default(cuid())
-    landId String?
-    userId String?
+  duration Int
 
-    land Land? @relation(fields: [landId], references: [id], onDelete: Cascade)
-    user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cropPlan String?
 
-    name String
-    url  String
+  message String?
 
-    createdAt DateTime @default(now())
-  }
+  status ApplicationStatus @default(PENDING)
 
-  model SoilReport {
-    id     String @id @default(cuid())
-    landId String
-    land   Land   @relation(fields: [landId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    ph        Float?
-    moisture  Float?
-    nutrients String?
+  land    Land @relation(fields: [landId], references: [id], onDelete: Cascade)
+  farmer  User @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  listing LandListing? @relation(fields: [listingId], references: [id])
 
-    createdAt DateTime @default(now())
-  }
+  @@index([farmerId])
+}
+
+//////////////////////////////////////////////////
+// LEASE
+//////////////////////////////////////////////////
+
+model Lease {
+  id String @id @default(cuid())
+
+  landId   String
+  farmerId String
+  ownerId  String
+
+  listingId String?
+
+  rent Float
+
+  securityDeposit Float?
+
+  startDate DateTime
+  endDate   DateTime
+
+  status LeaseStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  land   Land @relation(fields: [landId], references: [id], onDelete: Cascade)
+  farmer User @relation("FarmerLeases", fields: [farmerId], references: [id])
+  owner  User @relation("OwnerLeases", fields: [ownerId], references: [id])
+
+  listing LandListing? @relation(fields: [listingId], references: [id])
+
+  payments Payment[]
+
+  review Review?
+
+  @@index([farmerId])
+  @@index([ownerId])
+}
+
+//////////////////////////////////////////////////
+// PAYMENT
+//////////////////////////////////////////////////
+
+model Payment {
+  id String @id @default(cuid())
+
+  userId String
+  leaseId String?
+
+  amount Float
+  currency String @default("INR")
+
+  status PaymentStatus @default(PENDING)
+
+  providerRef String?
+
+  createdAt DateTime @default(now())
+
+  user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lease Lease? @relation(fields: [leaseId], references: [id])
+
+  @@index([userId])
+}
+
+//////////////////////////////////////////////////
+// SUBSCRIPTION
+//////////////////////////////////////////////////
+
+model Subscription {
+  id String @id @default(cuid())
+
+  userId String @unique
+
+  plan String
+
+  status SubscriptionStatus @default(ACTIVE)
+
+  startedAt DateTime @default(now())
+  endsAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+//////////////////////////////////////////////////
+// REVIEW
+//////////////////////////////////////////////////
+
+model Review {
+  id String @id @default(cuid())
+
+  leaseId String @unique
+
+  reviewerId String
+  revieweeId String
+
+  rating Int
+  comment String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lease Lease @relation(fields: [leaseId], references: [id])
+
+  reviewer User @relation("Reviewer", fields: [reviewerId], references: [id])
+  reviewee User @relation("Reviewee", fields: [revieweeId], references: [id])
+}
+
+//////////////////////////////////////////////////
+// MESSAGING
+//////////////////////////////////////////////////
+
+model Message {
+  id String @id @default(cuid())
+
+  senderId String
+  receiverId String
+
+  content String
+
+  createdAt DateTime @default(now())
+
+  sender   User @relation("MessagesSent", fields: [senderId], references: [id])
+  receiver User @relation("MessagesReceived", fields: [receiverId], references: [id])
+}
+
+//////////////////////////////////////////////////
+// NOTIFICATIONS
+//////////////////////////////////////////////////
+
+model Notification {
+  id String @id @default(cuid())
+
+  userId String
+
+  type NotificationType
+
+  title String
+  message String
+
+  isRead Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+//////////////////////////////////////////////////
+// SAVED LISTINGS
+//////////////////////////////////////////////////
+
+model SavedListing {
+  id String @id @default(cuid())
+
+  listingId String
+  userId String
+
+  listing LandListing @relation(fields: [listingId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([listingId, userId])
+}
+
+//////////////////////////////////////////////////
+// LISTING IMAGES
+//////////////////////////////////////////////////
+
+model ListingImage {
+  id String @id @default(cuid())
+
+  listingId String
+
+  url String
+  caption String?
+
+  isPrimary Boolean @default(false)
+
+  listing LandListing @relation(fields: [listingId], references: [id])
+}
+
+//////////////////////////////////////////////////
+// SOIL REPORT
+//////////////////////////////////////////////////
+
+model SoilReport {
+  id String @id @default(cuid())
+
+  landId String
+
+  ph Float?
+  moisture Float?
+
+  nutrients String?
+
+  createdAt DateTime @default(now())
+
+  land Land @relation(fields: [landId], references: [id])
+}
+
+//////////////////////////////////////////////////
+// DOCUMENTS
+//////////////////////////////////////////////////
+
+model Document {
+  id String @id @default(cuid())
+
+  userId String?
+  landId String?
+
+  name String
+  url String
+
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+  land Land? @relation(fields: [landId], references: [id])
+}
+
+//////////////////////////////////////////////////
+// AUDIT LOG
+//////////////////////////////////////////////////
+
+model AuditLog {
+  id String @id @default(cuid())
+
+  userId String?
+
+  action String
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+//////////////////////////////////////////////////
+// ENUMS
+//////////////////////////////////////////////////
+
+enum UserRole {
+  FARMER
+  LANDOWNER
+  ADMIN
+}
+
+enum FarmingType {
+  SUBSISTENCE
+  COMMERCIAL
+  ORGANIC
+  MIXED
+}
+
+enum LandType {
+  AGRICULTURAL
+  FALLOW
+  ORCHARD
+  PASTURE
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum LeaseStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  TERMINATED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+}
+
+enum NotificationType {
+  SYSTEM
+  LEASE
+  PAYMENT
+  MESSAGE
+  LISTING
+  BID
+  REVIEW
+}
+
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  CANCELLED
+  EXPIRED
+}
+
+enum ListingType {
+  OPEN_BIDDING
+  FIXED_PRICE
+}
+
+enum BidStatus {
+  ACTIVE
+  OUTBID
+  WITHDRAWN
+  ACCEPTED
+}
+
+enum PaymentFrequency {
+  MONTHLY
+  QUARTERLY
+  HALF_YEARLY
+  YEARLY
+  ONE_TIME
+}
