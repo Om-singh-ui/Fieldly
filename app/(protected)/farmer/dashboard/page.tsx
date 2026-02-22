@@ -1,172 +1,100 @@
 // app/(protected)/farmer/dashboard/page.tsx
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import {
-  Package,
-  Landmark,
-  TrendingUp,
-  Calendar,
-  Leaf,
-  MapPin,
-} from "lucide-react";
+
 import { DashboardHeroHeader } from "./_components/DashboardHeroHeader";
+import { FarmerStatsGrid } from "./_components/FarmerStatsGrid";
+import { FarmerProfileCard } from "./_components/FarmerProfileCard";
+import { FarmerQuickActions } from "./_components/FarmerQuickActions";
+import { FarmerRecentActivity } from "./_components/FarmerRecentActivity";
+
+import {
+  getFarmerDashboardData,
+  getFarmerActivityFeed,
+} from "@/lib/queries/farmers";
 
 export default async function FarmerDashboardPage() {
+  /////////////////////////////////////////////////////////
+  // AUTH
+  /////////////////////////////////////////////////////////
+
   const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
 
-  const user = await prisma.user.findUnique({
-    where: { clerkUserId: userId },
-    include: {
-      farmerProfile: true,
-    },
-  });
+  if (!userId) {
+    redirect("/sign-in");
+  }
 
-  if (!user || !user.farmerProfile) {
+  /////////////////////////////////////////////////////////
+  // FETCH DASHBOARD DATA
+  /////////////////////////////////////////////////////////
+
+  const dashboard = await getFarmerDashboardData(userId);
+
+  // Safety check (TypeScript + runtime safe)
+  if (!dashboard || !dashboard.user || !dashboard.user.farmerProfile) {
     redirect("/onboarding/farmer");
   }
 
-  const stats = [
-    {
-      label: "Active Applications",
-      value: "3",
-      icon: Package,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-    },
-    {
-      label: "Current Leases",
-      value: "1",
-      icon: Landmark,
-      color: "text-green-600",
-      bg: "bg-green-50",
-    },
-    {
-      label: "Recommended Lands",
-      value: "12",
-      icon: MapPin,
-      color: "text-purple-600",
-      bg: "bg-purple-50",
-    },
-    {
-      label: "Upcoming Payments",
-      value: "2",
-      icon: TrendingUp,
-      color: "text-orange-600",
-      bg: "bg-orange-50",
-    },
-  ];
+  /////////////////////////////////////////////////////////
+  // FETCH ACTIVITY FEED
+  /////////////////////////////////////////////////////////
+
+  const activities = await getFarmerActivityFeed(userId);
+
+  /////////////////////////////////////////////////////////
+  // ENSURE stats contains savedListings (critical fix)
+  /////////////////////////////////////////////////////////
+
+  const stats = {
+    activeApplications: dashboard.stats.activeApplications ?? 0,
+
+    activeLeases: dashboard.stats.activeLeases ?? 0,
+
+    recommendedLands: dashboard.stats.recommendedLands ?? 0,
+
+    upcomingPayments: dashboard.stats.upcomingPayments ?? 0,
+
+    savedListings: dashboard.stats.savedListings ?? 0,
+  };
+
+  /////////////////////////////////////////////////////////
+  // UI
+  /////////////////////////////////////////////////////////
 
   return (
-    <div className="p-6 mt-12">
-      {/* Header */}
-      <DashboardHeroHeader name={user.name} />
+    <div className="min-h-screen bg-gradient-to-b from-muted/30 via-background to-background">
+      {/* HERO */}
+      <section className="relative pt-24 md:pt-28 lg:pt-32 pb-8">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/3 w-[500px] h-[500px] blur-3xl rounded-full" />
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={stat.label}
-              className="rounded-xl p-6 shadow-sm border border-gray-100"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">{stat.label}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
-                    {stat.value}
-                  </p>
-                </div>
-                <div className={`p-3 rounded-lg ${stat.bg}`}>
-                  <Icon className={`h-6 w-6 ${stat.color}`} />
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Profile Summary */}
-      <div className="rounded-xl p-8 shadow-sm border border-gray-100 mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">
-          Your Farming Profile
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Leaf className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Primary Crops</p>
-                <p className="font-medium text-gray-900">
-                  {user.farmerProfile.primaryCrops.join(", ")}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Calendar className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Farming Experience</p>
-                <p className="font-medium text-gray-900">
-                  {user.farmerProfile.farmingExperience} years
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <MapPin className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Required Land Size</p>
-                <p className="font-medium text-gray-900">
-                  {user.farmerProfile.requiredLandSize} acres
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Landmark className="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">
-                  Preferred Lease Duration
-                </p>
-                <p className="font-medium text-gray-900">
-                  {user.farmerProfile.leaseDuration} months
-                </p>
-              </div>
-            </div>
-          </div>
+          <div className="absolute top-0 right-1/3 w-[400px] h-[400px]  blur-3xl rounded-full" />
         </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div className="rounded-xl p-8 shadow-sm border border-green-100">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">
-          Quick Actions
-        </h2>
-        <div className="flex flex-wrap gap-4">
-          <button className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors">
-            Find Available Land
-          </button>
-          <button className="px-6 py-3 bg-white text-green-600 font-medium rounded-lg border border-green-600 hover:bg-green-50 transition-colors">
-            Submit New Application
-          </button>
-          <button className="px-6 py-3 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
-            View Applications
-          </button>
-          <button className="px-6 py-3 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
-            Manage Leases
-          </button>
+        <div className="relative max-w-7xl mx-auto px-6">
+          <DashboardHeroHeader name={dashboard.user.name} />
         </div>
-      </div>
+      </section>
+
+      {/* MAIN */}
+      <main className="relative max-w-7xl mx-auto px-6 pb-16 space-y-8">
+        {/* Stats Grid */}
+        <FarmerStatsGrid stats={stats} />
+
+        {/* Profile + Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <FarmerProfileCard profile={dashboard.user.farmerProfile} />
+
+          <FarmerQuickActions />
+        </div>
+
+        {/* Activity Feed */}
+        <FarmerRecentActivity activities={activities} />
+      </main>
     </div>
   );
 }

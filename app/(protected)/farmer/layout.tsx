@@ -33,7 +33,7 @@ export default async function FarmerLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* You can add farmer-specific header/sidebar here */}
       {children}
     </div>

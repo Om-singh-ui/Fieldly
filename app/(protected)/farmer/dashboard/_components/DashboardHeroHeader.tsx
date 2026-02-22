@@ -17,7 +17,7 @@ export function DashboardHeroHeader({ name }: Props) {
         duration: 0.45,
         ease: [0.22, 1, 0.36, 1], // smoother than easeOut
       }}
-      className="relative mb-12 mt-16"
+      className="relative"
     >
       <motion.div
         whileHover={{
