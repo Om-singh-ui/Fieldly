@@ -10,6 +10,7 @@ import {
   Leaf,
   MapPin,
 } from "lucide-react";
+import { DashboardHeroHeader } from "./_components/DashboardHeroHeader";
 
 export default async function FarmerDashboardPage() {
   const { userId } = await auth();
@@ -58,14 +59,9 @@ export default async function FarmerDashboardPage() {
   ];
 
   return (
-    <div className="p-6 mt-16">
+    <div className="p-6 mt-12">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {user.name} 👨‍🌾
-        </h1>
-        <p className="text-gray-600 mt-2">Here&apos;s your farming dashboard</p>
-      </div>
+      <DashboardHeroHeader name={user.name} />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -74,7 +70,7 @@ export default async function FarmerDashboardPage() {
           return (
             <div
               key={stat.label}
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+              className="rounded-xl p-6 shadow-sm border border-gray-100"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -93,7 +89,7 @@ export default async function FarmerDashboardPage() {
       </div>
 
       {/* Profile Summary */}
-      <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 mb-8">
+      <div className="rounded-xl p-8 shadow-sm border border-gray-100 mb-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-6">
           Your Farming Profile
         </h2>
@@ -152,7 +148,7 @@ export default async function FarmerDashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-8 border border-green-100">
+      <div className="rounded-xl p-8 shadow-sm border border-green-100">
         <h2 className="text-xl font-semibold text-gray-900 mb-6">
           Quick Actions
         </h2>
