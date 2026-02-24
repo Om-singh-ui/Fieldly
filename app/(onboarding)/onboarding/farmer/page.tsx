@@ -161,7 +161,7 @@ export default function FarmerOnboardingPage() {
       case 3:
         return <InfrastructureForm form={form} />;
       case 4:
-        return <SuccessScreen onContinue={() => router.push("/post-auth")} />;
+        return <SuccessScreen onContinue={() => router.replace("/farmer/dashboard")} />;
       default:
         return null;
     }

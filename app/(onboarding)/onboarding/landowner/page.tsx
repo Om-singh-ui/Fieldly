@@ -212,7 +212,7 @@ export default function LandownerOnboardingPage() {
       case 3:
         return <ReviewForm form={form} />;
       case 4:
-        return <SuccessScreen role="landowner" onContinue={() => router.push("/dashboard/landowner")} />;
+        return <SuccessScreen role="landowner" onContinue={() => router.replace("/landowner/dashboard")} />;
       default:
         return null;
     }
