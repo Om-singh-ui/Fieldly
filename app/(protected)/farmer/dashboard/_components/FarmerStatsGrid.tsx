@@ -144,19 +144,7 @@ export function FarmerStatsGrid({ stats }: StatsGridProps) {
                   <Icon className={`h-6 w-6 ${stat.color}`} />
                 </motion.div>
                 
-                {/* Sparkle Effect */}
-                <motion.div
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.5, 1, 0.5],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    delay: stat.delay,
-                  }}
-                  className="w-2 h-2 rounded-full bg-green-400"
-                />
+            
               </div>
               
               <div>
@@ -165,7 +153,7 @@ export function FarmerStatsGrid({ stats }: StatsGridProps) {
                 </p>
                 <motion.p 
                   className="text-3xl font-bold text-gray-900 dark:text-white"
-                  initial={{ scale: 0.5 }}
+                  initial={{ scale: 0.5 }}   
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 200, delay: stat.delay }}
                 >
