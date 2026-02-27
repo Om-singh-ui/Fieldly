@@ -5,27 +5,27 @@ import { motion, Variants } from "framer-motion";
 const steps = [
   {
     id: "01",
-    title: "Create Your Fieldly Account",
+    title: "Sign Up as an Investor",
     description:
-      "Sign up using your email or secure authentication. Fieldly ensures identity validation to maintain a trusted agricultural ecosystem.",
+      "Create your Fieldly Finance account using secure authentication. Your identity is verified to maintain a trusted investment ecosystem.",
   },
   {
     id: "02",
-    title: "Select Your Role",
+    title: "Choose Your Investment Role",
     description:
-      "Choose whether you are a Farmer, Landowner, or Agricultural Investor. Fieldly customizes your platform experience based on your role.",
+      "Select whether you want to fund farmers directly, support landowners, or explore sustainable agricultural opportunities curated by Fieldly.",
   },
   {
     id: "03",
-    title: "Complete Smart Onboarding",
+    title: "Complete Investor Onboarding",
     description:
-      "Submit verification documents, land details, or farming preferences through our guided onboarding engine designed for compliance and transparency.",
+      "Submit your verification documents and financial preferences through our guided onboarding process, ensuring compliance and transparency.",
   },
   {
     id: "04",
-    title: "Access the Fieldly Platform",
+    title: "Start Investing with Confidence",
     description:
-      "Start exploring verified land listings, partnerships, financing opportunities, and sustainable agricultural workflows tailored to your profile.",
+      "Browse verified agricultural projects, fund farmers, monitor your investments, and earn stable returns while supporting sustainable agriculture.",
   },
 ];
 

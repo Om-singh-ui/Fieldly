@@ -166,8 +166,8 @@ opacity-0 group-hover:opacity-100 transition-all duration-300"
 
                 <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-white/20">
                   <p className="text-xs sm:text-sm text-white/90 leading-relaxed">
-                    &quot;Fieldly helped me find perfect land for my organic farm.
-                    The process was seamless!&quot;
+                    &quot;Fieldly helped me find perfect land for my organic
+                    farm. The process was seamless!&quot;
                   </p>
 
                   <div className="text-[11px] sm:text-xs text-white/70 mt-2">
