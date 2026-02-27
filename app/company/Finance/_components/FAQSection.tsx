@@ -9,30 +9,35 @@ import Link from "next/link";
 const faqs = [
   {
     id: "01",
-    question: "What is Fieldly and how does the platform work?",
+    question: "What is Fieldly Finance and how does it work?",
     answer:
-      "Fieldly is a digital land leasing and agricultural finance platform that connects verified landowners with farmers seeking cultivable land. The platform enables transparent agreements, secure payments, and verified land listings while ensuring soil health and sustainable farming practices.",
+      "Fieldly Finance connects investors with verified farmers and sustainable projects. Fund loans, monitor your investments, and earn returns while supporting agriculture.",
   },
   {
     id: "02",
-    question: "Who can use Fieldly?",
+    question: "Who can invest on Fieldly Finance?",
     answer:
-      "Fieldly is designed for landowners looking to lease unused agricultural land, farmers seeking cultivation opportunities, and agricultural investors supporting farming projects. Every user must complete identity and verification checks before accessing marketplace features.",
+      "Retail and institutional investors can participate after completing identity verification and compliance checks.",
   },
   {
     id: "03",
-    question: "How does Fieldly verify land and user authenticity?",
+    question: "How are farmers and projects verified?",
     answer:
-      "Fieldly follows a multi-layer verification system including document validation, land ownership checks, optional field inspections, and soil data validation. This helps maintain trust and ensures all marketplace listings meet platform safety and compliance standards.",
+      "All projects and farmers undergo multi-layer verification including document checks, farm inspections, and financial eligibility assessments.",
   },
   {
     id: "04",
-    question: "Are payments and transactions secure on Fieldly?",
+    question: "Are my investments secure?",
     answer:
-      "Yes. Fieldly uses secure payment integrations and transaction tracking to ensure rent payments, investment flows, and agreement settlements are recorded and protected. Payment milestones are tied to lease agreements to maintain financial transparency for all parties.",
+      "Fieldly Finance uses secure payments, escrow, and real-time tracking. Funds are tied to project milestones to ensure transparency and safety.",
+  },
+  {
+    id: "05",
+    question: "Can I monitor the performance of my investments?",
+    answer:
+      "Investors can track projects, view repayments, and receive real-time updates on agricultural progress to make informed decisions.",
   },
 ];
-
 
 const FAQSection = () => {
   const [active, setActive] = useState<number | null>(null);
@@ -41,15 +46,12 @@ const FAQSection = () => {
     <section className="w-full py-12">
       <div className="max-w-[1100px] mx-auto px-4 md:px-8">
         {/* Header */}
-          <div className="mb-12">
-            <h2 className="text-4xl font-semibold text-gray-900 mb-4">FAQ</h2>
-            <p className="max-w-2xl text-gray-600 leading-relaxed">
-              We created an easy and intuitive climate mitigation platform
-              suitable for both farmers and investors. We also have many answers
-              to the questions that might arise while familiarising yourself with
-              our products.
-            </p>
-          </div>
+        <div className="mb-8">
+          <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-2">FAQ</h2>
+          <p className="max-w-2xl text-gray-600 text-base md:text-lg leading-relaxed">
+            Find answers to common questions about investing with Fieldly Finance. Learn how our platform works and how you can start supporting sustainable agriculture.
+          </p>
+        </div>
 
         {/* FAQ Cards */}
         <div className="rounded-[28px] bg-white shadow-[0_12px_40px_rgba(0,0,0,0.12)] px-6 py-6 sm:px-8 sm:py-8">
