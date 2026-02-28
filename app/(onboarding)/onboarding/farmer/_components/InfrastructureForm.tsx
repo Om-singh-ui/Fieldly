@@ -1,12 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import {
-  Droplets,
-  Tractor,
   AlertCircle,
   Check,
-  CloudRain,
-  Toolbox,
 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { FarmerOnboardingInput } from "@/lib/validations/onboarding";
@@ -17,11 +14,11 @@ interface InfrastructureFormProps {
   form: UseFormReturn<FarmerOnboardingInput>;
 }
 
-/* ---------- Reusable Option Card ---------- */
+/* ---------- Reusable Premium Option Card ---------- */
 
 interface OptionCardProps {
   active: boolean;
-  icon: React.ReactNode;
+  imageSrc: string;
   title: string;
   description: string;
   onClick: () => void;
@@ -29,7 +26,7 @@ interface OptionCardProps {
 
 function OptionCard({
   active,
-  icon,
+  imageSrc,
   title,
   description,
   onClick,
@@ -37,35 +34,54 @@ function OptionCard({
   return (
     <motion.button
       type="button"
+      whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2 }}
       onClick={onClick}
       className={`
-        relative w-full p-5 rounded-xl border text-left
-        transition-all duration-200
+        relative w-full p-6 rounded-2xl text-left
+        border transition-all duration-300
+        backdrop-blur-sm
         ${
           active
-            ? "border-[#b7cf8a] bg-[#b7cf8a]/10"
-            : "border-gray-200 hover:border-gray-300 bg-white"
+            ? "border-[#6c8f3f] bg-[#f4f8ec] shadow-md"
+            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
         }
       `}
     >
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-5">
+        {/* Image Icon Container */}
         <div
           className={`
-            w-10 h-10 rounded-lg flex items-center justify-center
-            ${active ? "bg-[#b7cf8a]/30" : "bg-gray-100"}
+            relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0
+            ${active ? "ring-2 ring-[#6c8f3f]" : ""}
           `}
         >
-          {icon}
+          <Image
+            src={imageSrc}
+            alt={title}
+            fill
+            className="object-cover"
+          />
         </div>
 
         <div className="flex-1">
-          <div className="font-medium text-gray-900">{title}</div>
-          <div className="text-sm text-gray-500 mt-1">{description}</div>
+          <div className="font-semibold text-gray-900 text-sm">
+            {title}
+          </div>
+          <div className="text-sm text-gray-500 mt-1 leading-relaxed">
+            {description}
+          </div>
         </div>
 
         {active && (
-          <Check className="h-5 w-5 text-[#6c8f3f]" />
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute top-4 right-4"
+          >
+            <Check className="h-5 w-5 text-[#6c8f3f]" />
+          </motion.div>
         )}
       </div>
     </motion.button>
@@ -86,44 +102,54 @@ export function InfrastructureForm({ form }: InfrastructureFormProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-10"
+      transition={{ duration: 0.4 }}
+      className="max-w-3xl mx-auto space-y-14"
     >
       {/* Header */}
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-[#b7cf8a]/20 rounded-xl mb-4">
-          <Droplets className="h-7 w-7 text-[#6c8f3f]" />
-        </div>
+        <motion.div
+          initial={{ scale: 0.85, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="inline-flex items-center justify-center w-20 h-20  rounded-2xl shadow-sm mb-6"
+        >
+          <Image
+            src="/onboarding/maininfraicon.png"
+            alt="Infrastructure"
+            width={74}
+            height={74}
+          />
+        </motion.div>
 
-        <h2 className="text-xl font-semibold text-gray-900">
+        <h2 className="text-2xl font-semibold text-gray-900">
           Infrastructure & Equipment
         </h2>
 
-        <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto">
-          Tell us about irrigation and equipment availability.
+        <p className="text-sm text-gray-500 mt-3 max-w-md mx-auto">
+          Help us understand irrigation and machinery availability
+          to provide better land recommendations.
         </p>
       </div>
 
       {/* Irrigation Section */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
-          <h3 className="text-sm font-medium text-gray-900">
+          <h3 className="text-sm font-semibold text-gray-900">
             Irrigation
           </h3>
-
           <p className="text-sm text-gray-500">
             Does the land require irrigation facilities?
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-3">
+        <div className="grid md:grid-cols-2 gap-5">
           <OptionCard
             active={irrigationNeeded === true}
-            icon={<Droplets className="h-5 w-5 text-gray-700" />}
+            imageSrc="/onboarding/waterirrigation.png"
             title="Irrigation Required"
-            description="Land must include water infrastructure."
+            description="Land must include water infrastructure support."
             onClick={() =>
               setValue("irrigationNeeded", true, { shouldValidate: true })
             }
@@ -131,7 +157,7 @@ export function InfrastructureForm({ form }: InfrastructureFormProps) {
 
           <OptionCard
             active={irrigationNeeded === false}
-            icon={<CloudRain className="h-5 w-5 text-gray-700" />}
+            imageSrc="/onboarding/selfirrigation.webp"
             title="Self Managed"
             description="I manage irrigation independently."
             onClick={() =>
@@ -149,21 +175,20 @@ export function InfrastructureForm({ form }: InfrastructureFormProps) {
       </div>
 
       {/* Equipment Section */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
-          <h3 className="text-sm font-medium text-gray-900">
+          <h3 className="text-sm font-semibold text-gray-900">
             Equipment Access
           </h3>
-
           <p className="text-sm text-gray-500">
             Do you have access to farming machinery?
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-3">
+        <div className="grid md:grid-cols-2 gap-5">
           <OptionCard
             active={equipmentAccess === true}
-            icon={<Tractor className="h-5 w-5 text-gray-700" />}
+            imageSrc="/onboarding/Commercial.png"
             title="Equipment Available"
             description="Machinery is already available."
             onClick={() =>
@@ -173,7 +198,7 @@ export function InfrastructureForm({ form }: InfrastructureFormProps) {
 
           <OptionCard
             active={equipmentAccess === false}
-            icon={<Toolbox className="h-5 w-5 text-gray-700" />}
+            imageSrc="/onboarding/selfmannaged.jpg"
             title="Need Equipment"
             description="Require access to farming tools."
             onClick={() =>
@@ -191,16 +216,17 @@ export function InfrastructureForm({ form }: InfrastructureFormProps) {
       </div>
 
       {/* Info Note */}
-      <div className="rounded-xl border border-gray-200 p-5">
-        <div className="flex gap-3">
-          <Tractor className="h-5 w-5 text-gray-500 mt-1" />
-
-          <p className="text-sm text-gray-600">
-            Equipment and irrigation preferences help us recommend suitable land
-            and support services.
-          </p>
-        </div>
-      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+      >
+        <p className="text-sm text-gray-600 leading-relaxed">
+          Infrastructure preferences allow us to match you with land
+          that fits your operational capacity and long-term farming goals.
+        </p>
+      </motion.div>
     </motion.div>
   );
 }

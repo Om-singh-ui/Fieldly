@@ -81,8 +81,8 @@ shadow-[0_18px_45px_-12px_rgba(0,0,0,0.22)]
                     <Image
                       src={step.image}
                       alt={step.title}
-                      width={26}
-                      height={26}
+                      width={28}
+                      height={28}
                       className={`
                         object-contain transition duration-300
                         ${!isActive && !isCompleted ? "grayscale opacity-70" : ""}
