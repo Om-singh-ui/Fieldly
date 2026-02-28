@@ -1,7 +1,7 @@
 "use client";
 
 import { User, Building2, AlertCircle, Check } from "lucide-react";
-import { UseFormReturn } from "react-hook-form";
+import type { UseFormReturn } from "react-hook-form";
 import { LandownerOnboardingInput, ownershipTypes } from "@/lib/validations/onboarding";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -40,8 +40,8 @@ export function ProfileForm({ form }: ProfileFormProps) {
           <Image
             src="/onboarding/user-man-account-person.png"
             alt="Profile Icon"
-            height={48}
             width={48}
+            height={48}
             className="object-contain"
           />
         </motion.div>
@@ -70,6 +70,7 @@ export function ProfileForm({ form }: ProfileFormProps) {
           <textarea
             {...register("bio")}
             rows={5}
+            maxLength={500}
             placeholder="Tell us about your land ownership experience, how many acres you own, what type of farming you prefer, and what you're looking for in tenants..."
             className="px-4 py-3.5 w-full bg-transparent rounded-xl focus:outline-none text-sm resize-none"
           />
@@ -79,7 +80,11 @@ export function ProfileForm({ form }: ProfileFormProps) {
           <span className="text-xs text-gray-500">
             Minimum 20 characters
           </span>
-          <span className={`text-xs ${bio.length >= 20 ? 'text-green-600' : 'text-gray-400'}`}>
+          <span
+            className={`text-xs font-medium ${
+              bio.length >= 20 ? "text-green-600" : "text-gray-400"
+            }`}
+          >
             {bio.length}/500
           </span>
         </div>
@@ -112,26 +117,38 @@ export function ProfileForm({ form }: ProfileFormProps) {
                 key={type}
                 type="button"
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setValue("ownershipType", type)}
-                className={`
-                  relative p-5 rounded-xl border text-left
-                  transition-all duration-200
-                  ${active
-                    ? "border-[#b7cf8a] bg-[#b7cf8a]/10"
-                    : "border-gray-200 hover:border-gray-300 bg-white"
+                onClick={() =>
+                  setValue("ownershipType", type, { shouldValidate: true })
+                }
+                className={`relative p-5 rounded-xl border text-left transition-all duration-200
+                  ${
+                    active
+                      ? "border-[#b7cf8a] bg-[#b7cf8a]/10 shadow-sm"
+                      : "border-gray-200 hover:border-gray-300 bg-white"
                   }
                 `}
               >
                 <div className="flex items-start gap-4">
-                  <div className={`
-                    w-10 h-10 rounded-lg flex items-center justify-center
-                    ${active ? "bg-[#b7cf8a]/30" : "bg-gray-100"}
-                  `}>
-                    <Building2 className={`h-5 w-5 ${active ? "text-[#6c8f3f]" : "text-gray-600"}`} />
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition
+                      ${
+                        active
+                          ? "bg-[#b7cf8a]/30"
+                          : "bg-gray-100"
+                      }
+                    `}
+                  >
+                    <Building2
+                      className={`h-5 w-5 ${
+                        active ? "text-[#6c8f3f]" : "text-gray-600"
+                      }`}
+                    />
                   </div>
 
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900">{type}</div>
+                    <div className="font-medium text-gray-900">
+                      {type}
+                    </div>
                   </div>
 
                   {active && (
@@ -169,7 +186,7 @@ export function ProfileForm({ form }: ProfileFormProps) {
             </h4>
 
             <p className="text-sm text-gray-700">
-              A complete profile helps farmers understand your expectations and 
+              A complete profile helps farmers understand your expectations and
               builds trust before they apply to lease your land.
             </p>
           </div>

@@ -1,63 +1,55 @@
 "use client";
 
-import { Calendar, AlertCircle, Check } from "lucide-react";
+import { Calendar, AlertCircle, Check, Search } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { FarmerOnboardingInput } from "@/lib/validations/onboarding";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 
 interface FarmingDetailsFormProps {
   form: UseFormReturn<FarmerOnboardingInput>;
 }
 
+/* =========================================================
+   DATA
+========================================================= */
+
 const CROPS_BY_SEASON = {
   rabi: {
     name: "Rabi (Winter)",
-    icon: "❄️",
+    icon: "/onboarding/Winter.png",
     crops: [
-      { name: "Wheat", icon: "🌾" },
-      { name: "Barley", icon: "🌾" },
-      { name: "Mustard", icon: "🟡" },
-      { name: "Peas", icon: "🫛" },
-      { name: "Gram", icon: "🥜" },
-      { name: "Potato", icon: "🥔" },
+      { name: "Wheat", icon: "/onboarding/wheat-sack.png" },
+      { name: "Barley", icon: "/onboarding/barley.png" },
+      { name: "Mustard", icon: "/onboarding/Mustard.png" },
+      { name: "Peas", icon: "/onboarding/pea.png" },
+      { name: "Gram", icon: "/onboarding/GramChickpea.png" },
+      { name: "Potato", icon: "/onboarding/potato.png" },
     ],
   },
   kharif: {
     name: "Kharif (Monsoon)",
-    icon: "🌧️",
+    icon: "/onboarding/Monsoon.png",
     crops: [
-      { name: "Rice", icon: "🍚" },
-      { name: "Maize", icon: "🌽" },
-      { name: "Cotton", icon: "🧵" },
-      { name: "Soybean", icon: "🫘" },
-      { name: "Groundnut", icon: "🥜" },
-      { name: "Turmeric", icon: "🟡" },
+      { name: "Rice", icon: "/onboarding/rice.png" },
+      { name: "Maize", icon: "/onboarding/maize.png" },
+      { name: "Cotton", icon: "/onboarding/cotton.png" },
+      { name: "Soybean", icon: "/onboarding/soy.png" },
+      { name: "Groundnut", icon: "/onboarding/groundnut.png" },
+      { name: "Turmeric", icon: "/onboarding/turmeric.png" },
     ],
   },
   zaid: {
     name: "Zaid (Summer)",
-    icon: "☀️",
+    icon: "/onboarding/summers.png",
     crops: [
-      { name: "Watermelon", icon: "🍉" },
-      { name: "Cucumber", icon: "🥒" },
-      { name: "Sunflower", icon: "🌻" },
-      { name: "Pumpkin", icon: "🎃" },
-      { name: "Muskmelon", icon: "🍈" },
-      { name: "Fodder Crops", icon: "🌱" },
-    ],
-  },
-  perennial: {
-    name: "Perennial",
-    icon: "🔄",
-    crops: [
-      { name: "Sugarcane", icon: "🎋" },
-      { name: "Coffee", icon: "☕" },
-      { name: "Tea", icon: "🍃" },
-      { name: "Rubber", icon: "🛞" },
-      { name: "Fruits", icon: "🍎" },
-      { name: "Spices", icon: "🌶️" },
+      { name: "Watermelon", icon: "/onboarding/watermelon.png" },
+      { name: "Cucumber", icon: "/onboarding/cucumber.png" },
+      { name: "Sunflower", icon: "/onboarding/sunflower.png" },
+      { name: "Pumpkin", icon: "/onboarding/pumpkin.png" },
+      { name: "Muskmelon", icon: "/onboarding/muskmelon.png" },
+      { name: "Fodder Crops", icon: "/onboarding/FodderCrops.png" },
     ],
   },
 };
@@ -67,30 +59,33 @@ const FARMING_TYPES = [
     value: "ORGANIC",
     label: "Organic Farming",
     desc: "Chemical-free sustainable practices",
-    icon: "🌿",
+    icon: "/onboarding/organic.png",
   },
   {
     value: "COMMERCIAL",
     label: "Commercial Farming",
     desc: "Large-scale profit-driven cultivation",
-    icon: "💰",
+    icon: "/onboarding/Commercial.png",
   },
   {
     value: "SUBSISTENCE",
     label: "Subsistence Farming",
     desc: "Food grown for family consumption",
-    icon: "🏠",
+    icon: "/onboarding/Subsistence.png",
   },
   {
     value: "MIXED",
     label: "Mixed Farming",
     desc: "Combination of crops and livestock",
-    icon: "🐄",
+    icon: "/onboarding/mixed.png",
   },
 ];
 
+/* ========================================================= */
+
 export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
   const [selectedSeason, setSelectedSeason] = useState("rabi");
+  const [search, setSearch] = useState("");
 
   const {
     register,
@@ -99,132 +94,129 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
     formState: { errors },
   } = form;
 
-  const selectedCrops = watch("primaryCrops") || [];
-  const farmingExperience = watch("farmingExperience") || 0;
-  const farmingType = watch("farmingType");
+  const selectedCrops: string[] = watch("primaryCrops") || [];
+  const farmingExperience: number = watch("farmingExperience") || 0;
+  const farmingType: string | undefined = watch("farmingType");
 
   const toggleCrop = (crop: string) => {
     const updated = selectedCrops.includes(crop)
-      ? selectedCrops.filter((c: string) => c !== crop)
+      ? selectedCrops.filter((c) => c !== crop)
       : [...selectedCrops, crop];
 
-    setValue("primaryCrops", updated);
+    setValue("primaryCrops", updated, { shouldValidate: true });
   };
+
+  const filteredCrops = useMemo(() => {
+    return CROPS_BY_SEASON[
+      selectedSeason as keyof typeof CROPS_BY_SEASON
+    ].crops.filter((crop) =>
+      crop.name.toLowerCase().includes(search.toLowerCase()),
+    );
+  }, [selectedSeason, search]);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 25 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -25 }}
-      transition={{ duration: 0.35 }}
-      className="space-y-10"
+      transition={{ duration: 0.4 }}
+      className="space-y-12"
     >
-      {/* Header */}
+      {/* HEADER */}
       <div className="text-center">
-        <motion.div
-          initial={{ scale: 0.85, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="inline-flex items-center justify-center w-20 h-20 rounded-2xl shadow-sm mb-5"
-        >
+        <div className="mx-auto w-24 h-24 rounded-3xl flex items-center justify-center shadow-lg mb-6">
           <Image
             src="/onboarding/wheaticon.png"
-            alt="Farming Icon"
-            width={50}
-            height={50}
-            className="object-contain"
+            alt="Farming"
+            width={55}
+            height={55}
           />
-        </motion.div>
+        </div>
 
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Farming Details
-        </h2>
+        <h2 className="text-3xl font-bold text-gray-900">Farming Details</h2>
 
-        <p className="text-gray-600 text-sm max-w-md mx-auto">
-          Share your crop preferences, experience level, and farming approach.
+        <p className="text-gray-500 mt-2">
+          Select your crops, experience level, and farming type.
         </p>
       </div>
 
-      {/* Crop Selection */}
-      <div className="space-y-7">
+      {/* Crop Section */}
+      <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm space-y-8">
         <div className="flex justify-between items-center">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Crop Selection
-            </h3>
-            <p className="text-sm text-gray-600">
-              Choose crops cultivated during different seasons
-            </p>
-          </div>
+          <h3 className="text-xl font-semibold text-gray-900">
+            Crop Selection
+          </h3>
 
-          <div className="px-4 py-2 rounded-xl bg-[#b7cf8a]/20 border border-[#b7cf8a]/40">
-            <span className="text-[#5f7e37] font-semibold text-sm">
-              {selectedCrops.length} Selected
-            </span>
+          <div className="px-4 py-2 rounded-full bg-[#b7cf8a]/20 text-[#4d672c] text-sm font-medium">
+            {selectedCrops.length} Selected
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex flex-wrap gap-2">
+        <div className="relative">
+          <Search className="absolute left-4 top-3.5 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search crops..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#b7cf8a] focus:ring-2 focus:ring-[#b7cf8a]/30 outline-none text-sm"
+          />
+        </div>
+
+        <div className="flex gap-3 flex-wrap">
           {Object.entries(CROPS_BY_SEASON).map(([key, season]) => (
             <button
               key={key}
+              type="button"
               onClick={() => setSelectedSeason(key)}
-              className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition ${
                 selectedSeason === key
-                  ? "bg-[#b7cf8a] text-[#3e5324] shadow-sm"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-[#b7cf8a] text-[#2f3d1c] shadow"
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-700"
               }`}
             >
-              {season.icon} {season.name}
+              <Image src={season.icon} alt="" width={18} height={18} />
+              {season.name}
             </button>
           ))}
         </div>
 
-        {/* Crops Grid */}
         <AnimatePresence mode="wait">
           <motion.div
             key={selectedSeason}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"
           >
-            {CROPS_BY_SEASON[
-              selectedSeason as keyof typeof CROPS_BY_SEASON
-            ].crops.map((crop) => {
+            {filteredCrops.map((crop) => {
               const active = selectedCrops.includes(crop.name);
 
               return (
                 <motion.button
                   key={crop.name}
                   type="button"
-                  whileTap={{ scale: 0.96 }}
+                  whileTap={{ scale: 0.97 }}
+                  whileHover={{ y: -4 }}
                   onClick={() => toggleCrop(crop.name)}
-                  className={`relative p-5 rounded-2xl border transition-all flex flex-col items-center gap-3 ${
+                  className={`relative p-6 rounded-3xl border transition ${
                     active
-                      ? "border-[#b7cf8a] bg-[#b7cf8a]/20 shadow-sm"
-                      : "border-gray-200 bg-white hover:border-[#b7cf8a]/60 hover:shadow-md"
+                      ? "border-[#b7cf8a] bg-[#b7cf8a]/20 shadow-md"
+                      : "border-gray-200 bg-white hover:shadow-lg"
                   }`}
                 >
-                  <span className="text-3xl">{crop.icon}</span>
-
-                  <span
-                    className={`font-medium text-sm ${
-                      active ? "text-[#4d672c]" : "text-gray-700"
-                    }`}
-                  >
-                    {crop.name}
-                  </span>
+                  <div className="flex flex-col items-center gap-4">
+                    <Image
+                      src={crop.icon}
+                      alt={crop.name}
+                      width={40}
+                      height={40}
+                    />
+                    <span className="text-sm font-medium text-gray-800">
+                      {crop.name}
+                    </span>
+                  </div>
 
                   {active && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-[#b7cf8a] flex items-center justify-center shadow"
-                    >
-                      <Check className="h-4 w-4 text-[#3e5324]" />
-                    </motion.div>
+                    <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-[#b7cf8a] flex items-center justify-center shadow">
+                      <Check className="h-4 w-4 text-[#2f3d1c]" />
+                    </div>
                   )}
                 </motion.button>
               );
@@ -241,22 +233,20 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
       </div>
 
       {/* Experience */}
-      <div className="rounded-2xl border border-[#b7cf8a]/40 bg-[#b7cf8a]/10 p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Calendar className="h-5 w-5 text-[#5f7e37]" />
-              <h3 className="font-semibold text-gray-900">
-                Farming Experience
-              </h3>
+      <div className="rounded-2xl border border-[#b7cf8a]/40 bg-[#b7cf8a]/10 p-6 transition hover:shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center shadow-sm">
+              <Calendar className="h-4 w-4 text-[#5f7e37]" />
             </div>
-            <p className="text-sm text-gray-600">
-              Total years of agricultural practice
-            </p>
+
+            <h3 className="text-base font-semibold text-gray-900">
+              Farming Experience
+            </h3>
           </div>
 
           <div className="text-right">
-            <div className="text-3xl font-bold text-[#5f7e37]">
+            <div className="text-2xl font-semibold text-[#5f7e37]">
               {farmingExperience}
             </div>
             <div className="text-xs text-gray-500">Years</div>
@@ -265,69 +255,78 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
 
         <input
           type="range"
-          min="0"
-          max="60"
+          min={0}
+          max={60}
           value={farmingExperience}
+          {...register("farmingExperience", { valueAsNumber: true })}
           onChange={(e) =>
-            setValue("farmingExperience", Number(e.target.value))
+            setValue("farmingExperience", Number(e.target.value), {
+              shouldValidate: true,
+            })
           }
-          className="w-full h-2 rounded-lg appearance-none bg-[#b7cf8a]/40 cursor-pointer
-          [&::-webkit-slider-thumb]:appearance-none
-          [&::-webkit-slider-thumb]:h-6
-          [&::-webkit-slider-thumb]:w-6
-          [&::-webkit-slider-thumb]:rounded-full
-          [&::-webkit-slider-thumb]:bg-[#6c8f3f]
-          [&::-webkit-slider-thumb]:border-4
-          [&::-webkit-slider-thumb]:border-white
-          [&::-webkit-slider-thumb]:shadow"
+          className="
+      w-full h-2 rounded-full appearance-none cursor-pointer
+      bg-[#b7cf8a]/40
+      [&::-webkit-slider-thumb]:appearance-none
+      [&::-webkit-slider-thumb]:h-5
+      [&::-webkit-slider-thumb]:w-5
+      [&::-webkit-slider-thumb]:rounded-full
+      [&::-webkit-slider-thumb]:bg-[#6c8f3f]
+      [&::-webkit-slider-thumb]:border-2
+      [&::-webkit-slider-thumb]:border-white
+      [&::-webkit-slider-thumb]:shadow-md
+      [&::-moz-range-thumb]:h-5
+      [&::-moz-range-thumb]:w-5
+      [&::-moz-range-thumb]:rounded-full
+      [&::-moz-range-thumb]:bg-[#6c8f3f]
+      [&::-moz-range-thumb]:border-2
+      [&::-moz-range-thumb]:border-white
+    "
         />
       </div>
 
       {/* Farming Type */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Farming Type
-        </h3>
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold text-gray-900">Farming Type</h3>
 
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-2 gap-5">
           {FARMING_TYPES.map((type) => {
             const active = farmingType === type.value;
 
             return (
               <label
                 key={type.value}
-                className={`p-5 rounded-2xl border cursor-pointer transition-all ${
+                className={`cursor-pointer p-6 rounded-3xl border transition ${
                   active
-                    ? "border-[#b7cf8a] bg-[#b7cf8a]/20"
-                    : "border-gray-200 hover:border-[#b7cf8a]/60"
+                    ? "border-[#b7cf8a] bg-[#b7cf8a]/20 shadow-md"
+                    : "border-gray-200 bg-white hover:shadow-lg"
                 }`}
               >
                 <input
                   type="radio"
-                  {...register("farmingType")}
                   value={type.value}
+                  {...register("farmingType", { required: true })}
                   className="hidden"
                 />
 
                 <div className="flex items-center gap-4">
-                  <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${
-                      active ? "bg-[#b7cf8a]/40" : "bg-gray-100"
-                    }`}
-                  >
-                    {type.icon}
-                  </div>
+                  <Image
+                    src={type.icon}
+                    alt={type.label}
+                    width={42}
+                    height={42}
+                  />
 
-                  <div className="flex-1">
+                  <div>
                     <div className="font-semibold text-gray-900">
                       {type.label}
                     </div>
-                    <div className="text-sm text-gray-600">{type.desc}</div>
+                    <div className="text-sm text-gray-500">{type.desc}</div>
                   </div>
 
                   {active && (
-                    <div className="w-6 h-6 rounded-full bg-[#b7cf8a] flex items-center justify-center">
-                      <Check className="h-4 w-4 text-[#3e5324]" />
+                    <div className="ml-auto w-6 h-6 rounded-full bg-[#b7cf8a] flex items-center justify-center">
+                      <Check className="h-4 w-4 text-[#2f3d1c]" />
                     </div>
                   )}
                 </div>
@@ -335,6 +334,13 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
             );
           })}
         </div>
+
+        {errors.farmingType && (
+          <div className="flex items-center gap-2 text-sm text-red-600">
+            <AlertCircle className="h-4 w-4" />
+            Please select a farming type.
+          </div>
+        )}
       </div>
     </motion.div>
   );
