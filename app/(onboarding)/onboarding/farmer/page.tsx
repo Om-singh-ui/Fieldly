@@ -46,7 +46,7 @@ const STEPS = [
   {
     title: "Infrastructure",
     icon: Droplets,
-    image: "/onboarding/waterirrigation.png",
+    image: "/onboarding/maininfraicon.png",
   },
   {
     title: "Complete",
