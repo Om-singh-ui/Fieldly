@@ -48,7 +48,7 @@ export function ContactInfoForm({ form }: ContactInfoFormProps) {
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="inline-flex items-center justify-center w-20 h-20 rounded-2xl shadow-sm mb-5"
+          className="inline-flex items-center justify-center w-20 h-20 bg-[#b7cf8a]/25 rounded-2xl shadow-sm mb-5"
         >
           <Image
             src="/onboarding/contact.png"

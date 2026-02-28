@@ -1,10 +1,11 @@
 "use client";
 
-import { Shield, Calendar, Users, Sparkles } from "lucide-react"; // Removed unused imports
+import { Shield, Calendar, Users, Sparkles, CheckCircle2 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { LandownerOnboardingInput } from "@/lib/validations/onboarding";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import clsx from "clsx";
 
 interface ReviewFormProps {
   form: UseFormReturn<LandownerOnboardingInput>;
@@ -17,10 +18,6 @@ export function ReviewForm({ form }: ReviewFormProps) {
     formState: { errors },
   } = form;
 
-  // These are used in the JSX for checkbox states
-  watch("termsAccepted");
-  watch("privacyPolicyAccepted");
-  
   const phone = watch("phone");
   const state = watch("state");
   const district = watch("district");
@@ -28,17 +25,23 @@ export function ReviewForm({ form }: ReviewFormProps) {
   const ownershipType = watch("ownershipType");
   const paymentFrequency = watch("preferredPaymentFrequency");
   const contactMethod = watch("preferredContactMethod");
+  const emailNotifications = watch("emailNotifications");
+  const whatsappNotifications = watch("whatsappNotifications");
+
+  const truncate = (text?: string, length = 100) =>
+    text && text.length > length
+      ? text.slice(0, length) + "..."
+      : text || "Not provided";
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 25 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -25 }}
-      transition={{ duration: 0.35 }}
-      className="space-y-10"
+      transition={{ duration: 0.4 }}
+      className="relative space-y-16"
     >
-      {/* Header */}
-      <div className="text-center">
+      {/* === HEADER === */}
+      <div className="text-center space-y-4">
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -47,147 +50,172 @@ export function ReviewForm({ form }: ReviewFormProps) {
         >
           <Image
             src="/onboarding/review.png"
-            alt="Review Icon"
+            alt="Preferences Icon"
             width={48}
             height={48}
             className="object-contain"
           />
         </motion.div>
 
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Review & Submit
-        </h2>
-
-        <p className="text-gray-600 text-sm max-w-md mx-auto">
-          Please review your information before submitting
-        </p>
-      </div>
-
-      {/* Success Message */}
-      <div className="bg-green-50 p-6 rounded-xl border border-green-100">
-        <div className="flex items-center gap-3 mb-4">
-          <Sparkles className="h-6 w-6 text-green-600" />
-          <h3 className="font-semibold text-green-900">You&apos;re almost there!</h3> {/* Fixed unescaped character */}
-        </div>
-        <p className="text-green-800 text-sm">
-          Review your information and accept the terms to complete your profile setup.
-        </p>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="border border-gray-200 rounded-xl p-5 bg-white">
-          <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[#b7cf8a]/20 flex items-center justify-center">
-              <span className="text-xs text-[#5f7e37]">1</span>
-            </div>
-            Contact Information
-          </h3>
-          <div className="space-y-2 text-sm">
-            <p><span className="text-gray-500">Phone:</span> +91 {phone || "Not provided"}</p>
-            <p><span className="text-gray-500">Location:</span> {district || "Not provided"}, {state || "Not provided"}</p>
-          </div>
-        </div>
-
-        <div className="border border-gray-200 rounded-xl p-5 bg-white">
-          <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[#b7cf8a]/20 flex items-center justify-center">
-              <span className="text-xs text-[#5f7e37]">2</span>
-            </div>
-            Professional Profile
-          </h3>
-          <div className="space-y-2 text-sm">
-            <p><span className="text-gray-500">Ownership:</span> {ownershipType || "Not selected"}</p>
-            <p className="truncate"><span className="text-gray-500">Bio:</span> {bio ? bio.substring(0, 50) + "..." : "Not provided"}</p>
-          </div>
-        </div>
-
-        <div className="border border-gray-200 rounded-xl p-5 bg-white">
-          <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[#b7cf8a]/20 flex items-center justify-center">
-              <span className="text-xs text-[#5f7e37]">3</span>
-            </div>
-            Preferences
-          </h3>
-          <div className="space-y-2 text-sm">
-            <p><span className="text-gray-500">Payment:</span> {paymentFrequency || "Not selected"}</p>
-            <p><span className="text-gray-500">Contact:</span> {contactMethod || "Not selected"}</p>
-          </div>
-        </div>
-
-        <div className="border border-gray-200 rounded-xl p-5 bg-white">
-          <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[#b7cf8a]/20 flex items-center justify-center">
-              <span className="text-xs text-[#5f7e37]">4</span>
-            </div>
-            Notifications
-          </h3>
-          <div className="space-y-2 text-sm">
-            <p><span className="text-gray-500">Email:</span> {watch("emailNotifications") ? "✅ Enabled" : "❌ Disabled"}</p>
-            <p><span className="text-gray-500">WhatsApp:</span> {watch("whatsappNotifications") ? "✅ Enabled" : "❌ Disabled"}</p>
-          </div>
+        <div>
+          <h2 className="text-4xl font-semibold tracking-tight text-gray-900">
+            Final Review
+          </h2>
+          <p className="text-gray-600 mt-2 max-w-lg mx-auto">
+            Carefully review your details before activating your landowner
+            profile.
+          </p>
         </div>
       </div>
 
-      {/* Terms Acceptance */}
-      <div className="space-y-4 border-t border-gray-200 pt-6">
-        <label className="flex items-start gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
-          <input
-            type="checkbox"
-            {...register("termsAccepted")}
-            className="w-5 h-5 text-[#b7cf8a] rounded focus:ring-[#b7cf8a] mt-0.5"
-          />
+      {/* === SUCCESS BANNER === */}
+      <div className="relative overflow-hidden rounded-3xl border border-white/40 bg-white/60 backdrop-blur-xl shadow-xl p-8">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#b7cf8a]/20 to-transparent opacity-60" />
+
+        <div className="relative flex items-start gap-4">
+          <Sparkles className="w-7 h-7 text-[#5f7e37]" />
           <div>
-            <p className="font-medium text-gray-900">I accept the Terms of Service</p>
-            <p className="text-sm text-gray-500">
-              By checking this, you agree to our terms of service, privacy policy, and the rules for land leasing on our platform.
+            <h3 className="text-xl font-semibold text-gray-900">
+              You&apos;re almost done
+            </h3>
+            <p className="text-gray-600 mt-1 text-sm">
+              Accept the agreements below to complete your onboarding.
             </p>
           </div>
-        </label>
-
-        <label className="flex items-start gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
-          <input
-            type="checkbox"
-            {...register("privacyPolicyAccepted")}
-            className="w-5 h-5 text-[#b7cf8a] rounded focus:ring-[#b7cf8a] mt-0.5"
-          />
-          <div>
-            <p className="font-medium text-gray-900">I accept the Privacy Policy</p>
-            <p className="text-sm text-gray-500">
-              I understand how my data will be used and protected as outlined in the privacy policy.
-            </p>
-          </div>
-        </label>
+        </div>
       </div>
 
-      {(errors.termsAccepted || errors.privacyPolicyAccepted) && (
-        <motion.p 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-sm text-red-600 text-center"
-          role="alert"
-        >
-          Please accept both terms to continue
-        </motion.p>
-      )}
+      {/* === SUMMARY GRID === */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {[
+          {
+            title: "Contact Information",
+            items: [
+              `Phone: +91 ${phone || "—"}`,
+              `Location: ${district || "—"}, ${state || "—"}`,
+            ],
+          },
+          {
+            title: "Professional Profile",
+            items: [
+              `Ownership: ${ownershipType || "—"}`,
+              `Bio: ${truncate(bio)}`,
+            ],
+          },
+          {
+            title: "Preferences",
+            items: [
+              `Payment: ${paymentFrequency || "—"}`,
+              `Contact: ${contactMethod || "—"}`,
+            ],
+          },
+          {
+            title: "Notifications",
+            items: [
+              `Email: ${emailNotifications ? "Enabled" : "Disabled"}`,
+              `WhatsApp: ${whatsappNotifications ? "Enabled" : "Disabled"}`,
+            ],
+          },
+        ].map((section, i) => (
+          <motion.div
+            key={i}
+            whileHover={{ y: -4 }}
+            className="rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl shadow-lg p-8 transition-all"
+          >
+            <h4 className="text-lg font-semibold text-gray-900 mb-6">
+              {section.title}
+            </h4>
 
-      {/* Benefits Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-        <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl">
-          <Shield className="h-6 w-6 text-blue-600 mb-2" />
-          <h4 className="font-medium text-gray-900">Verified Platform</h4>
-          <p className="text-xs text-gray-600">All farmers are background verified</p>
-        </div>
-        <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl">
-          <Calendar className="h-6 w-6 text-green-600 mb-2" />
-          <h4 className="font-medium text-gray-900">Secure Payments</h4>
-          <p className="text-xs text-gray-600">Escrow protected transactions</p>
-        </div>
-        <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl">
-          <Users className="h-6 w-6 text-purple-600 mb-2" />
-          <h4 className="font-medium text-gray-900">24/7 Support</h4>
-          <p className="text-xs text-gray-600">Dedicated relationship manager</p>
-        </div>
+            <div className="space-y-3 text-sm text-gray-700">
+              {section.items.map((item, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <CheckCircle2 className="w-4 h-4 text-[#5f7e37] mt-1" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* === TERMS SECTION === */}
+      <div className="space-y-6">
+        {[
+          {
+            name: "termsAccepted",
+            title: "I agree to the Terms of Service",
+            desc: "You agree to platform rules, leasing policies, and service guidelines.",
+          },
+          {
+            name: "privacyPolicyAccepted",
+            title: "I agree to the Privacy Policy",
+            desc: "You understand how your data is securely managed.",
+          },
+        ].map((item) => (
+          <label
+            key={item.name}
+            className={clsx(
+              "flex items-start gap-5 p-6 rounded-3xl border transition-all cursor-pointer",
+              "bg-white/70 backdrop-blur-lg shadow-md",
+              errors[item.name as keyof typeof errors]
+                ? "border-red-400"
+                : "border-white/40 hover:border-[#b7cf8a]/60",
+            )}
+          >
+            <input
+              type="checkbox"
+              {...register(
+                item.name as "termsAccepted" | "privacyPolicyAccepted",
+              )}
+              className="mt-1 w-6 h-6 accent-[#b7cf8a]"
+            />
+
+            <div>
+              <p className="font-semibold text-gray-900">{item.title}</p>
+              <p className="text-sm text-gray-600 mt-1">{item.desc}</p>
+            </div>
+          </label>
+        ))}
+
+        {(errors.termsAccepted || errors.privacyPolicyAccepted) && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-red-500 text-sm text-center"
+          >
+            Please accept both agreements to proceed.
+          </motion.p>
+        )}
+      </div>
+
+      {/* === TRUST BADGES === */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {[
+          {
+            icon: Shield,
+            title: "Verified Farmers",
+            text: "Strict background verification process",
+          },
+          {
+            icon: Calendar,
+            title: "Secure Escrow",
+            text: "Protected financial transactions",
+          },
+          {
+            icon: Users,
+            title: "Dedicated Support",
+            text: "Relationship manager assistance",
+          },
+        ].map((item, i) => (
+          <div
+            key={i}
+            className="rounded-3xl p-6 bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-xl shadow-lg border border-white/40 text-center"
+          >
+            <item.icon className="w-6 h-6 text-[#5f7e37] mx-auto mb-3" />
+            <h5 className="font-semibold text-gray-900">{item.title}</h5>
+            <p className="text-xs text-gray-600 mt-1">{item.text}</p>
+          </div>
+        ))}
       </div>
     </motion.div>
   );
