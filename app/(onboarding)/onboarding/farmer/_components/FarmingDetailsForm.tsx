@@ -1,10 +1,10 @@
 "use client";
 
-import { Calendar, AlertCircle, Check, Search } from "lucide-react";
+import { AlertCircle, Check, Search } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { FarmerOnboardingInput } from "@/lib/validations/onboarding";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Image from "next/image";
 
 interface FarmingDetailsFormProps {
@@ -12,7 +12,43 @@ interface FarmingDetailsFormProps {
 }
 
 /* =========================================================
-   DATA (ALL LOWERCASE — PRODUCTION SAFE)
+   PRODUCTION SAFE IMAGE COMPONENT
+========================================================= */
+
+function SafeImage({
+  src,
+  alt,
+  size = 40,
+}: {
+  src: string;
+  alt: string;
+  size?: number;
+}) {
+  const [error, setError] = useState(false);
+
+  return (
+    <div
+      style={{ width: size, height: size }}
+      className="relative flex items-center justify-center"
+    >
+      <Image
+        src={error ? "/onboarding/fallback.png" : src}
+        alt={alt}
+        fill
+        sizes={`${size}px`}
+        loading="lazy"
+        priority={false}
+        draggable={false}
+        unoptimized
+        className="object-contain"
+        onError={() => setError(true)}
+      />
+    </div>
+  );
+}
+
+/* =========================================================
+   DATA
 ========================================================= */
 
 const CROPS_BY_SEASON = {
@@ -94,23 +130,31 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
     formState: { errors },
   } = form;
 
-  const selectedCrops: string[] = watch("primaryCrops") || [];
-  const farmingExperience: number = watch("farmingExperience") || 0;
-  const farmingType: string | undefined = watch("farmingType");
+  const watchedCrops = watch("primaryCrops");
+  const farmingExperience = watch("farmingExperience") ?? 0;
+  const farmingType = watch("farmingType");
 
-  const toggleCrop = (crop: string) => {
-    const updated = selectedCrops.includes(crop)
-      ? selectedCrops.filter((c) => c !== crop)
-      : [...selectedCrops, crop];
+  const selectedCrops = useMemo<string[]>(
+    () => watchedCrops ?? [],
+    [watchedCrops],
+  );
 
-    setValue("primaryCrops", updated, { shouldValidate: true });
-  };
+  const toggleCrop = useCallback(
+    (crop: string) => {
+      const updated = selectedCrops.includes(crop)
+        ? selectedCrops.filter((c) => c !== crop)
+        : [...selectedCrops, crop];
+
+      setValue("primaryCrops", updated, { shouldValidate: true });
+    },
+    [selectedCrops, setValue],
+  );
 
   const filteredCrops = useMemo(() => {
     return CROPS_BY_SEASON[
       selectedSeason as keyof typeof CROPS_BY_SEASON
     ].crops.filter((crop) =>
-      crop.name.toLowerCase().includes(search.toLowerCase())
+      crop.name.toLowerCase().includes(search.toLowerCase()),
     );
   }, [selectedSeason, search]);
 
@@ -121,27 +165,6 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
       transition={{ duration: 0.4 }}
       className="space-y-12"
     >
-      {/* HEADER */}
-      <div className="text-center">
-        <div className="mx-auto w-24 h-24 rounded-3xl flex items-center justify-center shadow-lg mb-6">
-          <Image
-            src="/onboarding/wheaticon.png"
-            alt="Farming"
-            width={55}
-            height={55}
-            priority
-          />
-        </div>
-
-        <h2 className="text-3xl font-bold text-gray-900">
-          Farming Details
-        </h2>
-
-        <p className="text-gray-500 mt-2">
-          Select your crops, experience level, and farming type.
-        </p>
-      </div>
-
       {/* Crop Section */}
       <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm space-y-8">
         <div className="flex justify-between items-center">
@@ -154,6 +177,7 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
           </div>
         </div>
 
+        {/* Search */}
         <div className="relative">
           <Search className="absolute left-4 top-3.5 h-4 w-4 text-gray-400" />
           <input
@@ -165,6 +189,7 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
           />
         </div>
 
+        {/* Season Tabs */}
         <div className="flex gap-3 flex-wrap">
           {Object.entries(CROPS_BY_SEASON).map(([key, season]) => (
             <button
@@ -177,12 +202,13 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
                   : "bg-gray-100 hover:bg-gray-200 text-gray-700"
               }`}
             >
-              <Image src={season.icon} alt={season.name} width={18} height={18} />
+              <SafeImage src={season.icon} alt={season.name} size={18} />
               {season.name}
             </button>
           ))}
         </div>
 
+        {/* Crop Grid */}
         <AnimatePresence mode="wait">
           <motion.div
             key={selectedSeason}
@@ -205,13 +231,7 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
                   }`}
                 >
                   <div className="flex flex-col items-center gap-4">
-                    <Image
-                      src={crop.icon}
-                      alt={crop.name}
-                      width={40}
-                      height={40}
-                      loading="lazy"
-                    />
+                    <SafeImage src={crop.icon} alt={crop.name} size={44} />
                     <span className="text-sm font-medium text-gray-800">
                       {crop.name}
                     </span>
@@ -236,24 +256,12 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
         )}
       </div>
 
-      {/* Experience */}
-      <div className="rounded-2xl border border-[#b7cf8a]/40 bg-[#b7cf8a]/10 p-6 transition hover:shadow-sm">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center shadow-sm">
-              <Calendar className="h-4 w-4 text-[#5f7e37]" />
-            </div>
-
-            <h3 className="text-base font-semibold text-gray-900">
-              Farming Experience
-            </h3>
-          </div>
-
-          <div className="text-right">
-            <div className="text-2xl font-semibold text-[#5f7e37]">
-              {farmingExperience}
-            </div>
-            <div className="text-xs text-gray-500">Years</div>
+      {/* Experience Slider */}
+      <div className="rounded-2xl border border-[#b7cf8a]/40 bg-[#b7cf8a]/10 p-6">
+        <div className="flex justify-between mb-6">
+          <h3 className="font-semibold text-gray-900">Farming Experience</h3>
+          <div className="text-2xl font-semibold text-[#5f7e37]">
+            {farmingExperience} Years
           </div>
         </div>
 
@@ -268,7 +276,7 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
               shouldValidate: true,
             })
           }
-          className="w-full h-2 rounded-full appearance-none cursor-pointer bg-[#b7cf8a]/40"
+          className="w-full h-2 rounded-full bg-[#b7cf8a]/40 cursor-pointer"
         />
       </div>
 
@@ -297,27 +305,16 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
                 />
 
                 <div className="flex items-center gap-4">
-                  <Image
-                    src={type.icon}
-                    alt={type.label}
-                    width={42}
-                    height={42}
-                  />
+                  <SafeImage src={type.icon} alt={type.label} size={42} />
 
                   <div>
                     <div className="font-semibold text-gray-900">
                       {type.label}
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {type.desc}
-                    </div>
+                    <div className="text-sm text-gray-500">{type.desc}</div>
                   </div>
 
-                  {active && (
-                    <div className="ml-auto w-6 h-6 rounded-full bg-[#b7cf8a] flex items-center justify-center">
-                      <Check className="h-4 w-4 text-[#2f3d1c]" />
-                    </div>
-                  )}
+                  {active && <Check className="ml-auto text-[#2f3d1c]" />}
                 </div>
               </label>
             );
