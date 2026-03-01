@@ -12,25 +12,25 @@ interface FarmingDetailsFormProps {
 }
 
 /* =========================================================
-   DATA
+   DATA (ALL LOWERCASE — PRODUCTION SAFE)
 ========================================================= */
 
 const CROPS_BY_SEASON = {
   rabi: {
     name: "Rabi (Winter)",
-    icon: "/onboarding/Winter.png",
+    icon: "/onboarding/winter.png",
     crops: [
       { name: "Wheat", icon: "/onboarding/wheat-sack.png" },
       { name: "Barley", icon: "/onboarding/barley.png" },
-      { name: "Mustard", icon: "/onboarding/Mustard.png" },
+      { name: "Mustard", icon: "/onboarding/mustard.png" },
       { name: "Peas", icon: "/onboarding/pea.png" },
-      { name: "Gram", icon: "/onboarding/GramChickpea.png" },
+      { name: "Gram", icon: "/onboarding/gramchickpea.png" },
       { name: "Potato", icon: "/onboarding/potato.png" },
     ],
   },
   kharif: {
     name: "Kharif (Monsoon)",
-    icon: "/onboarding/Monsoon.png",
+    icon: "/onboarding/monsoon.png",
     crops: [
       { name: "Rice", icon: "/onboarding/rice.png" },
       { name: "Maize", icon: "/onboarding/maize.png" },
@@ -49,7 +49,7 @@ const CROPS_BY_SEASON = {
       { name: "Sunflower", icon: "/onboarding/sunflower.png" },
       { name: "Pumpkin", icon: "/onboarding/pumpkin.png" },
       { name: "Muskmelon", icon: "/onboarding/muskmelon.png" },
-      { name: "Fodder Crops", icon: "/onboarding/FodderCrops.png" },
+      { name: "Fodder Crops", icon: "/onboarding/foddercrops.png" },
     ],
   },
 };
@@ -65,13 +65,13 @@ const FARMING_TYPES = [
     value: "COMMERCIAL",
     label: "Commercial Farming",
     desc: "Large-scale profit-driven cultivation",
-    icon: "/onboarding/Commercial.png",
+    icon: "/onboarding/commercial.png",
   },
   {
     value: "SUBSISTENCE",
     label: "Subsistence Farming",
     desc: "Food grown for family consumption",
-    icon: "/onboarding/Subsistence.png",
+    icon: "/onboarding/subsistence.png",
   },
   {
     value: "MIXED",
@@ -110,7 +110,7 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
     return CROPS_BY_SEASON[
       selectedSeason as keyof typeof CROPS_BY_SEASON
     ].crops.filter((crop) =>
-      crop.name.toLowerCase().includes(search.toLowerCase()),
+      crop.name.toLowerCase().includes(search.toLowerCase())
     );
   }, [selectedSeason, search]);
 
@@ -129,10 +129,13 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
             alt="Farming"
             width={55}
             height={55}
+            priority
           />
         </div>
 
-        <h2 className="text-3xl font-bold text-gray-900">Farming Details</h2>
+        <h2 className="text-3xl font-bold text-gray-900">
+          Farming Details
+        </h2>
 
         <p className="text-gray-500 mt-2">
           Select your crops, experience level, and farming type.
@@ -174,7 +177,7 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
                   : "bg-gray-100 hover:bg-gray-200 text-gray-700"
               }`}
             >
-              <Image src={season.icon} alt="" width={18} height={18} />
+              <Image src={season.icon} alt={season.name} width={18} height={18} />
               {season.name}
             </button>
           ))}
@@ -207,6 +210,7 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
                       alt={crop.name}
                       width={40}
                       height={40}
+                      loading="lazy"
                     />
                     <span className="text-sm font-medium text-gray-800">
                       {crop.name}
@@ -264,24 +268,7 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
               shouldValidate: true,
             })
           }
-          className="
-      w-full h-2 rounded-full appearance-none cursor-pointer
-      bg-[#b7cf8a]/40
-      [&::-webkit-slider-thumb]:appearance-none
-      [&::-webkit-slider-thumb]:h-5
-      [&::-webkit-slider-thumb]:w-5
-      [&::-webkit-slider-thumb]:rounded-full
-      [&::-webkit-slider-thumb]:bg-[#6c8f3f]
-      [&::-webkit-slider-thumb]:border-2
-      [&::-webkit-slider-thumb]:border-white
-      [&::-webkit-slider-thumb]:shadow-md
-      [&::-moz-range-thumb]:h-5
-      [&::-moz-range-thumb]:w-5
-      [&::-moz-range-thumb]:rounded-full
-      [&::-moz-range-thumb]:bg-[#6c8f3f]
-      [&::-moz-range-thumb]:border-2
-      [&::-moz-range-thumb]:border-white
-    "
+          className="w-full h-2 rounded-full appearance-none cursor-pointer bg-[#b7cf8a]/40"
         />
       </div>
 
@@ -321,7 +308,9 @@ export function FarmingDetailsForm({ form }: FarmingDetailsFormProps) {
                     <div className="font-semibold text-gray-900">
                       {type.label}
                     </div>
-                    <div className="text-sm text-gray-500">{type.desc}</div>
+                    <div className="text-sm text-gray-500">
+                      {type.desc}
+                    </div>
                   </div>
 
                   {active && (
