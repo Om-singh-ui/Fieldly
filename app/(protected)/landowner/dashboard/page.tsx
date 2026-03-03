@@ -211,7 +211,7 @@ export default async function LandownerDashboardPage() {
                   <div className="py-12">
                     <div className="relative w-12 h-12 mx-auto mb-4 opacity-50">
                       <Image
-                        src="/icons/leases-gray.svg"
+                        src="~/onboarding/user-man-account-person.png"
                         alt="No Leases"
                         fill
                         className="object-contain"

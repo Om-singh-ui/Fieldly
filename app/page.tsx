@@ -9,6 +9,7 @@ import BlogSection from "@/components/BlogSection";
 import { useState, useEffect } from "react";
 import MultiModalMonitoring from "@/components/MultiModalMonitoring";
 import { Plus, Minus } from "lucide-react";
+import FindLandHero from "@/components/FindLandHero";
 
 // FAQ Data
 const faqs = [
@@ -154,7 +155,10 @@ export default function Home() {
       <section className="mt-16 sm:mt-20 md:mt-24 lg:mt-28 px-4 sm:px-6 md:px-0">
         <WhatWeDoSection />
       </section>
-
+      {/* What We Do Section */}
+      <section className="mt-16 sm:mt-20 md:mt-24 lg:mt-28 px-4 sm:px-6 md:px-0">
+      <FindLandHero />
+      </section>
       {/* Mission Section with Background Image */}
       <section className="relative w-full overflow-hidden py-16 mt-16 sm:mt-20 md:mt-24 lg:mt-28">
         {loading ? (
