@@ -469,11 +469,11 @@ export default function AuthHeader() {
           <div className="flex md:hidden items-center justify-between rounded-full bg-white/90 px-4 py-2 shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-md">
             {loading ? (
               <>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 animate-pulse">
                   <div className="h-7 w-7 rounded-full bg-gray-200" />
                   <div className="h-5 w-20 rounded-full bg-gray-200" />
                 </div>
-                <div className="flex items-center gap-1 rounded-full bg-black/5 p-1">
+                <div className="flex items-center gap-1 rounded-full bg-black/5 p-1 animate-pulse">
                   <div className="h-9 w-16 rounded-full bg-gray-200" />
                   <div className="h-9 w-9 rounded-full bg-gray-200" />
                 </div>
@@ -509,7 +509,7 @@ export default function AuthHeader() {
           <div className="hidden md:flex items-center justify-between gap-8">
             {/* ========== CONTAINER 1: LOGO ========== */}
             {loading ? (
-              <div className="flex h-16 items-center rounded-full bg-gray-100 px-8 shadow-xl backdrop-blur-md">
+              <div className="flex h-16 items-center rounded-full bg-gray-100 px-8 shadow-xl backdrop-blur-md animate-pulse">
                 <div className="h-8 w-8 rounded-full bg-gray-300" />
                 <div className="ml-3 h-6 w-24 rounded-full bg-gray-300" />
               </div>
@@ -531,7 +531,7 @@ export default function AuthHeader() {
 
             {/* ========== CONTAINER 2: NAVIGATION ========== */}
             {loading ? (
-              <div className="flex h-16 items-center gap-12 rounded-full bg-gray-100 px-8 shadow-xl backdrop-blur-md">
+              <div className="flex h-16 items-center gap-12 rounded-full bg-gray-100 px-8 shadow-xl backdrop-blur-md animate-pulse">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <div className="h-4 w-20 rounded-full bg-gray-300" />
@@ -609,7 +609,7 @@ export default function AuthHeader() {
 
             {/* ========== CONTAINER 3: CTA ========== */}
             {loading ? (
-              <div className="flex h-16 items-center gap-6 rounded-full bg-gray-100 px-12 shadow-xl backdrop-blur-md">
+              <div className="flex h-16 items-center gap-6 rounded-full bg-gray-100 px-12 shadow-xl backdrop-blur-md animate-pulse">
                 <div className="h-5 w-5 rounded-full bg-gray-300" />
                 <div className="h-4 w-4 rounded-full bg-gray-300" />
                 <div className="h-4 w-32 rounded-full bg-gray-300" />
@@ -694,7 +694,7 @@ export default function AuthHeader() {
             aria-label="Mobile navigation menu"
           >
             {loading ? (
-              <div className="space-y-5">
+              <div className="space-y-5 animate-pulse">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="flex items-center justify-between">
                     <div className="h-5 w-32 rounded-full bg-gray-200" />

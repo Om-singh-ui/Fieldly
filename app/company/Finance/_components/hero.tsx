@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion, Variants } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function HeroSection() {
   const router = useRouter();
-
+  const [isLoading, setIsLoading] = useState(true);
   const [imageErrors, setImageErrors] = useState<{ [key: number]: boolean }>(
     {},
   );
@@ -21,6 +21,15 @@ export default function HeroSection() {
     "/testimonials/images.jpg",
     "/testimonials/9.avif",
   ];
+
+  useEffect(() => {
+    // Simulate loading time for images/content
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleImageError = (index: number) => {
     setImageErrors((prev) => ({ ...prev, [index]: true }));
@@ -48,6 +57,81 @@ export default function HeroSection() {
       },
     },
   };
+
+  if (isLoading) {
+    return (
+      <section className="relative mx-auto max-w-[1440px] px-4 sm:px-6 md:px-7 pt-6 sm:pt-16 md:pt-[64px] -mt-6 sm:-mt-10 md:mt-0">
+        <div className="grid grid-cols-1 gap-y-10 gap-x-6 lg:gap-x-8 lg:grid-cols-[1.15fr_0.85fr]">
+          {/* ================= LEFT SKELETON ================= */}
+          <div className="relative mt-24 sm:mt-12 lg:mt-16 w-full max-w-[1240px] self-start rounded-[28px] bg-gradient-to-br from-white via-white/95 to-white px-6 sm:px-8 md:px-10 lg:px-12 py-6 sm:py-7 md:py-8 shadow-[0_12px_40px_rgba(0,0,0,0.2),0_4px_10px_rgba(0,0,0,0.1)] animate-pulse">
+            <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-tr from-[#b7cf8a]/15 via-transparent to-transparent" />
+
+            {/* Heading Skeleton */}
+            <div className="max-w-3xl space-y-3">
+              <div className="h-8 sm:h-10 md:h-12 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-8 sm:h-10 md:h-12 bg-gray-200 rounded w-2/3"></div>
+              <div className="h-8 sm:h-10 md:h-12 bg-gray-200 rounded w-1/2"></div>
+            </div>
+
+            {/* Subtitle Skeleton */}
+            <div className="mt-3 sm:mt-4 max-w-3xl space-y-2">
+              <div className="h-4 sm:h-5 bg-gray-200 rounded w-full"></div>
+              <div className="h-4 sm:h-5 bg-gray-200 rounded w-5/6"></div>
+            </div>
+
+            {/* CTA Buttons Skeleton */}
+            <div className="relative mt-4 sm:mt-6 flex flex-wrap gap-3">
+              <div className="h-10 sm:h-11 w-32 sm:w-36 bg-gray-200 rounded-full"></div>
+              <div className="h-10 sm:h-11 w-36 sm:w-40 bg-gray-200 rounded-full"></div>
+            </div>
+
+            {/* Investors Trust Skeleton */}
+            <div className="relative mt-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                {/* Avatars Skeleton */}
+                <div className="flex -space-x-3">
+                  {[1, 2, 3, 4, 5].map((index) => (
+                    <div
+                      key={index}
+                      className="relative h-10 w-10 rounded-full bg-gray-200 border-2 border-white"
+                    />
+                  ))}
+                </div>
+
+                {/* Text Skeleton */}
+                <div className="space-y-1">
+                  <div className="h-4 bg-gray-200 rounded w-40"></div>
+                  <div className="h-4 bg-gray-200 rounded w-32"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ================= RIGHT SKELETON ================= */}
+          <div className="ml-auto w-full max-w-[448px] min-h-[280px] sm:min-h-[360px] md:min-h-[400px] lg:min-h-[555px] overflow-hidden rounded-[24px] sm:rounded-[28px] lg:-translate-y-14 shadow-[0_12px_40px_rgba(0,0,0,0.2),0_4px_10px_rgba(0,0,0,0.1)] animate-pulse">
+            <div className="relative h-full w-full pt-12 sm:pt-16 md:pt-20">
+              {/* Image Placeholder */}
+              <div className="absolute inset-0 bg-gray-200"></div>
+
+              {/* Overlay Glass Card Placeholder - Hidden initially */}
+              <div className="absolute bottom-0 left-0 right-0 p-6 opacity-0">
+                <div className="bg-black/40 backdrop-blur-xl border border-white/25 rounded-2xl p-6">
+                  <div className="flex items-center gap-2 text-sm mb-3">
+                    <div className="h-3 w-3 rounded-full bg-gray-300"></div>
+                    <div className="h-4 w-12 bg-gray-300 rounded"></div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-6 bg-gray-300 rounded w-3/4"></div>
+                    <div className="h-6 bg-gray-300 rounded w-2/3"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative mx-auto max-w-[1440px] px-4 sm:px-6 md:px-7 pt-6 sm:pt-16 md:pt-[64px] -mt-6 sm:-mt-10 md:mt-0">
@@ -128,7 +212,7 @@ export default function HeroSection() {
                   <motion.div
                     key={index}
                     whileHover={{ scale: 1.08 }}
-                    className="relative h-10 w-10 rounded-full  overflow-hidden shadow-sm"
+                    className="relative h-10 w-10 rounded-full overflow-hidden shadow-sm"
                   >
                     {imageErrors[index] ? (
                       <div className="h-full w-full flex items-center justify-center text-white text-xs font-semibold">

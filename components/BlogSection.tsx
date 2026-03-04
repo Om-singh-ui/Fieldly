@@ -1,9 +1,84 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function BlogSection() {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading time for images/content
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <section className="py-16">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-6 md:px-8">
+          {/* HEADER SKELETON */}
+          <div className="mb-10 flex items-start justify-between animate-pulse">
+            <div>
+              <div className="h-10 bg-gray-200 rounded w-48"></div>
+              <div className="mt-2 h-5 bg-gray-200 rounded w-96"></div>
+            </div>
+            <div className="h-10 bg-gray-200 rounded-full w-28"></div>
+          </div>
+
+          {/* GRID SKELETON */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 animate-pulse">
+            {/* LEFT FEATURED CARD SKELETON */}
+            <div className="relative overflow-hidden rounded-[24px] bg-white shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
+              <div className="h-[220px] w-full bg-gray-200"></div>
+              <div className="p-6">
+                <div className="h-6 bg-gray-200 rounded-full w-24"></div>
+                <div className="mt-3 space-y-2">
+                  <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-6 bg-gray-200 rounded w-full"></div>
+                </div>
+                <div className="mt-2 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="h-4 bg-gray-200 rounded w-20"></div>
+                  <div className="h-4 bg-gray-200 rounded w-24"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT STACKED CARDS SKELETON */}
+            <div className="flex flex-col gap-5">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="flex overflow-hidden rounded-[20px] bg-white shadow-[0_12px_32px_rgba(0,0,0,0.06)]"
+                >
+                  <div className="h-[140px] w-[140px] shrink-0 bg-gray-200"></div>
+                  <div className="relative p-5 flex flex-col justify-center flex-1">
+                    <div className="h-5 bg-gray-200 rounded-full w-24"></div>
+                    <div className="mt-2 space-y-1">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between">
+                      <div className="h-3 bg-gray-200 rounded w-16"></div>
+                      <div className="h-3 bg-gray-200 rounded w-12"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-16">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 md:px-8">

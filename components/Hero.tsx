@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -7,7 +8,74 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 export default function HeroSection() {
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    // Simulate loading time for images/content
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <section className="relative mx-auto max-w-[1440px] px-4 sm:px-6 md:px-7 pt-6 sm:pt-16 md:pt-[64px] -mt-6 sm:-mt-10 md:mt-0">
+        <div className="grid grid-cols-1 gap-y-10 gap-x-6 lg:gap-x-8 lg:grid-cols-[1.15fr_0.85fr]">
+          {/* LEFT SKELETON */}
+          <div className="relative mt-24 sm:mt-12 lg:mt-16 w-full max-w-[1240px] self-start rounded-[28px] bg-gradient-to-br from-white via-white/95 to-white px-6 sm:px-8 md:px-10 lg:px-12 py-6 sm:py-7 md:py-8 shadow-[0_12px_40px_rgba(0,0,0,0.2),0_4px_10px_rgba(0,0,0,0.1)] animate-pulse">
+            <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-tr from-[#b7cf8a]/15 via-transparent to-transparent" />
+
+            {/* Heading Skeleton */}
+            <div className="max-w-3xl space-y-3">
+              <div className="h-8 sm:h-10 md:h-12 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-8 sm:h-10 md:h-12 bg-gray-200 rounded w-2/3"></div>
+              <div className="h-8 sm:h-10 md:h-12 bg-gray-200 rounded w-1/2"></div>
+            </div>
+
+            {/* Description Skeleton */}
+            <div className="mt-3 sm:mt-4 max-w-3xl space-y-2">
+              <div className="h-4 sm:h-5 bg-gray-200 rounded w-full"></div>
+              <div className="h-4 sm:h-5 bg-gray-200 rounded w-5/6"></div>
+              <div className="h-4 sm:h-5 bg-gray-200 rounded w-4/6"></div>
+            </div>
+
+            {/* Buttons Skeleton */}
+            <div className="relative mt-4 sm:mt-6 flex flex-wrap gap-3">
+              <div className="h-10 sm:h-11 w-36 sm:w-40 bg-gray-200 rounded-full"></div>
+              <div className="h-10 sm:h-11 w-32 sm:w-36 bg-gray-200 rounded-full"></div>
+            </div>
+          </div>
+
+          {/* RIGHT SKELETON */}
+          <div className="group z-10 ml-auto w-full max-w-[448px] min-h-[280px] sm:min-h-[360px] md:min-h-[400px] lg:min-h-[555px] overflow-hidden rounded-[24px] sm:rounded-[28px] transition-all duration-300 lg:-translate-y-14 animate-pulse">
+            <div className="relative h-full w-full pt-12 sm:pt-16 md:pt-20">
+              {/* Image Placeholder */}
+              <div className="absolute inset-0 bg-gray-200"></div>
+
+              {/* Text Overlay Placeholder - Hidden in skeleton */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 md:p-6 lg:p-6 z-10 opacity-0">
+                <div className="relative bg-black/40 backdrop-blur-xl border border-white/25 rounded-2xl p-4 sm:p-5 md:p-6 lg:p-6 shadow-[0_15px_45px_rgba(0,0,0,0.35), inset_0_1px_0_rgba(255,255,255,0.18)]">
+                  <div className="flex items-center gap-2 text-sm font-medium mb-3">
+                    <div className="relative h-4 w-4">
+                      <div className="absolute inset-0 rounded-full bg-gray-300"></div>
+                    </div>
+                    <div className="h-4 w-12 bg-gray-300 rounded"></div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-6 bg-gray-300 rounded w-3/4"></div>
+                    <div className="h-6 bg-gray-300 rounded w-2/3"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative mx-auto max-w-[1440px] px-4 sm:px-6 md:px-7 pt-6 sm:pt-16 md:pt-[64px] -mt-6 sm:-mt-10 md:mt-0">
@@ -71,27 +139,27 @@ export default function HeroSection() {
             {/* TEXT OVERLAY - APPEARS ON HOVER */}
             <div
               className="
-  absolute bottom-0 left-0 right-0
-  bg-gradient-to-t from-black/70 via-black/20 to-transparent
-  p-4 sm:p-5 md:p-6 lg:p-6
-  text-white z-10
-  opacity-100 sm:opacity-0 sm:group-hover:opacity-100
-  transition-all duration-300
-"
+                absolute bottom-0 left-0 right-0
+                bg-gradient-to-t from-black/70 via-black/20 to-transparent
+                p-4 sm:p-5 md:p-6 lg:p-6
+                text-white z-10
+                opacity-100 sm:opacity-0 sm:group-hover:opacity-100
+                transition-all duration-300
+              "
             >
               <div
                 className="
-    relative
-    bg-black/40 backdrop-blur-xl
-    border border-white/25
-    rounded-2xl
-    p-4 sm:p-5 md:p-6 lg:p-6
-    shadow-[0_15px_45px_rgba(0,0,0,0.35),
-            inset_0_1px_0_rgba(255,255,255,0.18)]
-    transform translate-y-2 sm:translate-y-4 md:translate-y-6 lg:translate-y-6
-    sm:group-hover:translate-y-0
-    transition-all duration-300
-  "
+                  relative
+                  bg-black/40 backdrop-blur-xl
+                  border border-white/25
+                  rounded-2xl
+                  p-4 sm:p-5 md:p-6 lg:p-6
+                  shadow-[0_15px_45px_rgba(0,0,0,0.35),
+                          inset_0_1px_0_rgba(255,255,255,0.18)]
+                  transform translate-y-2 sm:translate-y-4 md:translate-y-6 lg:translate-y-6
+                  sm:group-hover:translate-y-0
+                  transition-all duration-300
+                "
               >
                 {/* LIVE INDICATOR WITH FRAMER MOTION BLINKING DOT */}
                 <div className="flex items-center gap-2 text-sm font-medium mb-3">
