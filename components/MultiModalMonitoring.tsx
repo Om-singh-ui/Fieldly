@@ -53,7 +53,7 @@ export default function MultiModalMonitoring() {
   }, []);
 
   return (
-    <section className="bg-[#fafafa] py-24">
+    <section className="py-24">
       <div className="mx-auto max-w-[1400px] px-6">
 
         {/* HEADING */}

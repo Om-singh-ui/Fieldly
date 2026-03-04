@@ -155,7 +155,7 @@ export default function Home() {
       <section className="mt-16 sm:mt-20 md:mt-24 lg:mt-28 px-4 sm:px-6 md:px-0">
         <WhatWeDoSection />
       </section>
-      {/* What We Do Section */}
+      {/* app - Find Land Hero */}
       <section className="mt-16 sm:mt-20 md:mt-24 lg:mt-28 px-4 sm:px-6 md:px-0">
       <FindLandHero />
       </section>
