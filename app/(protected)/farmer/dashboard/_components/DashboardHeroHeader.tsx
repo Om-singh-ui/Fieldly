@@ -3,12 +3,85 @@
 import { motion } from "framer-motion";
 import { Download, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 
 interface Props {
   name: string;
 }
 
 export function DashboardHeroHeader({ name }: Props) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading time for data
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <section className="relative">
+        <div
+          className="
+            group
+            relative
+            flex
+            flex-col md:flex-row
+            items-start md:items-center
+            justify-between
+            gap-6 md:gap-8
+            px-8 md:px-12
+            py-6 md:py-7
+            rounded-full
+            border border-gray-200/80
+            shadow-[0_8px_24px_rgba(0,0,0,0.06),0_2px_6px_rgba(0,0,0,0.04)]
+            backdrop-blur-md
+            overflow-hidden
+            animate-pulse
+          "
+        >
+          {/* Inner highlight stroke */}
+          <div
+            className="
+              pointer-events-none
+              absolute inset-[1px]
+              rounded-full
+              border border-white/50
+            "
+          />
+
+          {/* LEFT SIDE SKELETON */}
+          <div className="relative z-10 flex flex-col justify-center flex-1">
+            {/* Welcome text skeleton */}
+            <div className="space-y-2">
+              <div className="h-8 md:h-10 bg-gray-200 rounded w-64 md:w-80"></div>
+              <div className="h-4 md:h-5 bg-gray-200 rounded w-48 md:w-56"></div>
+            </div>
+
+            {/* Description skeleton */}
+            <div className="mt-1.5 space-y-2">
+              <div className="h-4 bg-gray-200 rounded w-full max-w-md"></div>
+              <div className="h-4 bg-gray-200 rounded w-5/6 max-w-sm"></div>
+              <div className="h-4 bg-gray-200 rounded w-4/6 max-w-xs"></div>
+            </div>
+          </div>
+
+          {/* RIGHT SIDE SKELETON */}
+          <div className="relative z-10 flex items-center gap-3 shrink-0">
+            {/* Export button skeleton */}
+            <div className="h-10 w-24 bg-gray-200 rounded-full"></div>
+            
+            {/* Explore Land's button skeleton */}
+            <div className="h-10 w-32 bg-gray-200 rounded-full"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 16 }}

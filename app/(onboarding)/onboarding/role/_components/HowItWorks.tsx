@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
+import { useState, useEffect } from "react";
 
 const steps = [
   {
@@ -46,6 +47,67 @@ const cardClasses = `
 `;
 
 export default function HowItWorksSection() {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading time for content
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <section className="relative py-28 bg-white overflow-hidden">
+        <div className="mx-auto max-w-[1200px] px-6">
+          {/* Heading Skeleton */}
+          <div className="mb-16 animate-pulse">
+            <div className="h-12 md:h-14 bg-gray-200 rounded-lg w-96"></div>
+          </div>
+
+          {/* Steps Grid Skeleton */}
+          <div className="relative grid md:grid-cols-2 gap-12 animate-pulse">
+            {[1, 2, 3, 4].map((_, index) => (
+              <div
+                key={index}
+                className="group relative"
+              >
+                {/* Connector Line (hidden in skeleton) */}
+                {index < 3 && (
+                  <div className="hidden md:block absolute -right-6 top-1/2 w-12 h-[1px]" />
+                )}
+
+                {/* Card Skeleton */}
+                <div className={cardClasses}>
+                  {/* Step Badge Skeleton */}
+                  <div className="absolute top-6 right-6 h-11 w-11 rounded-full bg-gray-200"></div>
+
+                  {/* Title Skeleton */}
+                  <div className="space-y-3 mb-4">
+                    <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-8 bg-gray-200 rounded w-2/3"></div>
+                  </div>
+
+                  {/* Description Skeleton */}
+                  <div className="space-y-2 max-w-md">
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                    <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                  </div>
+
+                  {/* Bottom Accent Skeleton */}
+                  <div className="h-[2px] mt-8 bg-gray-200 rounded-full w-0"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="relative py-28 bg-white overflow-hidden">
       <div className="mx-auto max-w-[1200px] px-6">
@@ -57,7 +119,7 @@ export default function HowItWorksSection() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mb-16 text-4xl md:text-5xl font-semibold text-gray-900 tracking-tight"
         >
-          How Fieldly Finance Works
+          How Fieldly Works
         </motion.h2>
 
         {/* Steps Grid */}

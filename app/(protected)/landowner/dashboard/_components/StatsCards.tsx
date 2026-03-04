@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Activity, ArrowUpRight, BadgeCheck, Sparkles } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface StatsCardsProps {
   stats: {
@@ -20,6 +21,17 @@ interface StatsCardsProps {
 }
 
 export function StatsCards({ stats }: StatsCardsProps) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading time for data
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const totalArea = stats.leasedArea + stats.availableArea;
   const leasedPercentage =
     totalArea > 0 ? (stats.leasedArea / totalArea) * 100 : 0;
@@ -56,6 +68,117 @@ export function StatsCards({ stats }: StatsCardsProps) {
         stats.pendingApplications > 0 ? "Requires attention" : "No pending",
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="space-y-16 mt-10">
+        {/* ================= Capsule Stats Container Skeleton ================= */}
+        <div className="relative">
+          {/* Capsule background */}
+          <div
+            className="absolute inset-0 rounded-[70px] dark:to-[#0f172a]
+              border border-[#b7cf8a]/20 
+              shadow-[0_18px_48px_rgba(0,0,0,0.10),0_6px_16px_rgba(0,0,0,0.06)]
+              backdrop-blur-2xl"
+          />
+
+          <div className="relative z-10 px-8 py-14">
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 animate-pulse">
+              {[1, 2, 3, 4].map((_, index) => (
+                <div key={index}>
+                  <Card
+                    className={cn(
+                      "rounded-3xl border border-white/40 dark:border-white/10",
+                      "bg-white/80 dark:bg-gray-900/80",
+                      "backdrop-blur-xl shadow-xl",
+                    )}
+                  >
+                    <CardContent className="p-7 space-y-6">
+                      <div className="flex justify-between items-start">
+                        {/* Icon Placeholder */}
+                        <div className="w-16 h-16 rounded-2xl bg-gray-200 dark:bg-gray-700"></div>
+
+                        {/* Trend Badge Placeholder */}
+                        <div className="h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                      </div>
+
+                      <div className="space-y-2">
+                        {/* Title Placeholder */}
+                        <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        {/* Value Placeholder */}
+                        <div className="h-8 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ================= Land Utilization Card Skeleton ================= */}
+        <div className="animate-pulse">
+          <Card
+            className="relative overflow-hidden rounded-3xl
+              shadow-[0_18px_48px_rgba(0,0,0,0.10),0_6px_16px_rgba(0,0,0,0.06)]
+              backdrop-blur-2xl"
+          >
+            <CardHeader className="relative z-10 pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="w-3 h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="relative z-10 space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                  <div className="flex items-end gap-1">
+                    <div className="h-7 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    <div className="h-4 w-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                  <div className="flex items-end gap-1">
+                    <div className="h-7 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    <div className="h-4 w-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-2">
+                  <div className="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="h-3 w-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+
+                <div className="relative h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="absolute h-full bg-gray-300 dark:bg-gray-600 rounded-full w-0"></div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 p-4 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div className="flex-1">
+                  <div className="h-3 w-3/4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-16 mt-10">
