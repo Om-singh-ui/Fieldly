@@ -125,85 +125,96 @@ export default function HeroSection() {
         </div>
 
         {/* RIGHT */}
-        <div className="group z-10 ml-auto w-full max-w-[448px] min-h-[280px] sm:min-h-[360px] md:min-h-[400px] lg:min-h-[555px] overflow-hidden rounded-[24px] sm:rounded-[28px] transition-all duration-300 lg:-translate-y-14 hover:shadow-[0_28px_90px_rgba(255,205,70,0.6),0_0_0_1px_rgba(255,205,70,0.4)]">
+        <div
+          className="group z-10 ml-auto w-full max-w-[448px] min-h-[280px] sm:min-h-[360px] md:min-h-[400px] lg:min-h-[555px] overflow-hidden rounded-[24px] sm:rounded-[28px] transition-all duration-500 lg:-translate-y-14
+hover:shadow-[0_30px_90px_rgba(183,207,138,0.45),0_0_0_1px_rgba(183,207,138,0.35)]"
+        >
           <div className="relative h-full w-full pt-12 sm:pt-16 md:pt-20">
             <Image
               src="/hero.jpg"
-              alt="Cultivated farmland"
+              alt="Global land collaboration"
               fill
               priority
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
-              className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+              className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
             />
 
-            {/* TEXT OVERLAY - APPEARS ON HOVER */}
+            {/* OVERLAY */}
             <div
               className="
-                absolute bottom-0 left-0 right-0
-                bg-gradient-to-t from-black/70 via-black/20 to-transparent
-                p-4 sm:p-5 md:p-6 lg:p-6
-                text-white z-10
-                opacity-100 sm:opacity-0 sm:group-hover:opacity-100
-                transition-all duration-300
-              "
+      absolute bottom-0 left-0 right-0
+      bg-gradient-to-t from-black/75 via-black/30 to-transparent
+      p-4 sm:p-5 md:p-6 lg:p-6
+      text-white z-10
+      opacity-100 sm:opacity-0 sm:group-hover:opacity-100
+      transition-all duration-300
+      "
             >
               <div
                 className="
-                  relative
-                  bg-black/40 backdrop-blur-xl
-                  border border-white/25
-                  rounded-2xl
-                  p-4 sm:p-5 md:p-6 lg:p-6
-                  shadow-[0_15px_45px_rgba(0,0,0,0.35),
-                          inset_0_1px_0_rgba(255,255,255,0.18)]
-                  transform translate-y-2 sm:translate-y-4 md:translate-y-6 lg:translate-y-6
-                  sm:group-hover:translate-y-0
-                  transition-all duration-300
-                "
+        relative
+        bg-black/40 backdrop-blur-xl
+        border border-white/20
+        rounded-2xl
+        p-4 sm:p-5 md:p-6
+        shadow-[0_20px_50px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.2)]
+        transform translate-y-2 sm:translate-y-6
+        sm:group-hover:translate-y-0
+        transition-all duration-400
+        "
               >
-                {/* LIVE INDICATOR WITH FRAMER MOTION BLINKING DOT */}
-                <div className="flex items-center gap-2 text-sm font-medium mb-3">
+                {/* LIVE INDICATOR */}
+                <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold mb-3 tracking-wide">
                   <div className="relative h-4 w-4">
-                    {/* Pulsing outer ring - GREEN */}
                     <motion.div
                       className="absolute inset-0 rounded-full bg-white"
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.2, 0.4, 0.2],
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
+                      animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
                     />
 
-                    {/* Blinking inner dot - BRIGHTER GREEN */}
                     <motion.div
-                      className="absolute inset-1 rounded-full bg-green-400 shadow-lg shadow-green-400/50"
-                      animate={{
-                        scale: [1, 1.3, 1],
-                        opacity: [1, 0.5, 1],
-                      }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
+                      className="absolute inset-1 rounded-full bg-[#b7cf8a] shadow-lg shadow-[#b7cf8a]/60"
+                      animate={{ scale: [1, 1.25, 1], opacity: [1, 0.6, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
                     />
                   </div>
-                  <span className="tracking-wider text-white font-semibold">
-                    LIVE
+
+                  <span className="tracking-wider text-white/90">
+                    LIVE NETWORK
                   </span>
                 </div>
 
-                <h3 className="text-2xl sm:text-3xl font-semibold leading-tight">
-                  4,000+ farmers trust&apos;s us here at Fieldly
+                {/* HEADLINE */}
+                <h3 className="text-xl sm:text-2xl font-semibold leading-tight mb-4">
+                  4,000+ members discovering land opportunities
                 </h3>
+
+                {/* METRICS */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
+                    <div className="text-lg font-bold">4K+</div>
+
+                    <div className="text-xs text-white/80">Active Members</div>
+                  </div>
+
+                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
+                    <div className="text-lg font-bold">20K+</div>
+
+                    <div className="text-xs text-white/80">Land Listings</div>
+                  </div>
+                </div>
+
+                {/* FOOTER */}
+                <div className="mt-4 pt-3 border-t border-white/20">
+                  <p className="text-xs sm:text-sm text-white/85 leading-relaxed">
+                    Connecting landowners and individuals globally through a
+                    transparent and accessible digital platform.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </div>  
       </div>
     </section>
   );

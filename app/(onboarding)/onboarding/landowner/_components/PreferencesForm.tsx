@@ -58,7 +58,7 @@ export function PreferencesForm({ form }: PreferencesFormProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="space-y-14 bg-gradient-to-b from-white to-[#f9fbf4] p-6 md:p-10 rounded-3xl"
+      className="space-y-14 p-6 md:p-10 rounded-3xl"
     >
       {/* ================= HEADER ================= */}
       <div className="text-center">
