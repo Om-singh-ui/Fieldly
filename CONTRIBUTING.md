@@ -6,7 +6,6 @@ This guide outlines how both new and experienced contributors can get involved: 
 
 **Audience:** Developers, designers, financial analysts, agricultural experts, writers, and community members who want to help make Fieldly better.
 
----
 
 ## 📋 Table of Contents
 - [Code of Conduct](#code-of-conduct)
@@ -28,7 +27,6 @@ This guide outlines how both new and experienced contributors can get involved: 
 - [Acknowledgements & Contacts](#acknowledgements--contacts)
 - [Templates](#templates)
 
----
 
 ## 📜 Code of Conduct
 
@@ -47,7 +45,6 @@ This project follows a **Contributor Covenant (v2.1)** — we expect all communi
 - Personal or political attacks
 - Publishing others' private information
 
----
 
 ## 🚀 How Can I Contribute?
 
@@ -66,7 +63,6 @@ Found a bug in the platform? Help us fix it:
 
 **Label:** `bug`
 
----
 
 ### 💡 Request a Feature
 Have an idea to improve Fieldly? We'd love to hear it:
@@ -82,7 +78,6 @@ Have an idea to improve Fieldly? We'd love to hear it:
 
 **Label:** `enhancement`
 
----
 
 ### 📚 Improve Documentation
 Documentation improvements are the easiest way to start contributing. Good documentation helps farmers access loans and investors understand opportunities.
@@ -104,7 +99,6 @@ Areas to contribute:
 
 **Label:** `documentation`
 
----
 
 ### 💻 Submit Code (PRs)
 Ready to write some code? Follow these steps:
@@ -122,7 +116,6 @@ Ready to write some code? Follow these steps:
 
 **Label:** `needs-review`
 
----
 
 ### 🌾 Domain Expertise
 Not a developer? You can still contribute valuable domain knowledge:
@@ -135,7 +128,6 @@ Not a developer? You can still contribute valuable domain knowledge:
 
 Reach out via our community channels to get involved!
 
----
 
 ## 🛠️ Getting Started (Local Development)
 
