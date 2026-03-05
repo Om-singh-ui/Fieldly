@@ -1,14 +1,13 @@
 "use client";
 
-import { motion, Variants } from "framer-motion";
+import { motion } from "framer-motion";
 import CountUp from "react-countup";
-import {
-  Package,
-  Landmark,
-  MapPin,
-  Heart,
-  IndianRupee,
-} from "lucide-react";
+import Image from "next/image";
+import { ArrowUpRight } from "lucide-react";
+
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
 interface FarmerStats {
   activeApplications: number;
@@ -23,160 +22,157 @@ interface StatsGridProps {
 }
 
 export function FarmerStatsGrid({ stats }: StatsGridProps) {
-  const statItems = [
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const cards = [
     {
-      label: "Active Applications",
+      title: "Active Applications",
       value: stats.activeApplications,
-      icon: Package,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-      darkBg: "dark:bg-blue-900/30",
-      gradient: "from-blue-500 to-blue-600",
-      delay: 0.1,
+      icon: "/onboarding/individualownership.png",
+      trend: "+4%",
     },
     {
-      label: "Active Leases",
+      title: "Active Leases",
       value: stats.activeLeases,
-      icon: Landmark,
-      color: "text-green-600",
-      bg: "bg-green-50",
-      darkBg: "dark:bg-green-900/30",
-      gradient: "from-green-500 to-emerald-600",
-      delay: 0.2,
+      icon: "/onboarding/user-man-account-person.png",
+      trend: "+2%",
     },
     {
-      label: "Recommended Lands",
+      title: "Recommended Lands",
       value: stats.recommendedLands,
-      icon: MapPin,
-      color: "text-purple-600",
-      bg: "bg-purple-50",
-      darkBg: "dark:bg-purple-900/30",
-      gradient: "from-purple-500 to-purple-600",
-      delay: 0.3,
+      icon: "/onboarding/landreq.png",
+      trend: "+9%",
     },
     {
-      label: "Saved Listings",
+      title: "Saved Listings",
       value: stats.savedListings,
-      icon: Heart,
-      color: "text-red-600",
-      bg: "bg-red-50",
-      darkBg: "dark:bg-red-900/30",
-      gradient: "from-red-500 to-pink-600",
-      delay: 0.4,
+      icon: "/icons/saved.png",
+      trend: "+6%",
     },
     {
-      label: "Upcoming Payments",
+      title: "Upcoming Payments",
       value: stats.upcomingPayments,
-      icon: IndianRupee,
-      color: "text-orange-600",
-      bg: "bg-orange-50",
-      darkBg: "dark:bg-orange-900/30",
-      gradient: "from-orange-500 to-amber-600",
-      delay: 0.5,
+      icon: "/icons/upcomingpayment.png",
+      trend: "Due Soon",
     },
   ];
 
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
+  /* ---------------- Skeleton Loader ---------------- */
 
-  const itemVariants: Variants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 12,
-      },
-    },
-  };
+  if (isLoading) {
+    return (
+      <div className="relative mt-10">
+        <div className="absolute inset-0 rounded-[70px] border border-[#b7cf8a]/20 backdrop-blur-2xl" />
+
+        <div className="relative z-10 px-8 py-14">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5 animate-pulse">
+            {[1, 2, 3, 4, 5].map((_, i) => (
+              <Card
+                key={i}
+                className="rounded-3xl border border-white/40 dark:border-white/10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-xl"
+              >
+                <CardContent className="p-7 space-y-6">
+                  <div className="flex justify-between items-start">
+                    <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-2xl" />
+                    <div className="h-5 w-14 bg-gray-200 dark:bg-gray-700 rounded-full" />
+                  </div>
+
+                  <div>
+                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+                    <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ---------------- Main UI ---------------- */
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6"
-    >
-      {statItems.map((stat) => {
-        const Icon = stat.icon;
-        return (
-          <motion.div
-            key={stat.label}
-            variants={itemVariants}
-            whileHover={{ 
-              scale: 1.05,
-              transition: { type: "spring", stiffness: 400, damping: 10 }
-            }}
-            whileTap={{ scale: 0.95 }}
-            className="group relative rounded-2xl p-6 bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
-          >
-            {/* Background Gradient */}
-            <motion.div
-              className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
-              animate={{ 
-                scale: [1, 1.2, 1],
-              }}
-              transition={{ 
-                duration: 5, 
-                repeat: Infinity,
-                repeatType: "reverse"
-              }}
-            />
-            
-            {/* Content */}
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <motion.div
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.5 }}
-                  className={`p-3 rounded-xl ${stat.bg} ${stat.darkBg} group-hover:scale-110 transition-transform duration-300`}
-                >
-                  <Icon className={`h-6 w-6 ${stat.color}`} />
-                </motion.div>
-                
-            
-              </div>
-              
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  {stat.label}
-                </p>
-                <motion.p 
-                  className="text-3xl font-bold text-gray-900 dark:text-white"
-                  initial={{ scale: 0.5 }}   
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 200, delay: stat.delay }}
-                >
-                  <CountUp
-                    end={stat.value}
-                    duration={2}
-                    delay={stat.delay}
-                    separator=","
-                  />
-                </motion.p>
-              </div>
-            </div>
+    <div className="relative mt-10">
+      {/* Capsule Background */}
+      <div
+        className="absolute inset-0 rounded-[70px]
+        border border-[#b7cf8a]/20
+        shadow-[0_18px_48px_rgba(0,0,0,0.10),0_6px_16px_rgba(0,0,0,0.06)]
+        backdrop-blur-2xl"
+      />
 
-            {/* Animated Border */}
+      <div className="relative z-10 px-8 py-14">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5"
+        >
+          {cards.map((card, index) => (
             <motion.div
-              className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-green-400 to-emerald-500"
-              initial={{ width: 0 }}
-              animate={{ width: "100%" }}
-              transition={{ duration: 1, delay: stat.delay }}
-            />
-          </motion.div>
-        );
-      })}
-    </motion.div>
+              key={card.title}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ y: -10, scale: 1.04 }}
+            >
+              <Card
+                className={cn(
+                  "rounded-3xl border border-white/40 dark:border-white/10",
+                  "bg-white/80 dark:bg-gray-900/80",
+                  "backdrop-blur-xl shadow-xl hover:shadow-2xl",
+                  "transition-all duration-300"
+                )}
+              >
+                <CardContent className="p-7 space-y-6">
+                  <div className="flex justify-between items-start">
+                    {/* Image Icon */}
+                    <div
+                      className="w-16 h-16 rounded-2xl 
+                      bg-[#b7cf8a]/15 flex items-center justify-center shadow-sm"
+                    >
+                      <Image
+                        src={card.icon}
+                        alt={card.title}
+                        width={38}
+                        height={38}
+                        className="object-contain"
+                      />
+                    </div>
+
+                    {/* Trend Badge */}
+                    <span
+                      className="flex items-center gap-1 text-xs font-medium 
+                      text-emerald-600 bg-emerald-50 
+                      dark:bg-emerald-900/30 px-3 py-1 rounded-full"
+                    >
+                      <ArrowUpRight className="w-3 h-3" />
+                      {card.trend}
+                    </span>
+                  </div>
+
+                  {/* Stat Value */}
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {card.title}
+                    </p>
+
+                    <h3 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white mt-1">
+                      <CountUp end={card.value} duration={2} separator="," />
+                    </h3>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </div>
   );
 }
