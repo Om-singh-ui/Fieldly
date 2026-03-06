@@ -159,7 +159,7 @@ const NAV_DATA: Record<NavKey, NavSection> = {
     ],
     feature: {
       title: "Company",
-      desc: "Learn more about our mission and team.",
+      desc: "Explore Fieldly’s mission to modernize agricultural land leasing with a trusted digital ecosystem for farmers, landowners, and rural communities.",
       button: "About Fieldly",
       href: "/company/about",
     },
@@ -349,21 +349,23 @@ export default function MainHeader() {
   const { mainVisible } = useHeaderVisibility();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [mobileActiveDropdown, setMobileActiveDropdown] = useState<NavKey | null>(null);
+  const [mobileActiveDropdown, setMobileActiveDropdown] =
+    useState<NavKey | null>(null);
   const [languageOpen, setLanguageOpen] = useState(false);
-  const [activeDesktopDropdown, setActiveDesktopDropdown] = useState<NavKey | null>(null);
+  const [activeDesktopDropdown, setActiveDesktopDropdown] =
+    useState<NavKey | null>(null);
   const [desktopLanguageOpen, setDesktopLanguageOpen] = useState(false);
-  
+
   const desktopDropdownRef = useRef<HTMLDivElement>(null);
   const desktopLanguageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
-    
+
     const timer = setTimeout(() => {
       setLoading(false);
     }, 0);
-    
+
     return () => {
       document.body.style.overflow = "";
       clearTimeout(timer);
@@ -383,10 +385,16 @@ export default function MainHeader() {
   // Close desktop dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (desktopDropdownRef.current && !desktopDropdownRef.current.contains(event.target as Node)) {
+      if (
+        desktopDropdownRef.current &&
+        !desktopDropdownRef.current.contains(event.target as Node)
+      ) {
         setActiveDesktopDropdown(null);
       }
-      if (desktopLanguageRef.current && !desktopLanguageRef.current.contains(event.target as Node)) {
+      if (
+        desktopLanguageRef.current &&
+        !desktopLanguageRef.current.contains(event.target as Node)
+      ) {
         setDesktopLanguageOpen(false);
       }
     };
@@ -411,8 +419,10 @@ export default function MainHeader() {
 
   const handleDesktopDropdownLeave = () => {
     setTimeout(() => {
-      if (!document.querySelector(".desktop-dropdown-content:hover") && 
-          !document.querySelector(".desktop-dropdown-trigger:hover")) {
+      if (
+        !document.querySelector(".desktop-dropdown-content:hover") &&
+        !document.querySelector(".desktop-dropdown-trigger:hover")
+      ) {
         setActiveDesktopDropdown(null);
       }
     }, 100);
@@ -436,7 +446,10 @@ export default function MainHeader() {
         {/* ================= EDGE-TO-EDGE HEADER STRAP ================= */}
         <div className="pointer-events-auto flex items-center justify-between h-14 md:h-16 border-b border-black/10 bg-white/95 px-4 md:px-8 shadow-[0_1px_3px_rgba(0,0,0,0.08)] backdrop-blur-md">
           {/* LEFT — Brand with home redirect */}
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <Link
+            href="/"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
             {loading ? (
               <>
                 <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-gray-200 animate-pulse" />
@@ -444,14 +457,25 @@ export default function MainHeader() {
               </>
             ) : (
               <>
-                <Image src="/hicon.png" alt="Fieldly" width={28} height={28} className="h-7 w-7 md:h-8 md:w-8" />
-                <span className="text-sm md:text-base font-semibold tracking-tight text-zinc-900">Fieldly</span>
+                <Image
+                  src="/hicon.png"
+                  alt="Fieldly"
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 md:h-8 md:w-8"
+                />
+                <span className="text-sm md:text-base font-semibold tracking-tight text-zinc-900">
+                  Fieldly
+                </span>
               </>
             )}
           </Link>
 
           {/* CENTER — Nav (Desktop with enhanced dropdowns) */}
-          <nav ref={desktopDropdownRef} className="hidden md:flex items-center gap-8 relative">
+          <nav
+            ref={desktopDropdownRef}
+            className="hidden md:flex items-center gap-8 relative"
+          >
             {loading ? (
               <>
                 {[...Array(4)].map((_, i) => (
@@ -465,7 +489,7 @@ export default function MainHeader() {
               <>
                 {(Object.keys(NAV_DATA) as NavKey[]).map((key) => {
                   const section = NAV_DATA[key];
-                  
+
                   return (
                     <div
                       key={key}
@@ -475,7 +499,9 @@ export default function MainHeader() {
                     >
                       <button className="desktop-dropdown-trigger flex items-center gap-1 text-sm font-medium text-black hover:text-black transition-colors">
                         {section.label}
-                        <ChevronDown className={`h-4 w-4 opacity-60 transition-transform ${activeDesktopDropdown === key ? "rotate-180" : ""}`} />
+                        <ChevronDown
+                          className={`h-4 w-4 opacity-60 transition-transform ${activeDesktopDropdown === key ? "rotate-180" : ""}`}
+                        />
                       </button>
 
                       {/* Desktop Dropdown Menu - Enhanced UI */}
@@ -497,7 +523,9 @@ export default function MainHeader() {
                                   <Link
                                     key={item.label}
                                     href={item.href}
-                                    onClick={() => setActiveDesktopDropdown(null)}
+                                    onClick={() =>
+                                      setActiveDesktopDropdown(null)
+                                    }
                                     className="group flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-all duration-200"
                                   >
                                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white transition-colors">
@@ -568,28 +596,28 @@ export default function MainHeader() {
                 <>
                   {/* Desktop Language Dropdown */}
                   <div ref={desktopLanguageRef} className="relative">
-                    <button 
-                      onClick={toggleDesktopLanguage} 
+                    <button
+                      onClick={toggleDesktopLanguage}
                       className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-black/5 transition-colors"
                       aria-expanded={desktopLanguageOpen}
                     >
                       <Globe className="h-5 w-5" />
                     </button>
-                    
+
                     {desktopLanguageOpen && (
                       <motion.div
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="absolute right-0 left-0.5 top-full mt-2 w-48 rounded-xl bg-white shadow-lg border border-gray-100 overflow-hidden z-50"
                       >
-                        <button 
-                          onClick={() => setDesktopLanguageOpen(false)} 
+                        <button
+                          onClick={() => setDesktopLanguageOpen(false)}
                           className="w-full px-4 py-3 text-left text-sm text-zinc-700 hover:bg-gray-50 hover:text-black transition-colors"
                         >
                           English (EN)
                         </button>
-                        <button 
-                          onClick={() => setDesktopLanguageOpen(false)} 
+                        <button
+                          onClick={() => setDesktopLanguageOpen(false)}
                           className="w-full px-4 py-3 text-left text-sm text-zinc-700 hover:bg-gray-50 hover:text-black border-t border-gray-100 transition-colors"
                         >
                           Español (ES)
@@ -600,7 +628,9 @@ export default function MainHeader() {
 
                   <ChevronDown className="h-4 w-4 opacity-60" />
 
-                  <span className="text-sm font-medium text-black whitespace-nowrap">Retail Investors</span>
+                  <span className="text-sm font-medium text-black whitespace-nowrap">
+                    Retail Investors
+                  </span>
 
                   {/* Desktop Auth Section */}
                   <div className="ml-1">
@@ -655,7 +685,11 @@ export default function MainHeader() {
                     className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-black/10 transition-colors"
                     aria-label={mobileOpen ? "Close menu" : "Open menu"}
                   >
-                    {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                    {mobileOpen ? (
+                      <X className="h-5 w-5" />
+                    ) : (
+                      <Menu className="h-5 w-5" />
+                    )}
                   </button>
                 </>
               )}
@@ -667,7 +701,10 @@ export default function MainHeader() {
       {/* ================= MOBILE MENU ================= */}
       {mobileOpen && (
         <>
-          <div className="fixed inset-0 z-30 bg-black/30 backdrop-blur-sm md:hidden" onClick={() => setMobileOpen(false)} />
+          <div
+            className="fixed inset-0 z-30 bg-black/30 backdrop-blur-sm md:hidden"
+            onClick={() => setMobileOpen(false)}
+          />
 
           <motion.div
             initial={{ y: -16, opacity: 0 }}
@@ -693,16 +730,21 @@ export default function MainHeader() {
                 <div className="space-y-2">
                   {(Object.keys(NAV_DATA) as NavKey[]).map((key) => {
                     const section = NAV_DATA[key];
-                    
+
                     return (
-                      <div key={key} className="border-b border-gray-100 pb-2 last:border-b-0">
+                      <div
+                        key={key}
+                        className="border-b border-gray-100 pb-2 last:border-b-0"
+                      >
                         <button
                           onClick={() => toggleMobileDropdown(key)}
                           className="flex w-full items-center justify-between py-4 px-2 text-base font-medium text-black hover:text-black transition-colors"
                           aria-expanded={mobileActiveDropdown === key}
                         >
                           {section.label}
-                          <ChevronDown className={`h-5 w-5 opacity-60 transition-transform duration-200 ${mobileActiveDropdown === key ? "rotate-180" : ""}`} />
+                          <ChevronDown
+                            className={`h-5 w-5 opacity-60 transition-transform duration-200 ${mobileActiveDropdown === key ? "rotate-180" : ""}`}
+                          />
                         </button>
 
                         {/* Mobile Dropdown Content - Enhanced UI */}
@@ -780,9 +822,11 @@ export default function MainHeader() {
                       <Globe className="h-4 w-4" />
                       Language
                     </div>
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${languageOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform duration-200 ${languageOpen ? "rotate-180" : ""}`}
+                    />
                   </button>
-                  
+
                   {languageOpen && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
@@ -810,7 +854,9 @@ export default function MainHeader() {
 
                 {/* Retail Investors Text */}
                 <div className="mt-4 mb-6 px-2">
-                  <span className="text-sm font-medium text-zinc-600">Retail Investors</span>
+                  <span className="text-sm font-medium text-zinc-600">
+                    Retail Investors
+                  </span>
                 </div>
 
                 {/* Mobile Auth Section */}

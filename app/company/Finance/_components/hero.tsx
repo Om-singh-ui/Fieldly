@@ -203,9 +203,7 @@ export default function HeroSection() {
 
           {/* Investors Trust */}
           <motion.div variants={fadeUp} className="relative mt-8">
-            <div
-              className="flex flex-col sm:flex-row items-start sm:items-center gap-4"
-            >
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               {/* Avatars */}
               <div className="flex -space-x-3">
                 {investors.map((src, index) => (
@@ -261,27 +259,56 @@ export default function HeroSection() {
               className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
             />
 
-             {/* Overlay Glass Card */}
-            <motion.div
-              initial={{ y: 30, opacity: 0 }}
-              whileHover={{ y: 0, opacity: 1 }}
-              className="absolute bottom-0 left-0 right-0 p-6 text-white"
+            {/* FIELDLY FINANCE OVERLAY */}
+            <div
+              className="absolute bottom-0 left-0 right-0 p-6 text-white 
+opacity-0 translate-y-6 
+group-hover:opacity-100 group-hover:translate-y-0 
+transition-all duration-500 ease-out"
             >
-              <div className="bg-black/40 backdrop-blur-xl border border-white/25 rounded-2xl p-6">
-                <div className="flex items-center gap-2 text-sm mb-3">
+              <div className="bg-black/50 border border-white/20 rounded-2xl p-6">
+                {/* LIVE INDICATOR */}
+                <div className="flex items-center gap-2 text-sm mb-3 tracking-wide">
                   <motion.div
-                    className="h-3 w-3 rounded-full bg-green-400"
+                    className="h-3 w-3 rounded-full bg-[#b7cf8a]"
                     animate={{ scale: [1, 1.3, 1] }}
-                    transition={{ repeat: Infinity, duration: 1.2 }}
+                    transition={{ duration: 1.2, repeat: Infinity }}
                   />
-                  LIVE
+                  LIVE FUNDING
                 </div>
 
-                <h3 className="text-2xl font-semibold">
-                  Bridging Farmers & Landowners Across India
+                {/* HEADLINE */}
+                <h3 className="text-2xl font-semibold leading-tight mb-4">
+                  Empowering Farmers Through Smart Agricultural Financing
                 </h3>
+
+                {/* METRICS */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white/20 rounded-xl p-3">
+                    <div className="text-lg font-bold">₹12Cr+</div>
+                    <div className="text-xs text-white/80">
+                      Capital Deployed
+                    </div>
+                  </div>
+
+                  <div className="bg-white/20 rounded-xl p-3">
+                    <div className="text-lg font-bold">2K+</div>
+                    <div className="text-xs text-white/80">
+                      Farmers Supported
+                    </div>
+                  </div>
+                </div>
+
+                {/* FOOTER */}
+                <div className="mt-4 pt-3 border-t border-white/20">
+                  <p className="text-xs text-white/85 leading-relaxed">
+                    Fieldly connects investors with verified agricultural
+                    opportunities, enabling farmers to access funding while
+                    investors earn reliable returns.
+                  </p>
+                </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </motion.div>
       </motion.div>
