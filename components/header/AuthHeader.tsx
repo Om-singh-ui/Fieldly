@@ -156,7 +156,7 @@ const NAV_DATA: Record<NavKey, NavSection> = {
       {
         label: "Fieldly Finance",
         icon: IndianRupee,
-        href: "/company/finance",
+        href: "/company/Finance",
       },
     ],
     feature: {
