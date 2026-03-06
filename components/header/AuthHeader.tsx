@@ -161,7 +161,7 @@ const NAV_DATA: Record<NavKey, NavSection> = {
     ],
     feature: {
       title: "Company",
-      desc: "Learn more about our mission and team.",
+      desc: "Explore Fieldly’s mission to modernize agricultural land leasing with a trusted digital ecosystem for farmers, landowners, and rural communities.",
       button: "About Fieldly",
       href: "/company/about",
     },
