@@ -74,21 +74,6 @@ export default function SignUpPage() {
           animate="visible"
           variants={containerVariants}
         >
-          {/* Desktop Back Button (Hidden on mobile) */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="hidden lg:block absolute left-12 top-6"
-          >
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1 text-sm text-black hover:text-zinc-600 transition-colors"
-            >
-              ← Back
-            </Link>
-          </motion.div>
-
           <motion.div
             className="w-full max-w-xl mx-auto lg:mx-0"
             variants={containerVariants}
