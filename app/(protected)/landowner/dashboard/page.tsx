@@ -211,7 +211,7 @@ export default async function LandownerDashboardPage() {
                   <div className="py-12">
                     <div className="relative w-12 h-12 mx-auto mb-4 opacity-50">
                       <Image
-                        src="~/onboarding/user-man-account-person.png"
+                        src="/onboarding/user-man-account-person.png"
                         alt="No Leases"
                         fill
                         className="object-contain"
@@ -220,7 +220,7 @@ export default async function LandownerDashboardPage() {
                     <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                       No Active Leases
                     </h4>
-                    <p className="text-gray-500 dark:text-gray-400">
+                    <p className="text-gray-500 dark:text-gray-4  00">
                       When your lands get applications approved, they&apos;ll appear here
                     </p>
                   </div>
