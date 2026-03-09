@@ -17,7 +17,7 @@ interface StatsCardsProps {
     availableArea: number;
     totalRevenue?: number;
     revenueGrowth?: number;
-  };
+  };  
 }
 
 export function StatsCards({ stats }: StatsCardsProps) {
