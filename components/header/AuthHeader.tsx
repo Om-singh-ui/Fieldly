@@ -226,7 +226,7 @@ function AuthCTA() {
         onClick={handleDashboardRedirect}
         disabled={isChecking}
         aria-busy={isChecking}
-        className="flex items-center justify-center gap-2 rounded-full bg-[#  ] px-6 py-2.5 text-sm font-medium min-w-[44px] hover:bg-[#a8c07a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex items-center justify-center gap-2 rounded-full bg-[#b7cf8a] px-6 py-2.5 text-sm font-medium min-w-[44px] hover:bg-[#a8c07a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isChecking ? (
           <>
