@@ -57,26 +57,60 @@ export default function HeroSection() {
     return (
       <section className="relative mx-auto max-w-[1440px] px-4 sm:px-6 md:px-7 pt-6 sm:pt-16 md:pt-[64px]">
         <div className="grid grid-cols-1 gap-y-10 gap-x-6 lg:grid-cols-[1.15fr_0.85fr]">
-          {/* Left Skeleton */}
-          <div className="rounded-[28px] bg-white p-10 animate-pulse">
-            <div className="h-32 sm:h-40 bg-gray-200 rounded-2xl mb-6" />
-            <div className="h-10 bg-gray-200 rounded-full w-48 mb-8" />
-            <div className="flex gap-3">
-              <div className="h-10 w-32 bg-gray-200 rounded-full" />
-              <div className="h-10 w-32 bg-gray-200 rounded-full" />
+          {/* LEFT SKELETON - Matches the actual left container structure */}
+          <div className="relative mt-24 sm:mt-12 lg:mt-16 w-full max-w-[1240px] self-start rounded-[28px] bg-gradient-to-br from-white via-white/95 to-white px-6 sm:px-8 md:px-10 lg:px-12 py-6 sm:py-7 md:py-8 shadow-[0_12px_40px_rgba(0,0,0,0.2),0_4px_10px_rgba(0,0,0,0.1)] animate-pulse">
+            <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-tr from-[#b7cf8a]/15 via-transparent to-transparent" />
+
+            {/* Heading Skeleton - 3 lines for the heading */}
+            <div className="max-w-3xl space-y-3">
+              <div className="h-8 sm:h-10 md:h-12 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-8 sm:h-10 md:h-12 bg-gray-200 rounded w-2/3"></div>
+              <div className="h-8 sm:h-10 md:h-12 bg-gray-200 rounded w-1/2"></div>
             </div>
-            <div className="flex items-center gap-4 mt-8">
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-10 w-10 rounded-full bg-gray-200" />
-                ))}
+
+            {/* CTA Buttons Skeleton - Two buttons */}
+            <div className="relative mt-6 sm:mt-6 flex flex-wrap gap-3">
+              <div className="h-10 sm:h-11 w-36 sm:w-40 bg-gray-200 rounded-full"></div>
+              <div className="h-10 sm:h-11 w-36 sm:w-40 bg-gray-200 rounded-full"></div>
+            </div>
+
+            {/* Trust Section Skeleton - Avatars + text */}
+            <div className="relative mt-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                {/* Avatar circles */}
+                <div className="flex -space-x-3">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="h-10 w-10 rounded-full bg-gray-200" />
+                  ))}
+                </div>
+                {/* Text line */}
+                <div className="h-4 w-48 bg-gray-200 rounded"></div>
               </div>
-              <div className="h-4 w-48 bg-gray-200 rounded" />
             </div>
           </div>
 
-          {/* Right Skeleton */}
-          <div className="rounded-[28px] bg-gray-200 animate-pulse h-[360px] lg:h-[555px] lg:-translate-y-14" />
+          {/* RIGHT SKELETON - Matches the actual image container */}
+          <div className="group z-10 ml-auto w-full max-w-[448px] min-h-[280px] sm:min-h-[360px] md:min-h-[400px] lg:min-h-[555px] overflow-hidden rounded-[24px] sm:rounded-[28px] transition-all duration-300 lg:-translate-y-14 shadow-[0_12px_40px_rgba(0,0,0,0.2),0_4px_10px_rgba(0,0,0,0.1)] animate-pulse">
+            <div className="relative h-full w-full bg-gray-200">
+              {/* Overlay content skeleton - hidden but maintains structure */}
+              <div className="absolute bottom-0 left-0 right-0 p-6 opacity-0">
+                <div className="bg-black/50 border border-white/20 rounded-2xl p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-3 w-3 rounded-full bg-gray-300" />
+                    <div className="h-4 w-32 bg-gray-300 rounded" />
+                  </div>
+                  <div className="space-y-2 mb-4">
+                    <div className="h-6 bg-gray-300 rounded w-3/4" />
+                    <div className="h-6 bg-gray-300 rounded w-2/3" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="h-16 bg-gray-300 rounded-xl" />
+                    <div className="h-16 bg-gray-300 rounded-xl" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     );
@@ -244,4 +278,4 @@ export default function HeroSection() {
       </motion.div>
     </section>
   );
-}
+} 
