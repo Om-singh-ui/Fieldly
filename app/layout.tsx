@@ -4,7 +4,6 @@ import HeaderRoot from "@/components/header/HeaderRoot";
 import Footer from "@/components/Footer";
 import { ClerkProvider } from "@clerk/nextjs";
 import FieldlyAssist from "@/components/FieldlyAssist";
-import CTA from "@/components/shared/CTA";
 
 export const metadata: Metadata = {
   title: "Fieldly - Empowering Farmers, Unlocking Land",
@@ -25,7 +24,6 @@ export default function RootLayout({
           <HeaderRoot />
           <main className="min-h-screen">{children}</main>
           <FieldlyAssist />
-          <CTA />
           <Footer />
         </ClerkProvider>
       </body>
