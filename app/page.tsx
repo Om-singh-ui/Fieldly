@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import MultiModalMonitoring from "@/components/MultiModalMonitoring";
 import { Plus, Minus } from "lucide-react";
 import FindLandHero from "@/components/FindLandHero";
+import CTA from "@/components/shared/CTA";
 
 // FAQ Data
 const faqs = [
@@ -423,6 +424,8 @@ export default function Home() {
             </motion.div>
           )}
         </div>
+      </section><section className="relative z-10 mt-16 sm:mt-20 md:mt-24 lg:mt-28">
+        <CTA />
       </section>
     </main>
   );

@@ -9,7 +9,7 @@ import { ArrowUpRight } from "lucide-react";
 // Skeleton Loader Component
 function CTASkeleton() {
   return (
-    <section className="relative mt-66 px-6">
+    <section className="relative  px-6">
       <div className="relative mx-auto max-w-[1200px] rounded-[32px] bg-[#ffffff] px-10 py-10 overflow-visible shadow-[0_30px_80px_rgba(0,0,0,0.25)]">
         <div className="relative z-10 max-w-[520px]">
           {/* Title skeleton */}
@@ -58,7 +58,7 @@ export default function CTA() {
   }
 
   return (
-    <section className="relative mt-66 px-6">
+    <section className="relative mt-66 mb-12 px-6">
       <motion.div
         initial={{ opacity: 0, y: 60 }}
         whileInView={{ opacity: 1, y: 0 }}
