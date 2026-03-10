@@ -115,7 +115,7 @@ export default function FindLandHero() {
           >
             {/* Left Icon */}
             <Image
-              src="/onboarding/landreq.png"
+              src="/icons/map.png"
               alt="Land Icon"
               width={22}
               height={22}
