@@ -1,8 +1,10 @@
 // app/(auth)/post-auth/page.tsx
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 export default async function PostAuthPage() {
   const { userId } = await auth();
@@ -12,17 +14,34 @@ export default async function PostAuthPage() {
   }
 
   /**
-   * RACE-SAFE USER FETCH / CREATE
-   * - Prevents duplicate users
-   * - Prevents redirect loops
+   * Get Clerk user (needed for first DB sync)
+   */
+  const clerkUser = await currentUser();
+
+  /**
+   * RACE-SAFE UPSERT
+   * - Prevent duplicate users
+   * - Ensure email/name always synced
    */
   const user = await prisma.user.upsert({
     where: { clerkUserId: userId },
-    update: {},
+    update: {
+      email:
+        clerkUser?.emailAddresses?.[0]?.emailAddress ?? undefined,
+      name:
+        `${clerkUser?.firstName ?? ""} ${
+          clerkUser?.lastName ?? ""
+        }`.trim() || undefined,
+    },
     create: {
       clerkUserId: userId,
-      email: "",
-      name: "",
+      email:
+        clerkUser?.emailAddresses?.[0]?.emailAddress ??
+        `${userId}@temp.fieldly`,
+      name:
+        `${clerkUser?.firstName ?? ""} ${
+          clerkUser?.lastName ?? ""
+        }`.trim() || "User",
       role: null,
       isOnboarded: false,
     },
@@ -33,36 +52,27 @@ export default async function PostAuthPage() {
   });
 
   /**
-   * ROUTING LOGIC (DETERMINISTIC)
+   * DETERMINISTIC ROUTING
    */
 
-  // 1️⃣ Role not chosen yet
+  // 1️⃣ No role selected
   if (!user.role) {
     redirect("/onboarding/role");
   }
 
-  // 2️⃣ Role chosen but onboarding not complete
+  // 2️⃣ Role selected but onboarding incomplete
   if (!user.isOnboarded) {
-    if (user.role === "FARMER") {
-      redirect("/onboarding/farmer");
-    }
-
-    if (user.role === "LANDOWNER") {
-      redirect("/onboarding/landowner");
-    }
-
-    redirect("/onboarding/role");
+    redirect(
+      user.role === "FARMER"
+        ? "/onboarding/farmer"
+        : "/onboarding/landowner"
+    );
   }
 
-  // 3️⃣ Fully onboarded → dashboard
-  if (user.role === "FARMER") {
-    redirect("/farmer/dashboard");
-  }
-
-  if (user.role === "LANDOWNER") {
-    redirect("/landowner/dashboard");
-  }
-
-  // Safety fallback
-  redirect("/");
+  // 3️⃣ Fully onboarded
+  redirect(
+    user.role === "FARMER"
+      ? "/farmer/dashboard"
+      : "/landowner/dashboard"
+  );
 }

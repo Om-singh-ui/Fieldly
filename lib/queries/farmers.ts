@@ -1,11 +1,7 @@
-// lib/queries/farmers.ts
-
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 
 import type {
-  User,
-  FarmerProfile,
   ApplicationStatus,
   LeaseStatus,
   BidStatus,
@@ -16,10 +12,6 @@ import type {
 // TYPES
 //////////////////////////////////////////////////////////////
 
-export type FarmerUser = User & {
-  farmerProfile: FarmerProfile | null;
-};
-
 export type FarmerStats = {
   activeApplications: number;
   activeLeases: number;
@@ -28,223 +20,193 @@ export type FarmerStats = {
   savedListings: number;
 };
 
-export type ActivityType =
-  | "application"
-  | "lease"
-  | "bid"
-  | "payment";
+export type ActivityType = "application" | "lease" | "bid" | "payment";
 
 export type Activity = {
   id: string;
   type: ActivityType;
   title: string;
   description: string;
-  status:
-    | ApplicationStatus
-    | LeaseStatus
-    | BidStatus
-    | PaymentStatus;
+  status: ApplicationStatus | LeaseStatus | BidStatus | PaymentStatus;
   timestamp: Date;
 };
 
 //////////////////////////////////////////////////////////////
-// DASHBOARD DATA
+// DASHBOARD DATA (OPTIMIZED)
 //////////////////////////////////////////////////////////////
 
-export const getFarmerDashboardData = cache(
-  async (
-    clerkUserId: string
-  ): Promise<{
-    user: FarmerUser;
-    stats: FarmerStats;
-  } | null> => {
+export const getFarmerDashboardData = cache(async (clerkUserId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { clerkUserId },
+    select: {
+      id: true,
+      name: true,
+      farmerProfile: true,
+    },
+  });
 
-    //////////////////////////////////////////////////////////
-    // Get user
-    //////////////////////////////////////////////////////////
+  if (!user) return null;
 
-    const user = await prisma.user.findUnique({
-      where: { clerkUserId },
-      include: {
-        farmerProfile: true,
+  const [
+    applicationsCount,
+    leasesCount,
+    savedListingsCount,
+    pendingPaymentsCount,
+  ] = await Promise.all([
+    prisma.application.count({
+      where: {
+        farmerId: user.id,
+        status: { not: "REJECTED" }, // ⭐ index friendly
       },
-    });
+    }),
 
-    if (!user) return null;
-
-    //////////////////////////////////////////////////////////
-    // Get stats
-    //////////////////////////////////////////////////////////
-
-    const [
-      activeApplications,
-      activeLeases,
-      savedListingsCount,
-      upcomingPayments,
-    ] = await Promise.all([
-      prisma.application.count({
-        where: { farmerId: user.id },
-      }),
-
-      prisma.lease.count({
-        where: { farmerId: user.id },
-      }),
-
-      prisma.savedListing.count({
-        where: { userId: user.id },
-      }),
-
-      prisma.payment.count({
-        where: {
-          userId: user.id,
-          status: "PENDING",
-        },
-      }),
-    ]);
-
-    //////////////////////////////////////////////////////////
-    // Return FULL FarmerStats object (FIXED)
-    //////////////////////////////////////////////////////////
-
-    return {
-      user,
-
-      stats: {
-        activeApplications,
-        activeLeases,
-
-        // recommended lands can reuse saved listings
-        recommendedLands: savedListingsCount,
-
-        upcomingPayments,
-
-        // REQUIRED FIELD — FIXED
-        savedListings: savedListingsCount,
+    prisma.lease.count({
+      where: {
+        farmerId: user.id,
+        status: { in: ["ACTIVE"] },
       },
-    };
-  }
-);
+    }),
+
+    prisma.savedListing.count({
+      where: { userId: user.id },
+    }),
+
+    prisma.payment.count({
+      where: {
+        userId: user.id,
+        status: "PENDING",
+      },
+    }),
+  ]);
+
+  return {
+    user,
+
+    stats: {
+      activeApplications: applicationsCount,
+      activeLeases: leasesCount,
+      recommendedLands: savedListingsCount,
+      upcomingPayments: pendingPaymentsCount,
+      savedListings: savedListingsCount,
+    },
+  };
+});
 
 //////////////////////////////////////////////////////////////
-// ACTIVITY FEED
+// ACTIVITY FEED (OPTIMIZED)
 //////////////////////////////////////////////////////////////
 
 export const getFarmerActivityFeed = cache(
   async (clerkUserId: string): Promise<Activity[]> => {
-
     const user = await prisma.user.findUnique({
       where: { clerkUserId },
+      select: { id: true },
     });
 
     if (!user) return [];
 
-    //////////////////////////////////////////////////////////
-    // Fetch activity sources
-    //////////////////////////////////////////////////////////
-
-    const [
-      applications,
-      leases,
-      bids,
-      payments,
-    ] = await Promise.all([
+    const [applications, leases, bids, payments] = await Promise.all([
       prisma.application.findMany({
         where: { farmerId: user.id },
-        include: { land: true },
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          land: {
+            select: { title: true, village: true },
+          },
+        },
         orderBy: { createdAt: "desc" },
-        take: 3,
+        take: 2,
       }),
 
       prisma.lease.findMany({
         where: { farmerId: user.id },
-        include: { land: true },
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          land: {
+            select: { title: true },
+          },
+        },
         orderBy: { createdAt: "desc" },
-        take: 3,
+        take: 2,
       }),
 
       prisma.bid.findMany({
         where: { farmerId: user.id },
-        include: {
-          listing: {
-            include: { land: true },
-          },
+        select: {
+          id: true,
+          amount: true,
+          status: true,
+          createdAt: true,
         },
         orderBy: { createdAt: "desc" },
-        take: 3,
+        take: 2,
       }),
 
       prisma.payment.findMany({
         where: { userId: user.id },
+        select: {
+          id: true,
+          amount: true,
+          status: true,
+          createdAt: true,
+        },
         orderBy: { createdAt: "desc" },
-        take: 3,
+        take: 2,
       }),
     ]);
 
-    //////////////////////////////////////////////////////////
-    // Build Activity Array
-    //////////////////////////////////////////////////////////
+    const activities: Activity[] = [
+      ...applications.map(
+        (app): Activity => ({
+          id: `app-${app.id}`,
+          type: "application",
+          title: `Application for ${app.land.title}`,
+          description: `Applied in ${app.land.village ?? "your area"}`,
+          status: app.status,
+          timestamp: app.createdAt,
+        }),
+      ),
 
-const activities: Activity[] = [
+      ...leases.map(
+        (lease): Activity => ({
+          id: `lease-${lease.id}`,
+          type: "lease",
+          title: `Lease for ${lease.land.title}`,
+          description: `Lease is ${lease.status.toLowerCase()}`,
+          status: lease.status,
+          timestamp: lease.createdAt,
+        }),
+      ),
 
-  ...applications.map(
-    (app): Activity => ({
-      id: `app-${app.id}`,
-      type: "application", // now correctly inferred
-      title: `Application for ${app.land.title}`,
-      description: `Applied in ${
-        app.land.village ?? "your area"
-      }`,
-      status: app.status,
-      timestamp: app.createdAt,
-    })
-  ),
+      ...bids.map(
+        (bid): Activity => ({
+          id: `bid-${bid.id}`,
+          type: "bid",
+          title: `Bid ₹${bid.amount}`,
+          description: `Bid placed`,
+          status: bid.status,
+          timestamp: bid.createdAt,
+        }),
+      ),
 
-  ...leases.map(
-    (lease): Activity => ({
-      id: `lease-${lease.id}`,
-      type: "lease",
-      title: `Lease for ${lease.land.title}`,
-      description: `Lease is ${lease.status.toLowerCase()}`,
-      status: lease.status,
-      timestamp: lease.createdAt,
-    })
-  ),
-
-  ...bids.map(
-    (bid): Activity => ({
-      id: `bid-${bid.id}`,
-      type: "bid",
-      title: `Bid ₹${bid.amount}`,
-      description: `Bid placed`,
-      status: bid.status,
-      timestamp: bid.createdAt,
-    })
-  ),
-
-  ...payments.map(
-    (payment): Activity => ({
-      id: `payment-${payment.id}`,
-      type: "payment",
-      title: `Payment ₹${payment.amount}`,
-      description: `Payment recorded`,
-      status: payment.status,
-      timestamp: payment.createdAt,
-    })
-  ),
-
-];
-
-
-    //////////////////////////////////////////////////////////
-    // Sort newest first
-    //////////////////////////////////////////////////////////
+      ...payments.map(
+        (p): Activity => ({
+          id: `payment-${p.id}`,
+          type: "payment",
+          title: `Payment ₹${p.amount}`,
+          description: `Payment recorded`,
+          status: p.status,
+          timestamp: p.createdAt,
+        }),
+      ),
+    ];
 
     return activities
-      .sort(
-        (a, b) =>
-          b.timestamp.getTime() -
-          a.timestamp.getTime()
-      )
-      .slice(0, 8);
-  }
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, 6);
+  },
 );
