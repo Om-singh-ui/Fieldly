@@ -29,29 +29,6 @@ export interface OnboardingResult {
   error?: string;
 }
 
-export interface UserStatusResult {
-  authenticated: boolean;
-  user?: {
-    id: string;
-    clerkId: string;
-    name: string;
-    email: string;
-    phone?: string | null;
-    state?: string | null;
-    district?: string | null;
-    bio?: string | null;
-    role?: "FARMER" | "LANDOWNER" | null;
-    isOnboarded: boolean;
-    hasFarmerProfile: boolean;
-    hasLandownerProfile: boolean;
-  } | null;
-  exists?: boolean;
-  needsOnboarding?: boolean;
-  status?: "needs_role" | "needs_profile" | "complete";
-  error?: string;
-  needsAuth?: boolean;
-}
-
 /* ============================================================
    HELPERS
 ============================================================ */
@@ -83,7 +60,6 @@ export async function setUserRole(
 ): Promise<OnboardingResult> {
   try {
     const { userId } = await auth();
-
     if (!userId)
       return { success: false, error: "User not authenticated" };
 
@@ -106,7 +82,8 @@ export async function setUserRole(
       },
     });
 
-    revalidatePath("/");
+    // Revalidate only auth flow page
+    revalidatePath("/post-auth");
 
     return {
       success: true,
@@ -131,7 +108,6 @@ export async function setUserRole(
 
 export async function getOrCreateUser() {
   const { userId } = await auth();
-
   if (!userId) throw new Error("Not authenticated");
 
   const clerkUser = await currentUser();
@@ -155,7 +131,7 @@ export async function getOrCreateUser() {
 }
 
 /* ============================================================
-   FARMER ONBOARDING (PRODUCTION SAFE)
+   FARMER ONBOARDING
 ============================================================ */
 
 export async function completeFarmerOnboarding(
@@ -163,7 +139,6 @@ export async function completeFarmerOnboarding(
 ): Promise<OnboardingResult> {
   try {
     const { userId } = await auth();
-
     if (!userId)
       return { success: false, error: "Not authenticated" };
 
@@ -177,69 +152,61 @@ export async function completeFarmerOnboarding(
     if (user.role !== "FARMER")
       return { success: false, error: "Invalid role" };
 
-    /* TRANSACTION ONLY CRITICAL WRITES */
-    await prisma.$transaction(
-      async (tx) => {
-        await tx.user.update({
-          where: { clerkUserId: userId },
-          data: {
-            phone: formData.phone,
-            district: formData.district,
-            state: formData.state,
-            bio: sanitizeString(formData.bio),
-            isOnboarded: true,
-          },
-        });
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { clerkUserId: userId },
+        data: {
+          phone: formData.phone,
+          district: formData.district,
+          state: formData.state,
+          bio: sanitizeString(formData.bio),
+          isOnboarded: true,
+        },
+      });
 
-        await tx.farmerProfile.upsert({
-          where: { userId: user.id },
-          update: {
-            primaryCrops: formData.primaryCrops,
-            farmingExperience: toNumber(
-              formData.farmingExperience
-            ),
-            farmingType: formData.farmingType,
-            requiredLandSize: toNumber(
-              formData.requiredLandSize
-            ),
-            leaseDuration: toNumber(
-              formData.leaseDuration
-            ),
-            irrigationNeeded: toBoolean(
-              formData.irrigationNeeded
-            ),
-            equipmentAccess: toBoolean(
-              formData.equipmentAccess
-            ),
-          },
-          create: {
-            userId: user.id,
-            primaryCrops: formData.primaryCrops,
-            farmingExperience: toNumber(
-              formData.farmingExperience
-            ),
-            farmingType: formData.farmingType,
-            requiredLandSize: toNumber(
-              formData.requiredLandSize
-            ),
-            leaseDuration: toNumber(
-              formData.leaseDuration
-            ),
-            irrigationNeeded: toBoolean(
-              formData.irrigationNeeded
-            ),
-            equipmentAccess: toBoolean(
-              formData.equipmentAccess
-            ),
-          },
-        });
-      },
-      {
-        timeout: 10000,
-      }
-    );
-
-    /* NON-CRITICAL OPERATIONS OUTSIDE TRANSACTION */
+      await tx.farmerProfile.upsert({
+        where: { userId: user.id },
+        update: {
+          primaryCrops: formData.primaryCrops,
+          farmingExperience: toNumber(
+            formData.farmingExperience
+          ),
+          farmingType: formData.farmingType,
+          requiredLandSize: toNumber(
+            formData.requiredLandSize
+          ),
+          leaseDuration: toNumber(
+            formData.leaseDuration
+          ),
+          irrigationNeeded: toBoolean(
+            formData.irrigationNeeded
+          ),
+          equipmentAccess: toBoolean(
+            formData.equipmentAccess
+          ),
+        },
+        create: {
+          userId: user.id,
+          primaryCrops: formData.primaryCrops,
+          farmingExperience: toNumber(
+            formData.farmingExperience
+          ),
+          farmingType: formData.farmingType,
+          requiredLandSize: toNumber(
+            formData.requiredLandSize
+          ),
+          leaseDuration: toNumber(
+            formData.leaseDuration
+          ),
+          irrigationNeeded: toBoolean(
+            formData.irrigationNeeded
+          ),
+          equipmentAccess: toBoolean(
+            formData.equipmentAccess
+          ),
+        },
+      });
+    });
 
     await Promise.allSettled([
       prisma.notification.create({
@@ -247,8 +214,7 @@ export async function completeFarmerOnboarding(
           userId: user.id,
           type: "SYSTEM",
           title: "Welcome to Fieldly! 🎉",
-          message:
-            "Your farmer profile is complete.",
+          message: "Your farmer profile is complete.",
         },
       }),
 
@@ -263,7 +229,7 @@ export async function completeFarmerOnboarding(
       }),
     ]);
 
-    revalidatePath("/");
+    revalidatePath("/farmer/dashboard");
 
     return {
       success: true,
@@ -283,7 +249,7 @@ export async function completeFarmerOnboarding(
 }
 
 /* ============================================================
-   LANDOWNER ONBOARDING (FULLY FIXED)
+   LANDOWNER ONBOARDING
 ============================================================ */
 
 export async function completeLandownerOnboarding(
@@ -291,7 +257,6 @@ export async function completeLandownerOnboarding(
 ): Promise<OnboardingResult> {
   try {
     const { userId } = await auth();
-
     if (!userId)
       return { success: false, error: "Not authenticated" };
 
@@ -305,48 +270,39 @@ export async function completeLandownerOnboarding(
     if (user.role !== "LANDOWNER")
       return { success: false, error: "Invalid role" };
 
-    /* TRANSACTION ONLY CRITICAL WRITES */
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { clerkUserId: userId },
+        data: {
+          phone: formData.phone,
+          district: formData.district,
+          state: formData.state,
+          bio: sanitizeString(formData.bio),
+          isOnboarded: true,
+        },
+      });
 
-    await prisma.$transaction(
-      async (tx) => {
-        await tx.user.update({
-          where: { clerkUserId: userId },
-          data: {
-            phone: formData.phone,
-            district: formData.district,
-            state: formData.state,
-            bio: sanitizeString(formData.bio),
-            isOnboarded: true,
-          },
-        });
-
-        await tx.landownerProfile.upsert({
-          where: { userId: user.id },
-          update: {
-            ownershipType: formData.ownershipType,
-            preferredPaymentFrequency:
-              formData.preferredPaymentFrequency,
-            preferredContactMethod:
-              formData.preferredContactMethod,
-            verificationLevel: 1,
-          },
-          create: {
-            userId: user.id,
-            ownershipType: formData.ownershipType,
-            preferredPaymentFrequency:
-              formData.preferredPaymentFrequency,
-            preferredContactMethod:
-              formData.preferredContactMethod,
-            verificationLevel: 1,
-          },
-        });
-      },
-      {
-        timeout: 10000,
-      }
-    );
-
-    /* SAFE NON-BLOCKING OPERATIONS */
+      await tx.landownerProfile.upsert({
+        where: { userId: user.id },
+        update: {
+          ownershipType: formData.ownershipType,
+          preferredPaymentFrequency:
+            formData.preferredPaymentFrequency,
+          preferredContactMethod:
+            formData.preferredContactMethod,
+          verificationLevel: 1,
+        },
+        create: {
+          userId: user.id,
+          ownershipType: formData.ownershipType,
+          preferredPaymentFrequency:
+            formData.preferredPaymentFrequency,
+          preferredContactMethod:
+            formData.preferredContactMethod,
+          verificationLevel: 1,
+        },
+      });
+    });
 
     await Promise.allSettled([
       prisma.notification.create({
@@ -371,7 +327,7 @@ export async function completeLandownerOnboarding(
       }),
     ]);
 
-    revalidatePath("/");
+    revalidatePath("/landowner/dashboard");
 
     return {
       success: true,
@@ -392,75 +348,3 @@ export async function completeLandownerOnboarding(
     };
   }
 }
-
-/* ============================================================
-   CHECK USER STATUS
-============================================================ */
-
-export async function checkUserStatus(): Promise<UserStatusResult> {
-  try {
-    const { userId } = await auth();
-
-    if (!userId)
-      return {
-        authenticated: false,
-        needsAuth: true,
-      };
-
-    const user = await prisma.user.findUnique({
-      where: { clerkUserId: userId },
-      include: {
-        farmerProfile: true,
-        landownerProfile: true,
-      },
-    });
-
-    if (!user)
-      return {
-        authenticated: true,
-        exists: false,
-        needsOnboarding: true,
-        status: "needs_role",
-      };
-
-    return {
-      authenticated: true,
-      exists: true,
-      needsOnboarding:
-        !user.role || !user.isOnboarded,
-      status:
-        user.role && user.isOnboarded
-          ? "complete"
-          : user.role
-          ? "needs_profile"
-          : "needs_role",
-      user: {
-        id: user.id,
-        clerkId: user.clerkUserId,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        state: user.state,
-        district: user.district,
-        bio: user.bio,
-        role:
-          user.role === "ADMIN"
-            ? null
-            : user.role,
-        isOnboarded: user.isOnboarded,
-        hasFarmerProfile:
-          !!user.farmerProfile,
-        hasLandownerProfile:
-          !!user.landownerProfile,
-      },
-    };
-  } catch (error) {
-    console.error(error);
-
-    return {
-      authenticated: false,
-      error: "Internal error",
-    };
-  }
-}
-
