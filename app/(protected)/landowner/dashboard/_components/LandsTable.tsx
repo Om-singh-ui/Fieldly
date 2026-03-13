@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { LandWithDetails } from "@/lib/queries/landowner";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
@@ -259,7 +259,6 @@ export function LandsTable({ lands }: LandsTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          <AnimatePresence mode="wait">
             {sortedLands.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-12">
@@ -399,7 +398,6 @@ export function LandsTable({ lands }: LandsTableProps) {
                 );
               })
             )}
-          </AnimatePresence>
         </TableBody>
       </Table>
 
