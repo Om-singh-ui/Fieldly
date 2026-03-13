@@ -1,41 +1,36 @@
-// app/(protected)/landowner/layout.tsx
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
-export default async function LandownerLayout({
+export default async function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const { userId } = await auth();
-  
-  if (!userId) {
-    redirect("/sign-in");
-  }
+
+  if (!userId) redirect("/sign-in");
 
   const user = await prisma.user.findUnique({
     where: { clerkUserId: userId },
+    select: {
+      role: true,
+      isOnboarded: true,
+    },
   });
 
-  // Redirect if user doesn't exist or isn't a landowner
-  if (!user) {
-    redirect("/onboarding/role");
-  }
+  if (!user) redirect("/post-auth");
 
-  if (user.role !== "LANDOWNER") {
-    redirect("/unauthorized");
-  }
+  if (!user.role) redirect("/onboarding/role");
 
-  // Redirect if not onboarded
   if (!user.isOnboarded) {
-    redirect("/onboarding/landowner");
+    const path =
+      user.role === "FARMER"
+        ? "/onboarding/farmer"
+        : "/onboarding/landowner";
+
+    redirect(path);
   }
 
-  return (
-    <div className="min-h-screen">
-      {/* You can add landowner-specific header/sidebar here */}
-      {children}
-    </div>
-  );
+  return <>{children}</>;
 }
