@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Download, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 interface Props {
   name: string;
@@ -11,25 +12,26 @@ interface Props {
 
 export function DashboardHeroHeader({ name }: Props) {
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    // Simulate loading time for data
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1500);
-
+    }, 1200); // reduced for better UX
     return () => clearTimeout(timer);
   }, []);
+
+  const handleAddLand = () => {
+    router.push("/landowner/land/new");
+  };
 
   if (isLoading) {
     return (
       <section className="relative mb-12 mt-16">
         <div
           className="
-            group
             relative
-            flex
-            flex-col md:flex-row
+            flex flex-col md:flex-row
             items-start md:items-center
             justify-between
             gap-6 md:gap-8
@@ -37,45 +39,21 @@ export function DashboardHeroHeader({ name }: Props) {
             py-6 md:py-7
             rounded-full
             border border-gray-200/80
-            shadow-[0_8px_24px_rgba(0,0,0,0.06),0_2px_6px_rgba(0,0,0,0.04)]
+            shadow-[0_8px_24px_rgba(0,0,0,0.06)]
             backdrop-blur-md
             overflow-hidden
             animate-pulse
           "
         >
-          {/* Inner highlight stroke */}
-          <div
-            className="
-              pointer-events-none
-              absolute inset-[1px]
-              rounded-full
-              border border-white/50
-            "
-          />
-
-          {/* LEFT SIDE SKELETON */}
-          <div className="relative z-10 flex flex-col justify-center flex-1">
-            {/* Welcome text skeleton */}
-            <div className="space-y-2">
-              <div className="h-8 md:h-10 bg-gray-200 rounded w-64 md:w-80"></div>
-              <div className="h-4 md:h-5 bg-gray-200 rounded w-48 md:w-56"></div>
-            </div>
-
-            {/* Description skeleton */}
-            <div className="mt-1.5 space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-full max-w-md"></div>
-              <div className="h-4 bg-gray-200 rounded w-5/6 max-w-sm"></div>
-              <div className="h-4 bg-gray-200 rounded w-4/6 max-w-xs"></div>
-            </div>
+          <div className="flex-1 space-y-3">
+            <div className="h-9 bg-gray-200 rounded w-72" />
+            <div className="h-4 bg-gray-200 rounded w-96" />
+            <div className="h-4 bg-gray-200 rounded w-64" />
           </div>
 
-          {/* RIGHT SIDE SKELETON */}
-          <div className="relative z-10 flex items-center gap-3 shrink-0">
-            {/* Export button skeleton */}
-            <div className="h-10 w-24 bg-gray-200 rounded-full"></div>
-            
-            {/* Add Land button skeleton */}
-            <div className="h-10 w-28 bg-gray-200 rounded-full"></div>
+          <div className="flex gap-3">
+            <div className="h-10 w-24 bg-gray-200 rounded-full" />
+            <div className="h-10 w-28 bg-gray-200 rounded-full" />
           </div>
         </div>
       </section>
@@ -84,141 +62,53 @@ export function DashboardHeroHeader({ name }: Props) {
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.45,
-        ease: [0.22, 1, 0.36, 1], // smoother than easeOut
-      }}
+      transition={{ duration: 0.4 }}
       className="relative mb-12 mt-16"
     >
       <motion.div
-        whileHover={{
-          y: -3,
-          scale: 1.012,
-        }}
-        transition={{
-          type: "spring",
-          stiffness: 180,
-          damping: 20,
-          mass: 0.6,
-        }}
+        whileHover={{ y: -3, scale: 1.01 }}
+        transition={{ type: "spring", stiffness: 180, damping: 18 }}
         className="
-          group
           relative
-
-          flex
-          flex-col md:flex-row
+          flex flex-col md:flex-row
           items-start md:items-center
           justify-between
-
           gap-6 md:gap-8
-
           px-8 md:px-12
           py-6 md:py-7
-
           rounded-full
           border border-gray-200/80
-
-          shadow-[0_8px_24px_rgba(0,0,0,0.06),0_2px_6px_rgba(0,0,0,0.04)]
-          hover:shadow-[0_18px_48px_rgba(0,0,0,0.10),0_6px_16px_rgba(0,0,0,0.06)]
-
+          shadow-[0_8px_24px_rgba(0,0,0,0.06)]
+          hover:shadow-[0_18px_48px_rgba(0,0,0,0.10)]
           backdrop-blur-md
-
-          transition-shadow duration-300
-
-          will-change-transform
+          transition-shadow
           overflow-hidden
         "
       >
-        {/* Inner highlight stroke */}
-        <div
-          className="
-            pointer-events-none
-            absolute inset-[1px]
-            rounded-full
-            border border-white/50
-          "
-        />
-
-        {/* Smooth light sweep on hover only */}
-        <motion.div
-          initial={{ x: "-120%", opacity: 0 }}
-          whileHover={{ x: "120%", opacity: 1 }}
-          transition={{
-            duration: 1.8,
-            ease: "easeInOut",
-          }}
-          className="
-            pointer-events-none
-            absolute inset-0
-          "
-        >
-          <div
-            className="
-              w-1/3
-              h-full
-              bg-gradient-to-r
-              from-transparent
-              via-white/40
-              to-transparent
-              skew-x-12
-            "
-          />
-        </motion.div>
-
-        {/* LEFT SIDE */}
-        <div className="relative z-10 flex flex-col justify-center">
-          <h1
-            className="
-              text-[22px] md:text-[34px]
-              font-semibold
-              tracking-tight
-              text-gray-900
-              leading-tight
-            "
-          >
-            Welcome back,{" "}
-            <span className="font-bold text-black">{name}</span>
+        {/* LEFT */}
+        <div className="relative z-10">
+          <h1 className="text-[22px] md:text-[34px] font-semibold tracking-tight text-gray-900">
+            Welcome back, <span className="font-bold text-black">{name}</span>
           </h1>
 
-          <p
-            className="
-              mt-1.5
-              text-sm md:text-base
-              text-gray-600
-              leading-relaxed
-            "
-          >
+          <p className="mt-1.5 text-sm md:text-base text-gray-600 max-w-xl">
             A unified workspace to manage your lands, track earnings, and
-            oversee applications with clarity.{" "}
+            oversee applications with clarity.
           </p>
         </div>
 
-        {/* RIGHT SIDE */}
-        <div
-          className="
-            relative z-10
-            flex items-center
-            gap-3
-            shrink-0
-          "
-        >
+        {/* RIGHT */}
+        <div className="relative z-10 flex items-center gap-3">
           <motion.div
             whileHover={{ y: -1 }}
             whileTap={{ scale: 0.96 }}
-            transition={{ type: "spring", stiffness: 300, damping: 18 }}
+            transition={{ type: "spring", stiffness: 300 }}
           >
             <Button
               variant="outline"
-              className="
-                rounded-full
-                px-5
-                h-10
-                hover:bg-white
-                shadow-sm
-                transition-all duration-200
-              "
+              className="rounded-full px-5 h-10 hover:bg-white shadow-sm"
             >
               <Download className="w-4 h-4 mr-2" />
               Export
@@ -226,31 +116,24 @@ export function DashboardHeroHeader({ name }: Props) {
           </motion.div>
 
           <motion.div
-            whileHover={{
-              y: -1,
-              scale: 1.035,
-            }}
+            whileHover={{ y: -1, scale: 1.03 }}
             whileTap={{ scale: 0.96 }}
-            transition={{ type: "spring", stiffness: 300, damping: 18 }}
+            transition={{ type: "spring", stiffness: 300 }}
           >
             <Button
+              onClick={handleAddLand}
               className="
                 rounded-full
                 px-6
                 h-10
-
                 bg-[#b7cf8a]
                 hover:bg-[#a9c87a]
-
                 text-gray-900
                 font-medium
-
                 border border-[#a9c87a]
-
                 shadow-[0_4px_12px_rgba(0,0,0,0.10)]
                 hover:shadow-[0_8px_20px_rgba(0,0,0,0.14)]
-
-                transition-all duration-200
+                transition-all
               "
             >
               <Plus className="w-4 h-4 mr-2" />
