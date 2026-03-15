@@ -1,4 +1,3 @@
-// app/(protected)/landowner/dashboard/_components/RevenueChart.tsx
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +11,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { useEffect, useState, useMemo } from "react";
 
 interface RevenueChartProps {
   data: Array<{ month: string; revenue: number }>;
@@ -22,62 +22,117 @@ interface CustomTooltipProps {
   payload?: Array<{
     value: number;
     name: string;
-    dataKey: string;
-    payload: Record<string, unknown>;
   }>;
   label?: string;
 }
 
-// Move CustomTooltip outside of the component with proper typing
+const currencyFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-background border rounded-lg shadow-lg p-3">
-        <p className="text-sm font-medium">{label}</p>
-        <p className="text-sm text-primary">
-          Revenue: ₹{payload[0].value.toLocaleString()}
-        </p>
-      </div>
-    );
-  }
-  return null;
+  if (!active || !payload?.length) return null;
+
+  return (
+    <div className="rounded-lg border bg-background shadow-xl p-3 backdrop-blur">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-sm font-semibold text-primary">
+        {currencyFormatter.format(payload[0].value)}
+      </p>
+    </div>
+  );
 };
 
 export function RevenueChart({ data }: RevenueChartProps) {
-  const formatCurrency = (value: number) => {
-    return `₹${value.toLocaleString()}`;
-  };
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  const safeData = useMemo(() => data ?? [], [data]);
+
+  if (!mounted) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Revenue Trend</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[320px] animate-pulse rounded-lg bg-muted/40" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!safeData.length) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Revenue Trend</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[320px] flex items-center justify-center text-sm text-muted-foreground">
+            No revenue data yet
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="col-span-2">
+    <Card>
       <CardHeader>
         <CardTitle>Revenue Trend</CardTitle>
       </CardHeader>
+
       <CardContent>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis 
-                dataKey="month" 
-                className="text-xs"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+        <div className="w-full min-h-[320px] h-[320px]">
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart
+              data={safeData}
+              margin={{ top: 10, right: 24, left: 8, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--muted))"
               />
-              <YAxis 
-                tickFormatter={formatCurrency}
-                className="text-xs"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+
+              <XAxis
+                dataKey="month"
+                tick={{ fontSize: 12 }}
+                stroke="hsl(var(--muted-foreground))"
               />
+
+              <YAxis
+                tickFormatter={(v) => currencyFormatter.format(v)}
+                tick={{ fontSize: 12 }}
+                stroke="hsl(var(--muted-foreground))"
+                width={80}
+              />
+
               <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="revenue" 
-                stroke="hsl(var(--primary))" 
-                strokeWidth={2}
-                dot={{ fill: 'hsl(var(--primary))' }}
-                activeDot={{ r: 8 }}
-                name="Revenue"
+
+              <Legend
+                wrapperStyle={{
+                  fontSize: 12,
+                  color: "hsl(var(--muted-foreground))",
+                }}
+              />
+
+              <Line
+                type="monotone"
+                dataKey="revenue"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2.4}
+                dot={false}
+                activeDot={{ r: 6 }}
+                isAnimationActive={true}
+                animationDuration={600}
+                animationEasing="ease-out"
               />
             </LineChart>
           </ResponsiveContainer>
