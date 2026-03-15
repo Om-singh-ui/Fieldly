@@ -32,9 +32,9 @@ import {
 } from "./FormSteps";
 
 const pageVariants = {
-  initial: { opacity: 0, x: 24 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -24 },
+  initial: { opacity: 0, x: 40, scale: 0.98 },
+  animate: { opacity: 1, x: 0, scale: 1 },
+  exit: { opacity: 0, x: -40, scale: 0.98 },
 };
 
 export function LandListingForm() {
@@ -44,8 +44,6 @@ export function LandListingForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [images, setImages] = useState<File[]>([]);
-  
-  // ✅ FIX 3: Submit mutex lock to prevent double submissions
   const submittingRef = useRef(false);
 
   const form = useForm<FormValues>({
@@ -94,10 +92,8 @@ export function LandListingForm() {
     },
   });
 
-  // ✅ FIX 2 & 3: Proper submit handler with mutex lock
   const onSubmit: SubmitHandler<FormValues> = useCallback(
     async (data) => {
-      // Prevent double submission
       if (submittingRef.current) return;
       submittingRef.current = true;
       setIsSubmitting(true);
@@ -122,22 +118,23 @@ export function LandListingForm() {
         if (!res.ok) throw new Error(json.error || "Failed to create listing");
 
         toast({
-          title: "Success",
-          description: "Your land has been listed successfully",
+          title: "Listing Created",
+          description: "Your land is now live on the marketplace.",
         });
 
-        // ✅ FIX 5: Use startTransition to prevent navigation freeze
         startTransition(() => {
           router.replace("/landowner/dashboard#lands");
         });
       } catch (err) {
         toast({
-          title: "Error",
-          description: err instanceof Error ? err.message : "Failed to create listing",
+          title: "Submission Failed",
+          description:
+            err instanceof Error
+              ? err.message
+              : "Unexpected error occurred",
           variant: "destructive",
         });
       } finally {
-        // Release mutex lock
         submittingRef.current = false;
         setIsSubmitting(false);
       }
@@ -145,7 +142,6 @@ export function LandListingForm() {
     [images, router, toast]
   );
 
-  // ✅ FIX 6: Proper step validation with focus
   const goNext = async () => {
     if (isSubmitting) return;
 
@@ -174,22 +170,26 @@ export function LandListingForm() {
   };
 
   const stepComponent = useMemo(() => {
+    const commonClass = "space-y-6";
+
     switch (currentStep) {
       case 1:
-        return <BasicInfoStep form={form} />;
+        return <div className={commonClass}><BasicInfoStep form={form} /></div>;
       case 2:
-        return <LocationStep form={form} />;
+        return <div className={commonClass}><LocationStep form={form} /></div>;
       case 3:
-        return <AmenitiesStep form={form} />;
+        return <div className={commonClass}><AmenitiesStep form={form} /></div>;
       case 4:
-        return <FarmingDetailsStep form={form} />;
+        return <div className={commonClass}><FarmingDetailsStep form={form} /></div>;
       case 5:
-        return <LeaseTermsStep form={form} />;
+        return <div className={commonClass}><LeaseTermsStep form={form} /></div>;
       case 6:
-        return <PricingStep form={form} />;
+        return <div className={commonClass}><PricingStep form={form} /></div>;
       case 7:
         return (
-          <ReviewStep form={form} images={images} onImagesChange={setImages} />
+          <div className={commonClass}>
+            <ReviewStep form={form} images={images} onImagesChange={setImages} />
+          </div>
         );
       default:
         return null;
@@ -199,97 +199,105 @@ export function LandListingForm() {
   const isLastStep = currentStep === STEPS.length;
 
   return (
-    <Form {...form}>
-      {/* ✅ FIX 1 & 2: Complete form submission control */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          // Only allow submission on last step
-          if (isLastStep) {
-            form.handleSubmit(onSubmit)(e);
-          }
-        }}
-        onKeyDown={(e) => {
-          // ✅ FIX 1: Prevent Enter key from submitting
-          if (e.key === "Enter") {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        }}
-        noValidate
-      >
-        <StepIndicator currentStep={currentStep} />
+    <div className="relative min-h-screen">
+      <div className="pointer-events-none absolute inset-0" />
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentStep}
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.25 }}
+      <div className="relative max-w-5xl mx-auto px-6 pt-12 pb-20">
+        <Form {...form}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (isLastStep) form.handleSubmit(onSubmit)(e);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") e.preventDefault();
+            }}
+            noValidate
           >
-            <Card>
-              <CardHeader>
-                <CardTitle>{STEPS[currentStep - 1].title}</CardTitle>
-                <CardDescription>
-                  Step {currentStep} of {STEPS.length}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>{stepComponent}</CardContent>
-            </Card>
-          </motion.div>
-        </AnimatePresence>
+            <div className="mb-10">
+              <StepIndicator currentStep={currentStep} />
+            </div>
 
-        <div className="flex justify-between mt-6">
-          {/* ✅ FIX 4: All navigation buttons are type="button" */}
-          <Button
-            type="button"
-            onClick={goPrev}
-            disabled={currentStep === 1 || isSubmitting}
-            variant="outline"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Previous
-          </Button>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{
+                  duration: 0.35,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+              >
+                <Card className="relative border border-slate-200/60 bg-white/70 backdrop-blur-2xl shadow-[0_10px_40px_rgba(2,6,23,0.08)] rounded-2xl overflow-hidden">
+                  <CardHeader className="px-8 py-7 border-b border-slate-200/60 bg-gradient-to-b from-white/80 to-transparent">
+                    <CardTitle className="text-[26px] font-semibold tracking-tight text-slate-900">
+                      {STEPS[currentStep - 1].title}
+                    </CardTitle>
+                    <CardDescription className="text-slate-500 mt-1">
+                      Step {currentStep} of {STEPS.length}
+                    </CardDescription>
+                  </CardHeader>
 
-          {!isLastStep ? (
-            <Button
-              type="button" // ✅ CRITICAL: Not submit
-              onClick={goNext}
-              disabled={isSubmitting}
-            >
-              Next
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          ) : (
-            <Button
-              type="submit" // ✅ Only last step button is submit
-              disabled={isSubmitting || images.length === 0}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Creating...
-                </>
+                  <CardContent className="px-8 pt-8 pb-10">
+                    {stepComponent}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="mt-2 pt-6 flex items-center justify-between">
+              <Button
+                type="button"
+                onClick={goPrev}
+                disabled={currentStep === 1 || isSubmitting}
+                variant="outline"
+                className="h-11 px-6 rounded-xl border-slate-300 bg-white/60 hover:bg-white shadow-sm"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Previous
+              </Button>
+
+              {!isLastStep ? (
+                <Button
+                  type="button"
+                  onClick={goNext}
+                  disabled={isSubmitting}
+                  className="h-11 px-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-[0_6px_20px_rgba(15,23,42,0.25)] transition-all"
+                >
+                  Next
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
               ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Create Listing
-                </>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || images.length === 0}
+                  className="h-11 px-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-[0_6px_20px_rgba(15,23,42,0.25)]"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Creating Listing...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Create Listing
+                    </>
+                  )}
+                </Button>
               )}
-            </Button>
-          )}
-        </div>
+            </div>
 
-        {/* Optional: Show image requirement on last step */}
-        {isLastStep && images.length === 0 && (
-          <p className="text-sm text-amber-600 text-center mt-2">
-            Please upload at least one image before creating the listing
-          </p>
-        )}
-      </form>
-    </Form>
+            {isLastStep && images.length === 0 && (
+              <p className="text-sm text-amber-500 font-medium text-center mt-3">
+                Upload at least one image to publish listing
+              </p>
+            )}
+          </form>
+        </Form>
+      </div>
+    </div>
   );
 }
