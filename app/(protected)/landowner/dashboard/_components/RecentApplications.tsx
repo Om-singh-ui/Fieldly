@@ -1,68 +1,161 @@
-// components/dashboard/RecentApplications.tsx
+"use client";
+
+import { memo } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ApplicationWithFarmer } from "@/lib/queries/landowner";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNowStrict } from "date-fns";
+import { motion } from "framer-motion";
+import { Clock } from "lucide-react";
 
-interface RecentApplicationsProps {
-  applications: ApplicationWithFarmer[];
+export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface RecentApplication {
+  id: string;
+  farmerName: string;
+  farmerImage?: string | null;
+  proposedRent?: number | null;
+  status: ApplicationStatus;
+  createdAt: string;
 }
 
-export function RecentApplications({ applications }: RecentApplicationsProps) {
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, string> = {
-      PENDING: "bg-yellow-100 text-yellow-800",
-      APPROVED: "bg-green-100 text-green-800",
-      REJECTED: "bg-red-100 text-red-800"
-    };
-    return variants[status] || "bg-gray-100 text-gray-800";
-  };
+interface Props {
+  applications: RecentApplication[];
+}
+
+const STATUS_STYLE: Record<ApplicationStatus, string> = {
+  PENDING:
+    "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300",
+  APPROVED:
+    "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300",
+  REJECTED:
+    "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300",
+};
+
+export const RecentApplications = memo(function RecentApplications({
+  applications,
+}: Props) {
+  const router = useRouter();
+
+  if (!applications?.length) {
+    return (
+      <Card
+        className="
+          rounded-3xl
+          border border-white/40 dark:border-white/10
+          bg-white/80 dark:bg-gray-900/80
+          backdrop-blur-xl
+          shadow-[0_18px_48px_rgba(0,0,0,0.10),0_6px_16px_rgba(0,0,0,0.06)]
+        "
+      >
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Recent Applications</CardTitle>
+        </CardHeader>
+
+        <CardContent className="text-sm text-muted-foreground py-16 text-center">
+          <div className="flex flex-col items-center gap-3">
+            <Clock className="h-6 w-6 opacity-60" />
+            No applications yet farmers will appear here.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Recent Applications</CardTitle>
+    <Card
+      className="
+        rounded-3xl
+        border border-white/40 dark:border-white/10
+        bg-white/80 dark:bg-gray-900/80
+        backdrop-blur-xl
+        shadow-[0_18px_48px_rgba(0,0,0,0.10),0_6px_16px_rgba(0,0,0,0.06)]
+      "
+    >
+      <CardHeader className="pb-4">
+        <CardTitle className="text-base font-semibold flex items-center gap-2">
+          Recent Applications
+        </CardTitle>
       </CardHeader>
+
       <CardContent>
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
-            {applications.map((app) => (
-              <div key={app.id} className="flex items-start space-x-4 p-4 rounded-lg border">
-                <Avatar>
-                  <AvatarImage src={app.farmer.imageUrl || ''} />
-                  <AvatarFallback>
-                    {app.farmer.name.charAt(0)}
+            {applications.map((app, i) => (
+              <motion.div
+                key={app.id}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="
+                  group
+                  flex items-start gap-4
+                  p-4 rounded-2xl
+                  border border-gray-100 dark:border-gray-800
+                  hover:shadow-md hover:-translate-y-0.5
+                  transition-all
+                "
+              >
+                <Avatar className="ring-2 ring-[#b7cf8a]/30">
+                  <AvatarImage src={app.farmerImage ?? ""} />
+                  <AvatarFallback className="bg-[#b7cf8a]/20 text-[#5a6b3d]">
+                    {app.farmerName?.charAt(0) ?? "F"}
                   </AvatarFallback>
                 </Avatar>
+
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium leading-none">
-                      {app.farmer.name}
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      {app.farmerName}
                     </p>
-                    <Badge variant="outline" className={getStatusBadge(app.status)}>
+
+                    <Badge
+                      variant="outline"
+                      className={`${STATUS_STYLE[app.status]} font-medium`}
+                    >
                       {app.status}
                     </Badge>
                   </div>
+
                   <p className="text-sm text-muted-foreground">
-                    Proposed Rent: ₹{app.proposedRent?.toLocaleString() || 'Not specified'}
+                    Proposed Rent:{" "}
+                    {app.proposedRent != null ? (
+                      <span className="font-semibold text-[#b7cf8a]">
+                        ₹{app.proposedRent.toLocaleString("en-IN")}
+                      </span>
+                    ) : (
+                      "Not specified"
+                    )}
                   </p>
-                  <div className="flex items-center pt-2">
+
+                  <div className="flex items-center pt-1">
                     <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(app.createdAt, { addSuffix: true })}
+                      {formatDistanceToNowStrict(
+                        new Date(app.createdAt),
+                        { addSuffix: true }
+                      )}
                     </span>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm">
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-80 group-hover:opacity-100"
+                  onClick={() =>
+                    router.push(`/landowner/applications/${app.id}`)
+                  }
+                >
                   View
                 </Button>
-              </div>
+              </motion.div>
             ))}
           </div>
         </ScrollArea>
       </CardContent>
     </Card>
   );
-}
+});

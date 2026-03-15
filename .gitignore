@@ -185,3 +185,4 @@ vite.config.ts.timestamp-*
 /.clerk/
 
 /generated/prisma
+
