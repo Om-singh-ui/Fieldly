@@ -90,13 +90,10 @@ const statusConfig = {
   },
 };
 
-// UPDATE FUNCTION SIGNATURE
 export function LandsTable({ lands, total, page }: LandsTableProps) {
   const router = useRouter();
 
   const [search, setSearch] = useState("");
-  // REMOVE page useState
-  // const [page, setPage] = useState(1);
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
@@ -404,7 +401,11 @@ export function LandsTable({ lands, total, page }: LandsTableProps) {
             </Link>
 
             <Link href={`?tab=lands&page=${page + 1}`}>
-              <Button variant="outline" size="sm" disabled={page === totalPages}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === totalPages}
+              >
                 Next
               </Button>
             </Link>

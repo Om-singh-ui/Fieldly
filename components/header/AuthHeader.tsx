@@ -105,7 +105,7 @@ const NAV_DATA: Record<NavKey, NavSection> = {
       title: "Institutional Investors",
       desc: "Access farmland investment opportunities and climate-positive portfolios.",
       button: "Explore Investments",
-      href: "/institutional",
+      href: "/company/institutional",
     },
   },
   resources: {
