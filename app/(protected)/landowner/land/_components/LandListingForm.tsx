@@ -32,9 +32,9 @@ import {
 } from "./FormSteps";
 
 const pageVariants = {
-  initial: { opacity: 0, x: 40, scale: 0.98 },
+  initial: { opacity: 0, x: 30, scale: 0.98 },
   animate: { opacity: 1, x: 0, scale: 1 },
-  exit: { opacity: 0, x: -40, scale: 0.98 },
+  exit: { opacity: 0, x: -30, scale: 0.98 },
 };
 
 export function LandListingForm() {
@@ -92,55 +92,50 @@ export function LandListingForm() {
     },
   });
 
-  const onSubmit: SubmitHandler<FormValues> = useCallback(
-    async (data) => {
-      if (submittingRef.current) return;
-      submittingRef.current = true;
-      setIsSubmitting(true);
+  const onSubmit: SubmitHandler<FormValues> = useCallback(async (data) => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setIsSubmitting(true);
 
-      try {
-        const fd = new FormData();
+    try {
+      const fd = new FormData();
 
-        Object.entries(data).forEach(([k, v]) => {
-          if (v instanceof Date) fd.append(k, v.toISOString());
-          else if (Array.isArray(v)) fd.append(k, JSON.stringify(v));
-          else if (v != null) fd.append(k, String(v));
-        });
+      Object.entries(data).forEach(([k, v]) => {
+        if (v instanceof Date) fd.append(k, v.toISOString());
+        else if (Array.isArray(v)) fd.append(k, JSON.stringify(v));
+        else if (v != null) fd.append(k, String(v));
+      });
 
-        images.forEach((img) => fd.append("images", img));
+      images.forEach((img) => fd.append("images", img));
 
-        const res = await fetch("/api/landowner/lands", {
-          method: "POST",
-          body: fd,
-        });
+      const res = await fetch("/api/landowner/lands", {
+        method: "POST",
+        body: fd,
+      });
 
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "Failed to create listing");
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to create listing");
 
-        toast({
-          title: "Listing Created",
-          description: "Your land is now live on the marketplace.",
-        });
+      toast({
+        title: "Listing Created",
+        description: "Your land is now live on the marketplace.",
+      });
 
-        startTransition(() => {
-          router.replace("/landowner/dashboard#lands");
-        });
-      } catch (err) {
-        toast({
-          title: "Submission Failed",
-          description:
-            err instanceof Error
-              ? err.message
-              : "Unexpected error occurred",
-          variant: "destructive",
-        });
-      } finally {
-        submittingRef.current = false;
-        setIsSubmitting(false);
-      }
-    },
-    [images, router, toast]
-  );
+      startTransition(() => {
+        router.replace("/landowner/dashboard#lands");
+      });
+    } catch (err) {
+      toast({
+        title: "Submission Failed",
+        description:
+          err instanceof Error ? err.message : "Unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      submittingRef.current = false;
+      setIsSubmitting(false);
+    }
+  }, [images, router, toast]);
 
   const goNext = async () => {
     if (isSubmitting) return;
@@ -170,29 +165,16 @@ export function LandListingForm() {
   };
 
   const stepComponent = useMemo(() => {
-    const commonClass = "space-y-6";
-
+    const common = "space-y-6";
     switch (currentStep) {
-      case 1:
-        return <div className={commonClass}><BasicInfoStep form={form} /></div>;
-      case 2:
-        return <div className={commonClass}><LocationStep form={form} /></div>;
-      case 3:
-        return <div className={commonClass}><AmenitiesStep form={form} /></div>;
-      case 4:
-        return <div className={commonClass}><FarmingDetailsStep form={form} /></div>;
-      case 5:
-        return <div className={commonClass}><LeaseTermsStep form={form} /></div>;
-      case 6:
-        return <div className={commonClass}><PricingStep form={form} /></div>;
-      case 7:
-        return (
-          <div className={commonClass}>
-            <ReviewStep form={form} images={images} onImagesChange={setImages} />
-          </div>
-        );
-      default:
-        return null;
+      case 1: return <div className={common}><BasicInfoStep form={form} /></div>;
+      case 2: return <div className={common}><LocationStep form={form} /></div>;
+      case 3: return <div className={common}><AmenitiesStep form={form} /></div>;
+      case 4: return <div className={common}><FarmingDetailsStep form={form} /></div>;
+      case 5: return <div className={common}><LeaseTermsStep form={form} /></div>;
+      case 6: return <div className={common}><PricingStep form={form} /></div>;
+      case 7: return <div className={common}><ReviewStep form={form} images={images} onImagesChange={setImages} /></div>;
+      default: return null;
     }
   }, [currentStep, form, images]);
 
@@ -200,24 +182,21 @@ export function LandListingForm() {
 
   return (
     <div className="relative min-h-screen">
-      <div className="pointer-events-none absolute inset-0" />
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 md:pt-10 pb-28">
 
-      <div className="relative max-w-5xl mx-auto px-6 pt-12 pb-20">
+        {/* STEP INDICATOR */}
+        <div className="mb-6 md:mb-10">
+          <StepIndicator currentStep={currentStep} />
+        </div>
+
         <Form {...form}>
           <form
             onSubmit={(e) => {
               e.preventDefault();
               if (isLastStep) form.handleSubmit(onSubmit)(e);
             }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") e.preventDefault();
-            }}
             noValidate
           >
-            <div className="mb-10">
-              <StepIndicator currentStep={currentStep} />
-            </div>
-
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
@@ -225,35 +204,33 @@ export function LandListingForm() {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                transition={{
-                  duration: 0.35,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               >
-                <Card className="relative border border-slate-200/60 bg-white/70 backdrop-blur-2xl shadow-[0_10px_40px_rgba(2,6,23,0.08)] rounded-2xl overflow-hidden">
-                  <CardHeader className="px-8 py-7 border-b border-slate-200/60 bg-gradient-to-b from-white/80 to-transparent">
-                    <CardTitle className="text-[26px] font-semibold tracking-tight text-slate-900">
+                <Card className="border bg-white/80 backdrop-blur-xl shadow-lg rounded-2xl">
+                  <CardHeader className="px-5 sm:px-8 py-6 border-b">
+                    <CardTitle className="text-xl sm:text-2xl font-semibold">
                       {STEPS[currentStep - 1].title}
                     </CardTitle>
-                    <CardDescription className="text-slate-500 mt-1">
+                    <CardDescription>
                       Step {currentStep} of {STEPS.length}
                     </CardDescription>
                   </CardHeader>
 
-                  <CardContent className="px-8 pt-8 pb-10">
+                  <CardContent className="px-5 sm:px-8 pt-6 pb-10">
                     {stepComponent}
                   </CardContent>
                 </Card>
               </motion.div>
             </AnimatePresence>
 
-            <div className="mt-2 pt-6 flex items-center justify-between">
+            {/* MOBILE STICKY NAV */}
+            <div className="fixed bottom-0 left-0 mt-14 right-0 md:relative bg-white md:bg-transparent border-t md:border-none p-4 md:p-0 flex gap-3 justify-between">
               <Button
                 type="button"
                 onClick={goPrev}
                 disabled={currentStep === 1 || isSubmitting}
                 variant="outline"
-                className="h-11 px-6 rounded-xl border-slate-300 bg-white/60 hover:bg-white shadow-sm"
+                className="flex-1 md:flex-none h-11"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Previous
@@ -264,7 +241,7 @@ export function LandListingForm() {
                   type="button"
                   onClick={goNext}
                   disabled={isSubmitting}
-                  className="h-11 px-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-[0_6px_20px_rgba(15,23,42,0.25)] transition-all"
+                  className="flex-1 md:flex-none h-11 bg-slate-900 text-white"
                 >
                   Next
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -273,12 +250,12 @@ export function LandListingForm() {
                 <Button
                   type="submit"
                   disabled={isSubmitting || images.length === 0}
-                  className="h-11 px-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-[0_6px_20px_rgba(15,23,42,0.25)]"
+                  className="flex-1 md:flex-none h-11 bg-slate-900 text-white"
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Creating Listing...
+                      Creating...
                     </>
                   ) : (
                     <>
@@ -291,7 +268,7 @@ export function LandListingForm() {
             </div>
 
             {isLastStep && images.length === 0 && (
-              <p className="text-sm text-amber-500 font-medium text-center mt-3">
+              <p className="text-sm text-amber-500 text-center mt-4">
                 Upload at least one image to publish listing
               </p>
             )}
