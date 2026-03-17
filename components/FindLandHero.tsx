@@ -156,7 +156,7 @@ export default function FindLandHero() {
             "
           >
             <Image
-              src="/mainmap.png"
+              src="https://thelandapp.com/wp-content/uploads/2026/02/Land-App-Main-Image-1.gif"
               alt="Map"
               fill
               className="object-cover"
@@ -175,7 +175,7 @@ export default function FindLandHero() {
             "
           >
             <Image
-              src="/mainmaplap.png"
+              src="/map.png"
               alt="Fieldly App"
               fill
               className="object-contain"

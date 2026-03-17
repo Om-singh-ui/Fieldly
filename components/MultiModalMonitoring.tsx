@@ -27,7 +27,7 @@ const cards = [
   {
     id: "03",
     title: "Satellite\nIntelligence",
-    image: "/stl.jpg",
+    image: "https://thelandapp.com/wp-content/uploads/2026/02/Land-App-Main-Image-1.gif",
     icon: "/icons/stl.png",
     dark: true,
     description:
@@ -36,7 +36,7 @@ const cards = [
   {
     id: "04",
     title: "Independent\nVerification",
-    image: "/sunset-handshake-farmers-tractor-min.webp",
+    image: "https://www.idmerit.com/wp-content/uploads/2025/03/id-verification.png",
     icon: "/icons/5290058.png",
     dark: false,
     description:
