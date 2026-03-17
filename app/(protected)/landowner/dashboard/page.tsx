@@ -22,31 +22,37 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import Link from "next/link";
 import Image from "next/image";
 
-export default async function LandownerDashboardPage() {
+type Props = {
+  searchParams: Promise<{ tab?: string; page?: string }>;
+};
+
+export default async function LandownerDashboardPage({ searchParams }: Props) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  /**
-   * ⭐ CRITICAL OPTIMIZATION
-   * Prevent waterfall + enable parallel fetch
-   */
-  const dataPromise = getLandownerDashboardData(userId);
+  // Next 15 safe param unwrap
+  const params = await searchParams;
+  const page = Math.max(1, Number(params?.page ?? "1"));
 
-  const data = await dataPromise;
+  // single optimized server fetch
+  const data = await getLandownerDashboardData(userId, page);
 
   if (!data) redirect("/onboarding/landowner");
 
-  const { user, stats, lands, revenueTrend } = data;
+  const { user, stats, lands, totalLands, revenueTrend } = data;
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        {/* HERO */}
         <DashboardHeroHeader name={user.name} />
 
+        {/* STATS */}
         <ErrorBoundary fallback={<StatsErrorFallback />}>
           <StatsCards stats={stats} />
         </ErrorBoundary>
 
+        {/* TABS */}
         <CapsuleTabs stats={stats} />
 
         <div className="mt-8">
@@ -66,7 +72,7 @@ export default async function LandownerDashboardPage() {
               </div>
             </div>
 
-            {/* ⭐ STREAM HEAVY SECTIONS */}
+            {/* STREAM HEAVY */}
             <div className="grid gap-6 lg:grid-cols-2">
               <Suspense fallback={<SectionSkeleton />}>
                 <ApplicationsSection userId={userId} />
@@ -103,7 +109,10 @@ export default async function LandownerDashboardPage() {
                 </div>
 
                 <Link href="/landowner/land/new">
-                  <Button size="sm" className="rounded-full px-4 gap-2 bg-[#b7cf8a]">
+                  <Button
+                    size="sm"
+                    className="rounded-full px-4 gap-2 bg-[#b7cf8a]"
+                  >
                     <Plus className="w-4 h-4" />
                     Add Land
                   </Button>
@@ -112,13 +121,17 @@ export default async function LandownerDashboardPage() {
 
               <div className="p-6">
                 <ErrorBoundary fallback={<TableErrorFallback />}>
-                  <LandsTable lands={lands} />
+                  <LandsTable
+                    lands={lands}
+                    total={totalLands}
+                    page={page}
+                  />
                 </ErrorBoundary>
               </div>
             </div>
           </div>
 
-          {/* APPLICATIONS TAB */}
+          {/* APPLICATIONS */}
           <div id="applications" className="hidden">
             <div className="rounded-xl border bg-white dark:bg-gray-900 shadow-sm">
               <div className="p-6 border-b flex items-center gap-3">
@@ -164,7 +177,9 @@ export default async function LandownerDashboardPage() {
                     </Button>
                   </Link>
                 ) : (
-                  <p className="text-muted-foreground">No active leases yet</p>
+                  <p className="text-muted-foreground">
+                    No active leases yet
+                  </p>
                 )}
               </div>
             </div>

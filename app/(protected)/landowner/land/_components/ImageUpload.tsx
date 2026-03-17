@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useEffect } from "react";
+import { useRef, useMemo, useEffect, useState } from "react";
 import Image from "next/image";
 import { X, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -18,40 +18,27 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-  // derive previews safely
   const previewUrls = useMemo(
     () => images.map((file) => URL.createObjectURL(file)),
-    [images],
+    [images]
   );
 
-  // cleanup memory
   useEffect(() => {
     return () => {
       previewUrls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [previewUrls]);
 
-  const openFileDialog = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    inputRef.current?.click();
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault(); // ⭐ CRITICAL
-    e.stopPropagation(); // ⭐ CRITICAL
-
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-
+  const validateFiles = (files: File[]) => {
     if (files.length + images.length > maxImages) {
       toast({
         title: "Too many images",
         description: `Max ${maxImages} images allowed`,
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     const maxSize = 5 * 1024 * 1024;
@@ -62,7 +49,7 @@ export function ImageUpload({
         description: "Each image must be < 5MB",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     if (files.some((f) => !f.type.startsWith("image/"))) {
@@ -71,28 +58,61 @@ export function ImageUpload({
         description: "Only images allowed",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
+    return true;
+  };
+
+  const handleFiles = (files: File[]) => {
+    if (!files.length) return;
+    if (!validateFiles(files)) return;
     onImagesChange([...images, ...files]);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const files = Array.from(e.target.files || []);
+    handleFiles(files);
 
     if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const openFileDialog = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    inputRef.current?.click();
   };
 
   const removeImage = (index: number) => {
     onImagesChange(images.filter((_, i) => i !== index));
   };
 
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
+  };
+
   return (
     <div
-      onClick={(e) => e.stopPropagation()} 
-      onKeyDown={(e) => {
-        if (e.key === "Enter") e.preventDefault();
+      onClick={(e) => e.stopPropagation()}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setIsDragging(true);
       }}
+      onDragLeave={() => setIsDragging(false)}
+      onDrop={handleDrop}
+      className={`transition rounded-xl p-2 ${
+        isDragging ? "bg-[#f5f9ec] border border-[#b7cf8a]" : ""
+      }`}
     >
-      <h3 className="text-lg font-semibold mb-4">Upload Images</h3>
-
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         {previewUrls.map((url, index) => (
           <div
             key={url}
@@ -123,10 +143,16 @@ export function ImageUpload({
           <button
             type="button"
             onClick={openFileDialog}
-            className="aspect-square rounded-lg border-2 border-dashed border-gray-300 hover:border-[#b7cf8a] flex flex-col items-center justify-center gap-2 text-gray-500 hover:text-[#b7cf8a] transition"
+            className={`aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-2 text-gray-500 transition ${
+              isDragging
+                ? "border-[#b7cf8a] text-[#7a9a3a] bg-[#f5f9ec]"
+                : "border-gray-300 hover:border-[#b7cf8a] hover:text-[#7a9a3a]"
+            }`}
           >
             <ImageIcon className="w-6 h-6" />
-            <span className="text-xs">Upload Image</span>
+            <span className="text-xs">
+              {isDragging ? "Drop images" : "Upload Image"}
+            </span>
           </button>
         )}
       </div>
@@ -141,7 +167,7 @@ export function ImageUpload({
       />
 
       <p className="text-sm text-gray-500 mt-2">
-        Upload up to {maxImages} images (Max 5MB each)
+        Drag & drop or upload up to {maxImages} images (Max 5MB each)
       </p>
     </div>
   );
