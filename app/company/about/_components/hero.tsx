@@ -176,43 +176,43 @@ export default function HeroSection() {
             </motion.div>
           </motion.div>
 
-          {/* TRUST SECTION */}
-          <motion.div variants={fadeUp} className="relative mt-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="flex -space-x-3">
-                {investors.map((src, index) => (
-                  <motion.div
-                    key={index}
-                    whileHover={{ scale: 1.08 }}
-                    className="relative h-10 w-10 rounded-full overflow-hidden shadow-sm"
-                  >
-                    {imageErrors[index] ? (
-                      <div className="h-full w-full flex items-center justify-center bg-gray-300 text-white text-xs font-semibold">
-                        {index + 1}
-                      </div>
-                    ) : (
-                      <Image
-                        src={src}
-                        alt="User"
-                        width={40}
-                        height={40}
-                        className="object-cover h-full w-full"
-                        onError={() => handleImageError(index)}
-                      />
-                    )}
-                  </motion.div>
-                ))}
-              </div>
+            {/* TRUST SECTION */}
+            <motion.div variants={fadeUp} className="relative mt-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex -space-x-3">
+                  {investors.map((src, index) => (
+                    <motion.div
+                      key={index}
+                      whileHover={{ scale: 1.08 }}
+                      className="relative h-10 w-10 rounded-full overflow-hidden shadow-sm"
+                    >
+                      {imageErrors[index] ? (
+                        <div className="h-full w-full flex items-center justify-center bg-gray-300 text-white text-xs font-semibold">
+                          {index + 1}
+                        </div>
+                      ) : (
+                        <Image
+                          src={src}
+                          alt="User"
+                          width={40}
+                          height={40}
+                          className="object-cover h-full w-full"
+                          onError={() => handleImageError(index)}
+                        />
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
 
-              <p className="text-sm text-zinc-700">
-                <span className="font-semibold text-black">
-                  1200+ farmers & landowners
-                </span>{" "}
-                are already building productive partnerships on Fieldly.
-              </p>
-            </div>
+                <p className="text-sm text-zinc-700">
+                  <span className="font-semibold text-black">
+                    1200+ farmers & landowners
+                  </span>{" "}
+                  are already building productive partnerships on Fieldly.
+                </p>
+              </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
 
         {/* RIGHT IMAGE */}
         <motion.div

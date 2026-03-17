@@ -45,11 +45,6 @@ export default function FindLandHero() {
           <div className="relative flex items-center justify-center min-h-[650px] animate-pulse">
             {/* Map Card Skeleton */}
             <div className="relative w-[520px] h-[340px] rounded-[40px] bg-gray-200 shadow-xl"></div>
-
-            {/* Phone Overlay Skeleton */}
-            <div className="absolute w-[360px] lg:w-[420px] h-[640px] lg:h-[760px] -top-28 z-10">
-              <div className="w-full h-full bg-gray-300 rounded-[60px] shadow-2xl"></div>
-            </div>
           </div>
         </div>
       </section>
