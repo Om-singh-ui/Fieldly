@@ -141,7 +141,7 @@ export default function SignInPage() {
             variants={imageVariants}
           >
             <Image
-              src="/auth.jpg"
+              src="https://images.pexels.com/photos/3013440/pexels-photo-3013440.jpeg?cs=srgb&dl=pexels-rafa-de-21730-3013440.jpg&fm=jpg"
               alt="Cultivated farmland"
               fill
               priority
