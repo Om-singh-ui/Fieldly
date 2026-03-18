@@ -209,7 +209,7 @@ export default function HeroSection() {
         >
           <div className="relative h-full w-full">
             <Image
-              src="https://stmaaprodfwsite.blob.core.windows.net/assets/sites/1/2025/06/Winter-wheat-7159_GNP_9014_C_GNP.jpg"
+              src="/investmenthero.png"
               alt="Institutional farmland"
               fill
               priority

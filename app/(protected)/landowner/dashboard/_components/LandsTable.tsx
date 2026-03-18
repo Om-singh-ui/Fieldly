@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { useTransition } from "react";
+import { deleteOrArchiveLand } from "@/app/(protected)/landowner/land/_actions/land.actions";
+import { Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -49,7 +52,6 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LandWithDetails } from "@/lib/queries/landowner";
 
-// UPDATE INTERFACE
 interface LandsTableProps {
   lands: LandWithDetails[];
   total: number;
@@ -66,8 +68,6 @@ type SortField =
 type SortDirection = "asc" | "desc";
 
 type SortValue = string | number | Date | null | undefined;
-
-// REMOVE ITEMS_PER_PAGE CONSTANT FROM HERE
 
 const statusConfig = {
   AVAILABLE: {
@@ -97,6 +97,10 @@ export function LandsTable({ lands, total, page }: LandsTableProps) {
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
+  // State for archive functionality
+  const [archivingId, setArchivingId] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+
   const handleSort = useCallback(
     (field: SortField) => {
       if (field === sortField) {
@@ -108,6 +112,25 @@ export function LandsTable({ lands, total, page }: LandsTableProps) {
     },
     [sortField],
   );
+
+  // Archive handler
+  const handleArchive = (id: string) => {
+    const confirm = window.confirm("Archive this land?");
+    if (!confirm) return;
+
+    setArchivingId(id);
+
+    startTransition(async () => {
+      try {
+        await deleteOrArchiveLand(id);
+        router.refresh();
+      } catch {
+        alert("Failed to archive land");
+      } finally {
+        setArchivingId(null);
+      }
+    });
+  };
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("en-IN").format(value);
@@ -150,14 +173,6 @@ export function LandsTable({ lands, total, page }: LandsTableProps) {
     });
   }, [filtered, sortField, sortDirection]);
 
-  // REMOVE paginated calculation
-  // const totalPages = Math.ceil(sorted.length / ITEMS_PER_PAGE);
-  // const paginated = sorted.slice(
-  //   (page - 1) * ITEMS_PER_PAGE,
-  //   page * ITEMS_PER_PAGE,
-  // );
-
-  // CALCULATE TOTAL PAGES USING SERVER total
   const totalPages = Math.ceil(total / 6); // 6 is ITEMS_PER_PAGE
 
   return (
@@ -265,12 +280,14 @@ export function LandsTable({ lands, total, page }: LandsTableProps) {
             </TableRow>
           )}
 
-          {/* USE sorted.map INSTEAD OF paginated.map */}
           {sorted.map((land, i) => {
             const status =
               statusConfig[land.status as keyof typeof statusConfig];
 
             const StatusIcon = status.icon;
+
+            // Check if this row is being archived
+            const isArchiving = archivingId === land.id;
 
             return (
               <motion.tr
@@ -279,15 +296,39 @@ export function LandsTable({ lands, total, page }: LandsTableProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
                 className="cursor-pointer hover:bg-muted/30"
-                onClick={() => router.push(`/landowner/lands/${land.id}`)}
+                onClick={() => router.push(`/landowner/land/${land.id}`)}
               >
                 <TableCell className="font-medium pl-6">
                   <div className="flex items-center gap-2">
                     {land.title}
-                    <ExternalLink className="w-3 h-3 text-muted-foreground" />
-                  </div>
-                </TableCell>
 
+                    {land.mapUrl && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(land.mapUrl!, "_blank");
+                        }}
+                        className="group"
+                      >
+                        <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-primary transition" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Map link under title */}
+                  {land.mapUrl && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(land.mapUrl!, "_blank");
+                      }}
+                      className="text-xs text-blue-500 hover:underline block mt-1 text-left"
+                    >
+                      View Location on Map
+                    </button>
+                  )}
+                </TableCell>
+              
                 <TableCell>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="w-4 h-4" />
@@ -315,8 +356,6 @@ export function LandsTable({ lands, total, page }: LandsTableProps) {
                   {formatRent(land.expectedRentMin, land.expectedRentMax)}
                 </TableCell>
 
-                {/* APPLICATIONS FIXED */}
-
                 <TableCell className="text-center">
                   {land.applicationsCount > 0 ? (
                     <Badge variant="secondary" className="gap-1">
@@ -340,8 +379,16 @@ export function LandsTable({ lands, total, page }: LandsTableProps) {
                 >
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal size={16} />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled={isArchiving}
+                      >
+                        {isArchiving ? (
+                          <Loader2 className="animate-spin" size={16} />
+                        ) : (
+                          <MoreHorizontal size={16} />
+                        )}
                       </Button>
                     </DropdownMenuTrigger>
 
@@ -351,21 +398,21 @@ export function LandsTable({ lands, total, page }: LandsTableProps) {
                       <DropdownMenuSeparator />
 
                       <DropdownMenuItem asChild>
-                        <Link href={`/landowner/lands/${land.id}`}>
+                        <Link href={`/landowner/land/${land.id}`}>
                           <Eye className="w-4 h-4 mr-2" />
                           View
                         </Link>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem asChild>
-                        <Link href={`/landowner/lands/${land.id}/edit`}>
+                        <Link href={`/landowner/land/${land.id}/edit`}>
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
                         </Link>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem asChild>
-                        <Link href={`/landowner/lands/${land.id}/applications`}>
+                        <Link href={`/landowner/land/${land.id}/applications`}>
                           <FileText className="w-4 h-4 mr-2" />
                           Applications
                         </Link>
@@ -373,7 +420,10 @@ export function LandsTable({ lands, total, page }: LandsTableProps) {
 
                       <DropdownMenuSeparator />
 
-                      <DropdownMenuItem className="text-red-600">
+                      <DropdownMenuItem
+                        onClick={() => handleArchive(land.id)}
+                        className="text-red-600"
+                      >
                         <Trash className="w-4 h-4 mr-2" />
                         Delete
                       </DropdownMenuItem>
@@ -386,7 +436,7 @@ export function LandsTable({ lands, total, page }: LandsTableProps) {
         </TableBody>
       </Table>
 
-      {/* Pagination - UPDATED WITH SERVER-SIDE LINKS */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between p-4 border-t">
           <p className="text-sm text-muted-foreground">
