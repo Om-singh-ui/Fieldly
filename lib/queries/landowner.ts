@@ -1,6 +1,19 @@
 import { prisma } from "@/lib/prisma";
 import { cache } from "react";
 
+/**
+ ⭐ MAP URL HELPERS
+ */
+function getGoogleMapsUrl(lat?: number | null, lng?: number | null) {
+  if (!lat || !lng) return null;
+  return `https://www.google.com/maps?q=${lat},${lng}`;
+}
+
+function getGoogleEmbedUrl(lat?: number | null, lng?: number | null) {
+  if (!lat || !lng) return null;
+  return `https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
+}
+
 export interface LandWithDetails {
   id: string;
   title: string;
@@ -8,9 +21,16 @@ export interface LandWithDetails {
   landType: string;
   status: "LEASED" | "AVAILABLE";
   location: string;
+
   expectedRentMin: number | null;
   expectedRentMax: number | null;
+
   applicationsCount: number;
+
+  /** ⭐ NEW */
+  mapUrl: string | null;
+  embedMapUrl: string | null;
+
   activeLease: {
     id: string;
     farmerName: string;
@@ -18,8 +38,10 @@ export interface LandWithDetails {
     startDate: Date;
     endDate: Date;
   } | null;
+
   createdAt: Date;
 }
+
 export const getLandownerDashboardData = cache(
   async (clerkId: string, page: number) => {
     const user = await prisma.user.findUnique({
@@ -39,6 +61,14 @@ export const getLandownerDashboardData = cache(
     const pageSize = 6;
     const skip = (page - 1) * pageSize;
 
+    /**
+     ⭐ SOFT DELETE FILTER
+     */
+    const baseLandWhere = {
+      landownerId: profileId,
+      isArchived: false,
+    };
+
     const [
       allLands,
       activeLeases,
@@ -48,7 +78,7 @@ export const getLandownerDashboardData = cache(
       lands,
     ] = await Promise.all([
       prisma.land.findMany({
-        where: { landownerId: profileId, isActive: true },
+        where: { ...baseLandWhere, isActive: true },
         select: { id: true, size: true },
       }),
 
@@ -59,27 +89,46 @@ export const getLandownerDashboardData = cache(
 
       prisma.application.count({
         where: {
-          land: { landownerId: profileId },
+          land: baseLandWhere,
           status: "PENDING",
         },
       }),
 
       prisma.payment.aggregate({
-        where: { lease: { ownerId: userId }, status: "SUCCESS" },
+        where: {
+          lease: { ownerId: userId },
+          status: "SUCCESS",
+        },
         _sum: { amount: true },
       }),
 
       prisma.land.count({
-        where: { landownerId: profileId },
+        where: baseLandWhere,
       }),
 
       prisma.land.findMany({
-        where: { landownerId: profileId },
-        include: {
+        where: baseLandWhere,
+        select: {
+          id: true,
+          title: true,
+          size: true,
+          landType: true,
+          village: true,
+          latitude: true,   // ⭐ NEW
+          longitude: true,  // ⭐ NEW
+          expectedRentMin: true,
+          expectedRentMax: true,
+          createdAt: true,
           _count: { select: { applications: true } },
           leases: {
             where: { status: "ACTIVE" },
-            include: { farmer: true },
+            select: {
+              id: true,
+              rent: true,
+              startDate: true,
+              endDate: true,
+              farmer: { select: { name: true } },
+            },
           },
         },
         orderBy: { createdAt: "desc" },
@@ -88,6 +137,9 @@ export const getLandownerDashboardData = cache(
       }),
     ]);
 
+    /**
+     ⭐ AREA CALCULATION
+     */
     const leasedLandIds = new Set(activeLeases.map((l) => l.landId));
 
     let leasedArea = 0;
@@ -110,6 +162,9 @@ export const getLandownerDashboardData = cache(
       availableArea,
     };
 
+    /**
+     ⭐ FORMAT TABLE DATA
+     */
     const landsFormatted: LandWithDetails[] = lands.map((l) => {
       const status: "LEASED" | "AVAILABLE" =
         l.leases.length > 0 ? "LEASED" : "AVAILABLE";
@@ -121,9 +176,15 @@ export const getLandownerDashboardData = cache(
         landType: l.landType,
         status,
         location: l.village ?? "Location not specified",
+
         expectedRentMin: l.expectedRentMin,
         expectedRentMax: l.expectedRentMax,
         applicationsCount: l._count.applications,
+
+        /** ⭐ NEW MAP URLS */
+        mapUrl: getGoogleMapsUrl(l.latitude, l.longitude),
+        embedMapUrl: getGoogleEmbedUrl(l.latitude, l.longitude),
+
         activeLease: l.leases[0]
           ? {
               id: l.leases[0].id,
@@ -133,10 +194,14 @@ export const getLandownerDashboardData = cache(
               endDate: l.leases[0].endDate,
             }
           : null,
+
         createdAt: l.createdAt,
       };
     });
-    
+
+    /**
+     ⭐ SIMPLE TREND MOCK
+     */
     const revenueTrend = Array.from({ length: 6 }).map((_, i) => ({
       month: `M${i + 1}`,
       revenue: totalRevenue / 6,

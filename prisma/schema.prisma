@@ -24,7 +24,6 @@ model User {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   
-  // Relations
   applications     Application[]
   auditLogs        AuditLog[]
   bids             Bid[]
@@ -62,66 +61,68 @@ model FarmerProfile {
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   
-  // Relations
   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model LandownerProfile {
-  id                        String   @id @default(cuid())
-  userId                    String   @unique
-  ownershipType             String?
-  verificationLevel         Int      @default(0)
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  ownershipType     String?
+  verificationLevel Int      @default(0)
   preferredPaymentFrequency String?
-  preferredContactMethod    String?
-  isVerified                Boolean  @default(false)
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
+  preferredContactMethod String?
+  isVerified        Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
   
-  // Relations
-  lands                     Land[]
-  user                      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lands             Land[]
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Land {
   id                               String           @id @default(cuid())
   landownerId                      String
   title                            String
-  description                      String?          
+  description                      String?
   size                             Float
   landType                         LandType
   soilType                         String?
   latitude                         Float?
   longitude                        Float?
   village                          String?
-  district                         String?          
-  state                            String?          
-  address                          String?          
-  pincode                          String?          
+  district                         String?
+  state                            String?
+  address                          String?
+  pincode                          String?
   irrigationAvailable              Boolean          @default(false)
   electricityAvailable             Boolean?         @default(false)
   roadAccess                       Boolean?         @default(false)
   fencingAvailable                 Boolean?         @default(false)
   storageAvailable                 Boolean?         @default(false)
-  waterSource                      String?          
+  waterSource                      String?
   soilReportAvailable              Boolean          @default(false)
   allowedCropTypes                 String[]
   allowsInfrastructureModification Boolean          @default(false)
   allowsOrganicFarming             Boolean          @default(true)
   allowsSubleasing                 Boolean          @default(false)
-  previousCrops                    String[]         // Fixed: removed ? from array
+  previousCrops                    String[]
   depositAmount                    Float?
   expectedRentMin                  Float?
   expectedRentMax                  Float?
   minLeaseDuration                 Int
   maxLeaseDuration                 Int
-  preferredPaymentFrequency        PaymentFrequency? 
+  preferredPaymentFrequency        PaymentFrequency?
   createdAt                        DateTime         @default(now())
   updatedAt                        DateTime         @updatedAt
   isActive                         Boolean          @default(true)
   views                            Int              @default(0)
   saves                            Int              @default(0)
-  
-  // Relations
+
+  // ⭐ NEW EDIT GOVERNANCE FIELDS
+  editCount                        Int              @default(0)
+  lastEditedAt                     DateTime?
+  isArchived                       Boolean          @default(false)
+
   applications                     Application[]
   documents                        Document[]
   landowner                        LandownerProfile @relation(fields: [landownerId], references: [id], onDelete: Cascade)
@@ -132,9 +133,11 @@ model Land {
   @@index([landownerId])
   @@index([landType])
   @@index([isActive])
+  @@index([isArchived])   
   @@index([createdAt])
   @@index([district, state])
 }
+
 
 model LandListing {
   id                   String         @id @default(cuid())
