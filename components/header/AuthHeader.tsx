@@ -598,26 +598,26 @@ export default function AuthHeader() {
                     href="/sign-in"
                     prefetch={false}
                     className="
-    group flex items-center gap-2
-    rounded-full
-    bg-[#b7cf8a]
-    px-4 py-1
-    text-sm font-semibold text-black
-    transition-all duration-300
-    hover:bg-[#a9c27b]
-    whitespace-nowrap
-  "
+      group flex items-center gap-2
+      rounded-full
+      bg-[#b7cf8a]
+      px-4 py-1
+      text-sm font-semibold text-black
+      transition-all duration-300
+      hover:bg-[#a9c27b]
+      whitespace-nowrap
+    "
                   >
                     <span>Sign In</span>
 
                     <span
                       className="
-      flex items-center justify-center
-      h-7 w-7 rounded-full
-      bg-black text-white
-      transition-all duration-300
-      group-hover:bg-[#2a2f1f]
-    "
+        flex items-center justify-center
+        h-7 w-7 rounded-full
+        bg-black text-white
+        transition-all duration-300
+        group-hover:bg-[#2a2f1f]
+      "
                     >
                       <ArrowUpRight className="h-4 w-4" />
                     </span>
