@@ -101,7 +101,7 @@ export default function HeroSection() {
           <div className="relative mt-4 sm:mt-6 flex flex-wrap gap-3">
             {/* For Landowners */}
             <Button
-              onClick={() => router.push("/sign-in")}
+              onClick={() => router.push("/post-auth")}
               className="group h-10 sm:h-11 rounded-full bg-gradient-to-r from-[#b7cf8a] to-[#9fb86d] px-5 sm:px-6 text-sm font-medium text-black shadow-[0_6px_18px_rgba(183,207,138,0.35)] hover:from-[#a8c47a] hover:to-[#93ae63]"
             >
               For Landowners
@@ -112,7 +112,7 @@ export default function HeroSection() {
 
             {/* For Farmers */}
             <Button
-              onClick={() => router.push("/sign-in")}
+              onClick={() => router.push("/post-auth")}
               variant="outline"
               className="group h-10 sm:h-11 rounded-full border-zinc-200 px-5 sm:px-6 text-sm hover:bg-zinc-50"
             >
@@ -214,7 +214,7 @@ hover:shadow-[0_30px_90px_rgba(183,207,138,0.45),0_0_0_1px_rgba(183,207,138,0.35
               </div>
             </div>
           </div>
-        </div>  
+        </div>
       </div>
     </section>
   );

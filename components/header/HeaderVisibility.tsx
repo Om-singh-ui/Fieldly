@@ -19,33 +19,25 @@ export function HeaderVisibilityProvider({
   const [authHidden, setAuthHidden] = useState(false);
   const [mainVisible, setMainVisible] = useState(false);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // Clear any pending timer
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
+    // cancel previous frame
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
     if (authHidden) {
-      // ⏳ Show main header with 800ms delay (gap between headers)
-      timerRef.current = setTimeout(() => {
+      // use RAF instead of timeout → prevents race + overlap
+      rafRef.current = requestAnimationFrame(() => {
         setMainVisible(true);
-      }, 800);
+      });
     } else {
-      // Hide main header immediately, show auth header
-      // Use setTimeout to avoid synchronous state update
-      timerRef.current = setTimeout(() => {
+      rafRef.current = requestAnimationFrame(() => {
         setMainVisible(false);
-      }, 0);
+      });
     }
 
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [authHidden]);
 
