@@ -41,6 +41,7 @@ model User {
   reviewsGiven     Review[]          @relation("Reviewer")
   savedListings    SavedListing[]
   subscription     Subscription?
+  marketSubscriptions MarketSubscription[]
 
   @@index([clerkUserId])
   @@index([email])
@@ -118,7 +119,7 @@ model Land {
   views                            Int              @default(0)
   saves                            Int              @default(0)
 
-  // ⭐ NEW EDIT GOVERNANCE FIELDS
+  // EDIT GOVERNANCE FIELDS
   editCount                        Int              @default(0)
   lastEditedAt                     DateTime?
   isArchived                       Boolean          @default(false)
@@ -129,6 +130,7 @@ model Land {
   listings                         LandListing[]
   leases                           Lease[]
   soilReports                      SoilReport[]
+  images                           ListingImage[]    // ← ADD THIS RELATION
 
   @@index([landownerId])
   @@index([landType])
@@ -138,7 +140,6 @@ model Land {
   @@index([district, state])
 }
 
-
 model LandListing {
   id                   String         @id @default(cuid())
   landId               String
@@ -147,6 +148,22 @@ model LandListing {
   description          String?
   listingType          ListingType    @default(OPEN_BIDDING)
   status               ListingStatus  @default(DRAFT)
+  
+  // Auction Engine Fields ⭐
+  auctionStatus        AuctionStatus  @default(UPCOMING)
+  winningBidId         String?        @unique
+  currentLeaderId      String?
+  bidIncrement         Float?
+  autoExtendMinutes    Int?           @default(5)
+  lastBidAt            DateTime?
+  
+  // Marketplace Scoring ⭐
+  riskLevel            RiskLevel      @default(LOW)
+  marketScore          Float?
+  engagementScore      Float?
+  hotnessScore         Float?
+  
+  // Existing Fields
   basePrice            Float
   reservePrice         Float?
   buyNowPrice          Float?
@@ -168,15 +185,20 @@ model LandListing {
   land                 Land           @relation(fields: [landId], references: [id], onDelete: Cascade)
   owner                User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   leases               Lease[]
-  images               ListingImage[]
+  images               ListingImage[] // ← THIS ALREADY EXISTS
   terms                ListingTerms?
   savedBy              SavedListing[]
+  auctionEvents        AuctionEvent[]
+  analytics            ListingAnalytics?
+  winningBid           Bid?           @relation("WinningBid", fields: [winningBidId], references: [id])
 
   @@index([ownerId])
   @@index([status])
   @@index([listingType])
   @@index([startDate, endDate])
   @@index([createdAt])
+  @@index([auctionStatus, endDate])
+  @@index([hotnessScore])
 }
 
 model ListingTerms {
@@ -200,17 +222,70 @@ model Bid {
   amount    Float
   message   String?
   status    BidStatus   @default(ACTIVE)
+  
+  // New Auction Fields ⭐
+  sequence  Int         // For bid ordering
+  isWinning Boolean     @default(false)
+  outbidAt  DateTime?
+  isAutoBid Boolean     @default(false)
+  
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   
   // Relations
   farmer    User        @relation(fields: [farmerId], references: [id], onDelete: Cascade)
   listing   LandListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  winningOf LandListing? @relation("WinningBid")
+  events    AuctionEvent[]
 
   @@index([listingId])
   @@index([farmerId])
   @@index([status])
-  @@unique([listingId, farmerId, status])
+  @@index([listingId, amount(sort: Desc)])
+  @@index([listingId, createdAt])
+}
+
+// NEW TABLE: AuctionEvent ⭐
+model AuctionEvent {
+  id        String   @id @default(cuid())
+  listingId String
+  type      String   // BID_PLACED, BID_OUTBID, AUCTION_STARTED, AUCTION_ENDED, etc.
+  actorId   String?  // User who triggered the event
+  bidId     String?  // Related bid if applicable
+  metadata  Json?    // Additional event data
+  createdAt DateTime @default(now())
+
+  listing   LandListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  bid       Bid?        @relation(fields: [bidId], references: [id], onDelete: SetNull)
+
+  @@index([listingId])
+  @@index([createdAt])
+}
+
+// NEW TABLE: ListingAnalytics ⭐
+model ListingAnalytics {
+  listingId      String @id
+  demandScore    Float? // Market demand score
+  bidVelocity    Float? // Bids per hour/day
+  conversionScore Float? // Likelihood of conversion
+  avgBidGap      Float? // Average gap between bids
+  watchers       Int @default(0)
+  lastActivityAt DateTime?
+
+  listing LandListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+// NEW TABLE: MarketSubscription ⭐
+model MarketSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  filters   Json     // Saved search filters
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Application {
@@ -251,6 +326,16 @@ model Lease {
   startDate       DateTime
   endDate         DateTime
   status          LeaseStatus  @default(DRAFT)
+  
+  // FinTech Ready Fields ⭐
+  platformFee        Float?      // Platform commission
+  netOwnerReceivable Float?      // Amount after fees
+  grossContractValue Float?      // Total contract value
+  leaseSource        LeaseSource @default(AUCTION)
+  riskScore          Float?      // Risk assessment score
+  escrowStatus       String?     // Escrow account status
+  creditApproved     Boolean     @default(false)
+  
   signedByFarmer  Boolean      @default(false)
   signedByOwner   Boolean      @default(false)
   signedAt        DateTime?
@@ -272,6 +357,7 @@ model Lease {
   @@index([landId])
   @@index([status])
   @@index([startDate, endDate])
+  @@index([riskScore])
 }
 
 model Payment {
@@ -281,6 +367,18 @@ model Payment {
   amount      Float
   currency    String        @default("INR")
   status      PaymentStatus @default(PENDING)
+  
+  // Razorpay Ready Fields ⭐
+  razorpayOrderId    String? @unique
+  razorpayPaymentId  String?
+  razorpaySignature  String?
+  
+  // Payment Details ⭐
+  paymentType        String?   // RENT / DEPOSIT / FEE
+  platformFee        Float?    // Platform fee amount
+  gatewayFee         Float?    // Payment gateway fee
+  netAmount          Float?    // Net amount after fees
+  
   providerRef String?
   dueDate     DateTime?
   paidAt      DateTime?
@@ -296,6 +394,8 @@ model Payment {
   @@index([leaseId])
   @@index([status])
   @@index([dueDate])
+  @@index([razorpayOrderId])
+  @@index([razorpayPaymentId])
 }
 
 model Subscription {
@@ -361,6 +461,11 @@ model Notification {
   isRead    Boolean          @default(false)
   readAt    DateTime?
   actionUrl String?
+  
+  // Deep Link Ready Fields ⭐
+  entityType String?  // LISTING, BID, LEASE, PAYMENT, etc.
+  entityId   String?  // ID of the related entity
+  
   createdAt DateTime         @default(now())
   
   // Relations
@@ -369,6 +474,7 @@ model Notification {
   @@index([userId])
   @@index([isRead])
   @@index([createdAt])
+  @@index([entityType, entityId])
 }
 
 model SavedListing {
@@ -388,7 +494,8 @@ model SavedListing {
 
 model ListingImage {
   id        String      @id @default(cuid())
-  listingId String
+  listingId String?
+  landId    String?      // ← ADD THIS FIELD
   url       String
   caption   String?
   isPrimary Boolean     @default(false)
@@ -396,9 +503,11 @@ model ListingImage {
   createdAt DateTime    @default(now())
   
   // Relations
-  listing   LandListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listing   LandListing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  land      Land?        @relation(fields: [landId], references: [id], onDelete: Cascade) // ← ADD THIS RELATION
 
   @@index([listingId])
+  @@index([landId])      // ← ADD THIS INDEX
   @@index([isPrimary])
 }
 
@@ -565,4 +674,26 @@ enum PaymentFrequency {
   YEARLY
   ONE_TIME
   CUSTOM
+}
+
+// NEW ENUMS ⭐
+enum AuctionStatus {
+  UPCOMING
+  LIVE
+  PAUSED
+  CLOSED
+  SETTLED
+  FAILED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum LeaseSource {
+  AUCTION
+  DIRECT
+  NEGOTIATION
 }
