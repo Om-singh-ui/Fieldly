@@ -79,7 +79,7 @@ export default function ProblemSolutionSection() {
 
             <div className="relative h-[240px] w-full overflow-hidden">
               <Image
-                src="https://i2.res.24o.it/images2010/S24/Documenti/2025/11/13/Immagini/Ritagli/agri-U25705733551Lop-1440x752@IlSole24Ore-Web.jpg?r=650x341"
+                src="/maintracblog.avif"
                 alt="Idle farmland"
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -108,19 +108,19 @@ export default function ProblemSolutionSection() {
           <div className="flex flex-col gap-5">
             {[
               {
-                img: "https://www.omshakthy.com/blog/images/blog-b78.webp",
+                img: "/blog-b78.webp",
                 tag: "FIELDLY SOLUTION",
                 title: "Transparent Digital Land Listings",
                 desc: "Landowners can list farmland digitally with verified information and clear leasing terms.",
               },
               {
-                img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbiCUE1qBDk5ic_acCXuVJT_hCvj9_UcQufQ&s",
+                img: "/blogfarmers.jpg",
                 tag: "FIELDLY SOLUTION",
                 title: "Direct Farmer Discovery",
                 desc: "Farmers can explore farmland listings and apply directly without relying on intermediaries.",
               },
               {
-                img: "https://images.jdmagicbox.com/quickquotes/images_main/john-deere-5405-trem-iv-2215941707-szmjzimg.jpg",
+                img: "/blogtractor.avif",
                 tag: "FIELDLY SOLUTION",
                 title: "Unlocking Productive Land Use",
                 desc: "Fieldly connects farmers and landowners to transform idle land into productive farmland.",
