@@ -527,18 +527,18 @@ export default function MainHeader() {
               <Link
                 href="/marketplace"
                 className="
-               hidden lg:flex items-center gap-2
-               h-11 px-6 rounded-full
-               backdrop-blur-xl
-               bg-white/40
-               border border-white/30
-               text-black font-semibold text-sm
-               shadow-[0_8px_24px_rgba(0,0,0,0.08)]
-               hover:bg-white/60
-               hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)]
-               transition-all duration-300
-               group
-               "
+  hidden lg:flex items-center gap-2
+  h-11 px-6 rounded-full
+  backdrop-blur-xl
+  bg-white/40
+  border border-white/30
+  text-black font-semibold text-sm
+  shadow-[0_8px_24px_rgba(0,0,0,0.08)]
+  hover:bg-white/60
+  hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)]
+  transition-all duration-300
+  group
+  "
               >
                 Marketplace
                 <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
@@ -550,10 +550,30 @@ export default function MainHeader() {
                   <Link
                     href="/sign-in"
                     prefetch={false}
-                    className="flex items-center gap-2 rounded-lg bg-[#b7cf8a] px-4 py-2 text-sm font-medium text-black hover:bg-[#a8c07a] transition-colors"
+                    className="
+      group flex items-center gap-2
+      rounded-full
+      bg-[#b7cf8a]
+      px-4 py-1
+      text-sm font-semibold text-black
+      transition-all duration-300
+      hover:bg-[#a9c27b]
+      whitespace-nowrap
+    "
                   >
-                    Sign In
-                    <ArrowUpRight className="h-4 w-4" />
+                    <span>Sign In</span>
+
+                    <span
+                      className="
+        flex items-center justify-center
+        h-7 w-7 rounded-full
+        bg-black text-white
+        transition-all duration-300
+        group-hover:bg-[#2a2f1f]
+      "
+                    >
+                      <ArrowUpRight className="h-4 w-4" />
+                    </span>
                   </Link>
                 </SignedOut>
                 <SignedIn>
@@ -568,10 +588,30 @@ export default function MainHeader() {
                 <Link
                   href="/sign-in"
                   prefetch={false}
-                  className="flex h-9 items-center gap-1 rounded-lg bg-[#b7cf8a] px-3 text-xs font-medium text-black hover:bg-[#a8c07a] transition-colors"
+                  className="
+                     group flex items-center gap-2
+                     rounded-full
+                     bg-[#b7cf8a]
+                     px-4 py-1
+                     text-sm font-semibold text-black
+                     transition-all duration-300
+                     hover:bg-[#a9c27b]
+                     whitespace-nowrap
+                   "
                 >
-                  Sign In
-                  <ArrowUpRight className="h-3 w-3" />
+                  <span>Sign In</span>
+
+                  <span
+                    className="
+                       flex items-center justify-center
+                       h-7 w-7 rounded-full
+                       bg-black text-white
+                       transition-all duration-300
+                       group-hover:bg-[#2a2f1f]
+                     "
+                  >
+                    <ArrowUpRight className="h-4 w-4" />
+                  </span>
                 </Link>
               </SignedOut>
               <SignedIn>
