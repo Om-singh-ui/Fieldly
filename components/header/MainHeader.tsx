@@ -165,7 +165,6 @@ const NAV_DATA: Record<NavKey, NavSection> = {
   },
 };
 
-
 // ================= DESKTOP AUTH CTA =================
 function AuthCTA() {
   const [isChecking, setIsChecking] = useState(false);
@@ -217,7 +216,6 @@ function AuthCTA() {
     </div>
   );
 }
-
 
 // ================= MOBILE AUTH CTA =================
 function MobileAuthSection({ onClose }: { onClose: () => void }) {
@@ -276,7 +274,6 @@ function MobileAuthSection({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
-
 
 export default function MainHeader() {
   const { mainVisible } = useHeaderVisibility();
@@ -527,9 +524,25 @@ export default function MainHeader() {
 
               <ChevronDown className="h-4 w-4 opacity-60" />
 
-              <span className="hidden lg:block text-sm font-medium text-black whitespace-nowrap">
-                Retail Investors
-              </span>
+              <Link
+                href="/marketplace"
+                className="
+               hidden lg:flex items-center gap-2
+               h-11 px-6 rounded-full
+               backdrop-blur-xl
+               bg-white/40
+               border border-white/30
+               text-black font-semibold text-sm
+               shadow-[0_8px_24px_rgba(0,0,0,0.08)]
+               hover:bg-white/60
+               hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)]
+               transition-all duration-300
+               group
+               "
+              >
+                Marketplace
+                <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </Link>
 
               {/* Desktop Auth Section */}
               <div className="ml-1">
@@ -733,13 +746,41 @@ export default function MainHeader() {
               )}
             </div>
 
-            {/* Retail Investors Text */}
+            {/* Marketplace CTA (Mobile - Glass) */}
             <div className="mt-4 mb-6 px-2">
-              <span className="text-sm font-medium text-zinc-600">
-                Retail Investors
-              </span>
-            </div>
+              <Link
+                href="/marketplace"
+                prefetch={false}
+                className="
+                  group flex items-center justify-between
+                  w-full
+                  h-11 px-5
+                  rounded-full
+                  backdrop-blur-2xl
+                  bg-gradient-to-b from-white/60 to-white/30
+                  border border-white/40
+                  text-black text-sm font-semibold
+                  shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_8px_20px_rgba(0,0,0,0.08)]
+                  active:scale-[0.97]
+                  transition-all duration-200
+                "
+              >
+                <span>Explore Marketplace</span>
 
+                <span
+                  className="
+                  flex items-center justify-center
+                  h-7 w-7 rounded-full
+                  bg-white/60
+                  border border-white/50
+                  transition-transform duration-200
+                  group-active:translate-x-1 group-active:-translate-y-1
+                "
+                >
+                  <ArrowUpRight className="h-4 w-4 opacity-80" />
+                </span>
+              </Link>
+            </div>
             {/* Mobile Auth Section */}
             <MobileAuthSection onClose={() => setMobileOpen(false)} />
           </motion.div>
