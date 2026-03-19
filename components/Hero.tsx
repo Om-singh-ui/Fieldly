@@ -131,7 +131,7 @@ hover:shadow-[0_30px_90px_rgba(183,207,138,0.45),0_0_0_1px_rgba(183,207,138,0.35
         >
           <div className="relative h-full w-full pt-12 sm:pt-16 md:pt-20">
             <Image
-              src="https://images.pexels.com/photos/3013440/pexels-photo-3013440.jpeg?cs=srgb&dl=pexels-rafa-de-21730-3013440.jpg&fm=jpg"
+              src="/herro.jpg"
               alt="Global land collaboration"
               fill
               priority

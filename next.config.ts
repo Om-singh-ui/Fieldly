@@ -6,6 +6,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "nxfepetnabafrqurgsir.supabase.co",
       },
+      {
+        protocol: "https",
+        hostname: "thelandapp.com",
+      },
     ],
   },
 };
