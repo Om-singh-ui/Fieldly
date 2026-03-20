@@ -16,11 +16,14 @@ import {
   Zap,
   Users,
   Clock,
+  Navigation,
+  ExternalLink,
 } from "lucide-react"
 import { SavedButton } from "./SavedButton"
 import { VerifiedBadge } from "./VerifiedBadge"
 import { formatCurrency, formatTimeLeft, cn, getInitials } from "@/lib/utils"
-import { MarketplaceFeedItem } from "@/types/marketplace"
+import { MarketplaceFeedItem, formatLocation, hasLocationData, getMapUrl } from "@/types/marketplace"
+import { useToast } from "@/hooks/use-toast"
 
 const LAND_PLACEHOLDER = "/images/placeholder-land.jpg"
 
@@ -42,20 +45,74 @@ export function ListingCard({
   const [manual, setManual] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const [imageError, setImageError] = useState<Record<number, boolean>>({})
+  const { toast } = useToast()
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const touchStart = useRef<number | null>(null)
 
-  // ✅ stable images list
+  //  stable images list
   const images = useMemo(() => {
-    // Use images from land first, then from listing if available
     const landImgs = listing.land?.images?.map(i => i.url) ?? []
     const listingImgs = listing.images?.map(i => i.url) ?? []
     const merged = [...landImgs, ...listingImgs].filter(Boolean)
     return merged.length ? merged : [LAND_PLACEHOLDER]
   }, [listing.land?.images, listing.images])
 
-  // ✅ timer
+  //  Get formatted location using helper (fixes ESLint warning)
+  const formattedLocation = useMemo(() => {
+    return formatLocation(listing.land)
+  }, [listing.land]) //  Now depends on listing.land, not individual properties
+
+  //  Check if location data is available using helper
+  const locationAvailable = useMemo(() => {
+    return hasLocationData(listing.land)
+  }, [listing.land])
+
+  //  Get map URL using helper
+  const mapUrl = useMemo(() => {
+    return getMapUrl(listing.land)
+  }, [listing.land])
+
+  // Handle View on Map click
+  const handleViewOnMap = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (mapUrl) {
+      window.open(mapUrl, '_blank', 'noopener,noreferrer')
+    } else {
+      toast({
+        title: "Location unavailable",
+        description: "Map location is not available for this listing",
+        variant: "destructive",
+      })
+    }
+  }
+
+  //Handle Get Directions click
+  const handleGetDirections = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    const land = listing.land
+    
+    if (land?.latitude && land?.longitude) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${land.latitude},${land.longitude}`
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } else if (formattedLocation !== "Location not specified") {
+      const destination = encodeURIComponent(formattedLocation)
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } else {
+      toast({
+        title: "Directions unavailable",
+        description: "Cannot get directions for this location",
+        variant: "destructive",
+      })
+    }
+  }
+
+  // timer
   useEffect(() => {
     const update = () => {
       const remaining =
@@ -69,7 +126,7 @@ export function ListingCard({
     return () => clearInterval(timer)
   }, [listing.endDate])
 
-  // ✅ auto slider
+  // auto slider
   useEffect(() => {
     if (manual || images.length <= 1 || !isHovered) return
 
@@ -96,7 +153,7 @@ export function ListingCard({
     setIndex(i => (i + 1) % images.length)
   }
 
-  // ✅ swipe support
+  // swipe support
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStart.current = e.touches[0].clientX
   }
@@ -130,7 +187,7 @@ export function ListingCard({
   }
 
   const isLive = listing.auctionStatus === "LIVE" && timeLeft > 0
-  const isEndingSoon = timeLeft > 0 && timeLeft < 24 * 60 * 60 * 1000 // Less than 24 hours
+  const isEndingSoon = timeLeft > 0 && timeLeft < 24 * 60 * 60 * 1000
   const bidCount = listing._count?.bids || 0
   const savedCount = listing._count?.savedBy || 0
 
@@ -176,7 +233,7 @@ export function ListingCard({
             </div>
           )}
 
-          {/* Navigation Arrows - Only show on hover */}
+          {/* Navigation Arrows */}
           {images.length > 1 && isHovered && (
             <>
               <button
@@ -186,7 +243,6 @@ export function ListingCard({
               >
                 <ChevronLeft className="text-white bg-black/60 hover:bg-black/80 rounded-full p-1.5 w-8 h-8 backdrop-blur-sm transition-colors" />
               </button>
-
               <button
                 onClick={next}
                 className="absolute right-2 top-1/2 -translate-y-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -232,7 +288,7 @@ export function ListingCard({
             className="absolute top-2 right-2 z-10"
           />
 
-          {/* Price Tag - Overlay on image */}
+          {/* Price Tag */}
           <div className="absolute bottom-2 right-2 z-10">
             <Badge variant="secondary" className="bg-black/70 text-white border-0 backdrop-blur-sm py-1.5">
               <span className="font-bold text-lg">{formatCurrency(listing.basePrice)}</span>
@@ -248,11 +304,36 @@ export function ListingCard({
               {listing.title}
             </h3>
             
-            <div className="flex items-center text-sm text-muted-foreground">
-              <MapPin className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
-              <span className="truncate">
-                {listing.land?.district}, {listing.land?.state}
-              </span>
+            {/* Location with Map Actions */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center text-sm text-muted-foreground min-w-0 flex-1">
+                <MapPin className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
+                <span className="truncate">
+                  {formattedLocation}
+                </span>
+              </div>
+              
+              {/* Map Actions - Only show if location data available */}
+              {locationAvailable && (
+                <div className="flex gap-1 flex-shrink-0">
+                  <button
+                    onClick={handleGetDirections}
+                    className="text-primary hover:text-primary/80 transition-colors p-1 rounded-md hover:bg-primary/5"
+                    aria-label="Get directions"
+                    title="Get directions"
+                  >
+                    <Navigation className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={handleViewOnMap}
+                    className="text-primary hover:text-primary/80 transition-colors p-1 rounded-md hover:bg-primary/5"
+                    aria-label="View on map"
+                    title="View on map"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -292,7 +373,6 @@ export function ListingCard({
 
           {/* Stats Bar */}
           <div className="flex items-center justify-between pt-2 border-t border-border/50">
-            {/* Starting Price */}
             <div className="flex-1">
               <p className="text-xs text-muted-foreground">Starting Price</p>
               <p className="font-semibold text-primary">
@@ -300,7 +380,6 @@ export function ListingCard({
               </p>
             </div>
 
-            {/* Time Left */}
             {timeLeft > 0 && (
               <div className="flex-1 text-right">
                 <p className="text-xs text-muted-foreground">Time Left</p>
@@ -314,7 +393,6 @@ export function ListingCard({
               </div>
             )}
 
-            {/* Saved Count */}
             {savedCount > 0 && (
               <div className="flex-1 text-right">
                 <p className="text-xs text-muted-foreground">Saved</p>
@@ -326,7 +404,7 @@ export function ListingCard({
             )}
           </div>
 
-          {/* Marketplace Score (if available) - REPLACED WITH bg-[#b7cf8a] */}
+          {/* Marketplace Score */}
           {listing.marketplaceScore && (
             <div className="flex items-center gap-1 text-xs text-gray-700 bg-[#b7cf8a] px-2 py-1 rounded-md">
               <span>Popular</span>

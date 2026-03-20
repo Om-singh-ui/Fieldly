@@ -56,7 +56,7 @@ export const getFarmerDashboardData = cache(async (clerkUserId: string) => {
     prisma.application.count({
       where: {
         farmerId: user.id,
-        status: { not: "REJECTED" }, // ⭐ index friendly
+        status: { not: "REJECTED" }, // index friendly
       },
     }),
 

@@ -1,3 +1,4 @@
+// app/api/marketplace/feed/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
@@ -8,9 +9,6 @@ import {
 import { MarketplaceFilters } from "@/lib/types/marketplace";
 import { getImageUrl } from "@/lib/supabase-image";
 
-/**
- * ⭐ Proper Prisma typed listing
- */
 type FeedListing = Prisma.LandListingGetPayload<{
   include: {
     land: true;
@@ -62,7 +60,6 @@ export async function GET(req: NextRequest) {
         skip: (pagination.page - 1) * pagination.limit,
         take: pagination.limit,
         orderBy: { createdAt: "desc" },
-
         include: {
           land: true,
           owner: {
@@ -80,7 +77,6 @@ export async function GET(req: NextRequest) {
           },
         },
       }),
-
       prisma.landListing.count({ where }),
     ]);
 
@@ -95,8 +91,26 @@ export async function GET(req: NextRequest) {
         ? getImageUrl(listing.owner.imageUrl)
         : null;
 
+      // Generate map URL and location from geo data
+      const mapUrl = listing.land?.latitude && listing.land?.longitude
+        ? `https://www.google.com/maps?q=${listing.land.latitude},${listing.land.longitude}`
+        : null;
+
+      const location = [
+        listing.land?.village,
+        listing.land?.district,
+        listing.land?.state,
+      ]
+        .filter(Boolean)
+        .join(", ");
+
       return {
         ...listing,
+        land: listing.land ? {
+          ...listing.land,
+          mapUrl,
+          location: location || `${listing.land.district}, ${listing.land.state}`,
+        } : null,
         images: listingImages,
         owner: listing.owner
           ? {
@@ -108,8 +122,13 @@ export async function GET(req: NextRequest) {
       };
     });
 
+    // Deduplicate at API level as well
+    const uniqueListings = Array.from(
+      new Map(enhancedListings.map(listing => [listing.id, listing])).values()
+    );
+
     return NextResponse.json({
-      listings: enhancedListings,
+      listings: uniqueListings,
       pagination: {
         page: pagination.page,
         limit: pagination.limit,

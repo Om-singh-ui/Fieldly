@@ -23,7 +23,7 @@ export default async function FarmerDashboardPage() {
     getFarmerActivityFeed(userId),
   ]);
 
-  // ⭐ HARD TYPE NARROWING (IMPORTANT)
+  // HARD TYPE NARROWING (IMPORTANT)
   if (!dashboard) {
     redirect("/onboarding/farmer");
   }

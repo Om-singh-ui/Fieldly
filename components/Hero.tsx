@@ -84,7 +84,7 @@ export default function HeroSection() {
         <div className="group z-10 ml-auto w-full max-w-[448px] min-h-[280px] sm:min-h-[360px] md:min-h-[400px] lg:min-h-[555px] overflow-hidden rounded-[24px] sm:rounded-[28px] transition-all duration-500 lg:-translate-y-14 hover:shadow-[0_30px_90px_rgba(183,207,138,0.45),0_0_0_1px_rgba(183,207,138,0.35)]">
           <div className="relative h-full w-full pt-12 sm:pt-16 md:pt-20">
             <Image
-              src="/herro.jpg"
+              src="/hero.jpg"
               alt="Global land collaboration"
               fill
               priority

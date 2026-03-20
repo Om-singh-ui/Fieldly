@@ -20,7 +20,7 @@ export interface ListingImageDTO {
 }
 
 /**
- * LAND DTO
+ * LAND DTO - Complete with geo fields
  */
 export interface LandDTO {
   id: string
@@ -28,8 +28,24 @@ export interface LandDTO {
   landType: string
   district: string | null
   state: string | null
+  soilType?: string | null
   irrigationAvailable: boolean
+  electricityAvailable?: boolean | null
+  roadAccess?: boolean | null
+  fencingAvailable?: boolean | null
+  waterSource?: string | null
+  title?: string | null
+  description?: string | null
   images?: ListingImageDTO[]
+  
+  // GEO FIELDS - Required for map functionality
+  latitude?: number | null
+  longitude?: number | null
+  village?: string | null
+  pincode?: string | null
+  address?: string | null
+  mapUrl?: string | null
+  location?: string | null
 }
 
 /**
@@ -39,21 +55,37 @@ export interface OwnerDTO {
   id: string
   name: string
   imageUrl?: string | null
+  createdAt?: string
+  updatedAt?: string
   landownerProfile?: {
     isVerified: boolean
     verificationLevel?: number
-  }
+  } | null
 }
 
 /**
- * FEED DTO (API → UI)
+ * FEED DTO (API → UI) - Complete with all fields
  */
 export interface MarketplaceFeedItem {
   id: string
   title: string
+  description?: string | null
   basePrice: number
-  auctionStatus: "LIVE" | "UPCOMING" | "ENDED"
+  highestBid?: number | null
   endDate: string
+  startDate?: string
+  auctionStatus: "LIVE" | "UPCOMING" | "ENDED"
+  minimumLeaseDuration?: number
+  maximumLeaseDuration?: number
+  createdAt?: string
+  updatedAt?: string
+  publishedAt?: string | null
+  lastBidAt?: string | null
+  viewCount?: number
+  totalBids?: number
+  hotnessScore?: number | null
+  engagementScore?: number | null
+  marketplaceScore?: number
 
   images?: ListingImageDTO[]
   land: LandDTO
@@ -62,9 +94,8 @@ export interface MarketplaceFeedItem {
   _count?: {
     bids: number
     savedBy?: number
+    applications?: number
   }
-
-  marketplaceScore?: number
 }
 
 /**
@@ -124,4 +155,49 @@ export interface SavedListing {
   userId: string
   createdAt: Date
   listing?: MarketplaceFeedItem
+}
+
+// Helper function to format location from land data
+export function formatLocation(land: LandDTO | null | undefined): string {
+  if (!land) return "Location not specified"
+  
+  // Use pre-formatted location if available
+  if (land.location) return land.location
+  
+  // Build from components
+  const parts: string[] = []
+  if (land.village) parts.push(land.village)
+  if (land.district) parts.push(land.district)
+  if (land.state) parts.push(land.state)
+  
+  return parts.length > 0 ? parts.join(", ") : "Location not specified"
+}
+
+// Helper function to get map URL
+export function getMapUrl(land: LandDTO | null | undefined): string | null {
+  if (!land) return null
+  
+  // Use pre-generated mapUrl if available
+  if (land.mapUrl) return land.mapUrl
+  
+  // Generate from coordinates
+  if (land.latitude && land.longitude) {
+    return `https://www.google.com/maps?q=${land.latitude},${land.longitude}`
+  }
+  
+  // Generate from location name
+  const location = formatLocation(land)
+  if (location !== "Location not specified") {
+    return `https://www.google.com/maps/search/${encodeURIComponent(location)}`
+  }
+  
+  return null
+}
+
+// Helper function to check if location data is available
+export function hasLocationData(land: LandDTO | null | undefined): boolean {
+  if (!land) return false
+  return !!(land.latitude && land.longitude) || 
+    (!!land.location && land.location !== "Location not specified") ||
+    !!(land.district && land.state)
 }
