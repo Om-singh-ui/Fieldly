@@ -120,6 +120,8 @@ export const marketplaceFeedQuery = (
         { description: { contains: search, mode: "insensitive" } },
         { land: { title: { contains: search, mode: "insensitive" } } },
         { land: { village: { contains: search, mode: "insensitive" } } },
+        { land: { district: { contains: search, mode: "insensitive" } } },
+        { land: { state: { contains: search, mode: "insensitive" } } },
       ],
     }),
 
@@ -197,10 +199,13 @@ export const marketplaceFeedQuery = (
           images: {
             take: 1,
             select: {
-              url: true
+              url: true,
+              id: true,
+              caption: true,
+              isPrimary: true,
             }
           }
-        },
+        }
       },
       owner: {
         include: {
@@ -766,3 +771,62 @@ export async function getTrendingListings(limit: number = 10): Promise<Marketpla
 export type MarketplaceFeedQuery = ReturnType<typeof marketplaceFeedQuery>
 export type ListingDetailQuery = ReturnType<typeof listingDetailQuery>
 export type AuctionRoomQuery = ReturnType<typeof auctionRoomQuery>
+
+// NEW: Type for land with geo fields
+export interface LandWithGeo {
+  id: string
+  size: number
+  landType: string
+  title?: string | null
+  description?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  village?: string | null
+  district?: string | null
+  state?: string | null
+  pincode?: string | null
+  address?: string | null
+  soilType?: string | null
+  irrigationAvailable?: boolean
+  electricityAvailable?: boolean | null
+  roadAccess?: boolean | null
+  fencingAvailable?: boolean | null
+  waterSource?: string | null
+}
+
+// NEW: Helper function to format location from land data
+export function formatLocation(land: LandWithGeo | null | undefined): string {
+  if (!land) return "Location not specified"
+  
+  const parts: string[] = []
+  if (land.village) parts.push(land.village)
+  if (land.district) parts.push(land.district)
+  if (land.state) parts.push(land.state)
+  
+  return parts.length > 0 ? parts.join(", ") : "Location not specified"
+}
+
+// NEW: Helper function to generate Google Maps URL
+export function generateMapUrl(
+  latitude?: number | null, 
+  longitude?: number | null
+): string | null {
+  if (latitude && longitude) {
+    return `https://www.google.com/maps?q=${latitude},${longitude}`
+  }
+  return null
+}
+
+// NEW: Helper to get full address string
+export function getFullAddress(land: LandWithGeo | null | undefined): string {
+  if (!land) return "Address not available"
+  
+  const parts: string[] = []
+  if (land.address) parts.push(land.address)
+  if (land.village) parts.push(land.village)
+  if (land.district) parts.push(land.district)
+  if (land.state) parts.push(land.state)
+  if (land.pincode) parts.push(land.pincode)
+  
+  return parts.length > 0 ? parts.join(", ") : "Address not available"
+}

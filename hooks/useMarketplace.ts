@@ -55,7 +55,29 @@ export function useMarketplace(initialFilters: MarketplaceFilters = {}): UseMark
 
       const data = await response.json()
       
-      setListings(prev => reset ? data.listings : [...prev, ...data.listings])
+      // FIX: Deduplicate listings by ID when appending
+      setListings(prev => {
+        if (reset) {
+          return data.listings
+        }
+        
+        // Create a Map to deduplicate by ID
+        const listingMap = new Map()
+        
+        // Add existing listings first
+        prev.forEach(listing => {
+          listingMap.set(listing.id, listing)
+        })
+        
+        // Add new listings (will overwrite any duplicates)
+        data.listings.forEach((listing: MarketplaceFeedItem) => {
+          listingMap.set(listing.id, listing)
+        })
+        
+        // Convert back to array
+        return Array.from(listingMap.values())
+      })
+      
       setHasMore(data.pagination.page < data.pagination.pages)
       setPage(pageNum)
     } catch (err) {
@@ -72,7 +94,7 @@ export function useMarketplace(initialFilters: MarketplaceFilters = {}): UseMark
 
   const loadMore = useCallback(async () => {
     if (!loading && hasMore) {
-      await fetchListings(page + 1)
+      await fetchListings(page + 1, false)
     }
   }, [loading, hasMore, page, fetchListings])
 

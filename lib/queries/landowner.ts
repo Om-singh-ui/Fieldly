@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { cache } from "react";
 
 /**
- ⭐ MAP URL HELPERS
+ MAP URL HELPERS
  */
 function getGoogleMapsUrl(lat?: number | null, lng?: number | null) {
   if (!lat || !lng) return null;
@@ -27,7 +27,7 @@ export interface LandWithDetails {
 
   applicationsCount: number;
 
-  /** ⭐ NEW */
+  /** NEW */
   mapUrl: string | null;
   embedMapUrl: string | null;
 
@@ -62,7 +62,7 @@ export const getLandownerDashboardData = cache(
     const skip = (page - 1) * pageSize;
 
     /**
-     ⭐ SOFT DELETE FILTER
+     SOFT DELETE FILTER
      */
     const baseLandWhere = {
       landownerId: profileId,
@@ -114,8 +114,8 @@ export const getLandownerDashboardData = cache(
           size: true,
           landType: true,
           village: true,
-          latitude: true,   // ⭐ NEW
-          longitude: true,  // ⭐ NEW
+          latitude: true,   // NEW
+          longitude: true,  // NEW
           expectedRentMin: true,
           expectedRentMax: true,
           createdAt: true,
@@ -138,7 +138,7 @@ export const getLandownerDashboardData = cache(
     ]);
 
     /**
-     ⭐ AREA CALCULATION
+     AREA CALCULATION
      */
     const leasedLandIds = new Set(activeLeases.map((l) => l.landId));
 
@@ -163,7 +163,7 @@ export const getLandownerDashboardData = cache(
     };
 
     /**
-     ⭐ FORMAT TABLE DATA
+     FORMAT TABLE DATA
      */
     const landsFormatted: LandWithDetails[] = lands.map((l) => {
       const status: "LEASED" | "AVAILABLE" =
@@ -181,7 +181,7 @@ export const getLandownerDashboardData = cache(
         expectedRentMax: l.expectedRentMax,
         applicationsCount: l._count.applications,
 
-        /** ⭐ NEW MAP URLS */
+        /** NEW MAP URLS */
         mapUrl: getGoogleMapsUrl(l.latitude, l.longitude),
         embedMapUrl: getGoogleEmbedUrl(l.latitude, l.longitude),
 
@@ -200,7 +200,7 @@ export const getLandownerDashboardData = cache(
     });
 
     /**
-     ⭐ SIMPLE TREND MOCK
+     SIMPLE TREND MOCK
      */
     const revenueTrend = Array.from({ length: 6 }).map((_, i) => ({
       month: `M${i + 1}`,
