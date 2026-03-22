@@ -23,7 +23,7 @@ export default function RootLayout({
         <ClerkProvider>
           <HeaderRoot />
           <main className="min-h-screen">{children}</main>
-          <FieldlyAssist />
+          <FieldlyAssist />   
           <Footer />
         </ClerkProvider>
       </body>
