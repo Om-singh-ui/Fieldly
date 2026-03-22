@@ -3,13 +3,25 @@
 import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function WhatWeDoSection() {
+  const router = useRouter();
+  const [isRouting, setIsRouting] = useState(false);
+
+  const handleClick = () => {
+    if (isRouting) return;
+    setIsRouting(true);
+
+    setTimeout(() => {
+      router.push("/marketplace");
+    }, 600);
+  };
+
   return (
     <section className="relative w-full overflow-hidden py-16 sm:py-20 text-black">
-
       {/* BACKGROUND IMAGE */}
-
       <motion.div
         className="absolute inset-0 z-0"
         initial={{ opacity: 0 }}
@@ -23,17 +35,13 @@ export default function WhatWeDoSection() {
           priority
           className="object-cover"
         />
-
         <div className="absolute inset-0 bg-[#b7cf8a]/70" />
       </motion.div>
 
       {/* CONTENT */}
-
       <div className="relative z-20 mx-auto max-w-[1200px] px-4 sm:px-6">
         <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-[1.3fr_0.7fr]">
-
-          {/* LEFT CONTENT */}
-
+          {/* LEFT */}
           <motion.div
             className="space-y-5"
             initial="hidden"
@@ -44,9 +52,6 @@ export default function WhatWeDoSection() {
               visible: { transition: { staggerChildren: 0.15 } },
             }}
           >
-
-            {/* SECTION LABEL */}
-
             <motion.div
               className="flex items-center gap-3"
               variants={{
@@ -60,8 +65,6 @@ export default function WhatWeDoSection() {
               </p>
             </motion.div>
 
-            {/* MAIN HEADLINE */}
-
             <motion.div
               className="space-y-3"
               variants={{
@@ -71,20 +74,14 @@ export default function WhatWeDoSection() {
             >
               <h2 className="max-w-2xl text-[40px] sm:text-[48px] font-semibold leading-[1.05] tracking-[-0.01em]">
                 Unlocking the Value of{" "}
-                <span className="text-white">
-                  Agricultural Land
-                </span>
+                <span className="text-white">Agricultural Land</span>
               </h2>
 
               <h2 className="max-w-2xl text-[40px] sm:text-[48px] font-semibold leading-[1.05] tracking-[-0.01em]">
                 by Connecting{" "}
-                <span className="text-black">
-                  Farmers and Landowners
-                </span>
+                <span className="text-black">Farmers and Landowners</span>
               </h2>
             </motion.div>
-
-           
 
             <motion.p
               className="max-w-xl text-[16px] leading-[1.8] text-black/70"
@@ -99,8 +96,7 @@ export default function WhatWeDoSection() {
             </motion.p>
           </motion.div>
 
-          {/* RIGHT CONTENT */}
-
+          {/* RIGHT */}
           <motion.div
             className="flex justify-start lg:justify-end"
             initial={{ opacity: 0, x: 60 }}
@@ -108,12 +104,10 @@ export default function WhatWeDoSection() {
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
           >
-
             <div className="space-y-6">
-
               {/* CTA BUTTON */}
-
               <motion.button
+                onClick={handleClick}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.96 }}
                 className="group relative flex items-center gap-3 overflow-hidden rounded-full bg-black px-8 py-4 text-sm font-medium text-white transition-all duration-300 hover:shadow-lg"
@@ -122,14 +116,16 @@ export default function WhatWeDoSection() {
                   Explore Land Marketplace
                 </span>
 
-                <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-[#b7cf8a] text-black transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1">
-                  <ArrowUpRight className="h-4 w-4" />
+                <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-[#b7cf8a] text-black">
+                  {isRouting ? (
+                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
+                  )}
                 </span>
 
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
               </motion.button>
-
-              {/* SUPPORT TEXT */}
 
               <motion.p
                 className="max-w-[220px] text-[13px] leading-relaxed text-black/60"
@@ -141,8 +137,6 @@ export default function WhatWeDoSection() {
                 trusted agricultural partners.
               </motion.p>
 
-              {/* TRUST BADGE */}
-
               <motion.div
                 className="pt-4"
                 initial={{ opacity: 0, y: 20 }}
@@ -150,7 +144,6 @@ export default function WhatWeDoSection() {
                 viewport={{ once: true }}
               >
                 <div className="inline-flex items-center gap-3 rounded-full bg-black/5 px-4 py-2.5">
-
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/10">
                     <span className="text-xs font-semibold">✓</span>
                   </div>
@@ -163,14 +156,10 @@ export default function WhatWeDoSection() {
                       Connected through Fieldly
                     </p>
                   </div>
-
                 </div>
               </motion.div>
-
             </div>
-
           </motion.div>
-
         </div>
       </div>
     </section>
