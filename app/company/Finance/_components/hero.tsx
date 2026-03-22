@@ -3,16 +3,23 @@
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { motion, Variants } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 export default function HeroSection() {
   const router = useRouter();
+  const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(true);
-  const [imageErrors, setImageErrors] = useState<{ [key: number]: boolean }>(
-    {},
-  );
+  const [imageErrors, setImageErrors] = useState<{ [key: number]: boolean }>({});
+  const [buttonLoading, setButtonLoading] = useState<{
+    signUp: boolean;
+    explore: boolean;
+  }>({
+    signUp: false,
+    explore: false,
+  });
+  const mountedRef = useRef(true);
 
   const investors = [
     "/testimonials/image3.jpg",
@@ -23,20 +30,62 @@ export default function HeroSection() {
   ];
 
   useEffect(() => {
+    mountedRef.current = true;
     // Simulate loading time for images/content
     const timer = setTimeout(() => {
-      setIsLoading(false);
+      if (mountedRef.current) {
+        setIsLoading(false);
+      }
     }, 1500);
 
-    return () => clearTimeout(timer);
+    return () => {
+      mountedRef.current = false;
+      clearTimeout(timer);
+    };
   }, []);
 
-  const handleImageError = (index: number) => {
+  const handleImageError = useCallback((index: number) => {
     setImageErrors((prev) => ({ ...prev, [index]: true }));
-  };
+  }, []);
 
-  /* ---------- Framer Variants (FIXED TYPES) ---------- */
+  const handleNavigation = useCallback(async (
+    path: string,
+    buttonType: "signUp" | "explore"
+  ) => {
+    // Prevent multiple clicks
+    if (buttonLoading[buttonType]) return;
 
+    // Check if already on the target page
+    if (pathname === path) {
+      console.log(`Already on ${path}`);
+      return;
+    }
+
+    setButtonLoading((prev) => ({ ...prev, [buttonType]: true }));
+
+    try {
+      // Small delay for better UX feedback
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      router.push(path);
+    } catch (error) {
+      console.error("Navigation error:", error);
+      // Reset loading state if navigation fails
+      if (mountedRef.current) {
+        setButtonLoading((prev) => ({ ...prev, [buttonType]: false }));
+      }
+    }
+  }, [buttonLoading, pathname, router]);
+
+  // Reset loading state on unmount
+  useEffect(() => {
+    return () => {
+      if (mountedRef.current) {
+        setButtonLoading({ signUp: false, explore: false });
+      }
+    };
+  }, []);
+
+  /* ---------- Framer Variants ---------- */
   const container: Variants = {
     hidden: {},
     show: {
@@ -142,10 +191,9 @@ export default function HeroSection() {
         className="grid grid-cols-1 gap-y-10 gap-x-6 lg:gap-x-8 lg:grid-cols-[1.15fr_0.85fr]"
       >
         {/* ================= LEFT ================= */}
-
         <motion.div
           variants={fadeUp}
-          className="relative mt-24 sm:mt-12 lg:mt-16 w-full max-w-[1240px] self-start rounded-[28px] bg-gradient-to-br from-white via-white/95 to-white px-6 sm:px-8 md:px-10 lg:px-12 py-6 sm:py-7 md:py-8  shadow-[0_12px_40px_rgba(0,0,0,0.2),0_4px_10px_rgba(0,0,0,0.1)]"
+          className="relative mt-24 sm:mt-12 lg:mt-16 w-full max-w-[1240px] self-start rounded-[28px] bg-gradient-to-br from-white via-white/95 to-white px-6 sm:px-8 md:px-10 lg:px-12 py-6 sm:py-7 md:py-8 shadow-[0_12px_40px_rgba(0,0,0,0.2),0_4px_10px_rgba(0,0,0,0.1)]"
         >
           <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-tr from-[#b7cf8a]/15 via-transparent to-transparent" />
 
@@ -170,32 +218,64 @@ export default function HeroSection() {
             stable returns.
           </motion.p>
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons with Loaders */}
           <motion.div
             variants={fadeUp}
             className="relative mt-4 sm:mt-6 flex flex-wrap gap-3"
           >
+            {/* Sign Up Button */}
             <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}>
               <Button
-                onClick={() => router.push("/sign-up")}
-                className="group h-10 sm:h-11 rounded-full bg-gradient-to-r from-[#b7cf8a] to-[#9fb86d] px-5 sm:px-6 text-sm font-medium text-black shadow-[0_6px_18px_rgba(183,207,138,0.35)] hover:from-[#a8c47a] hover:to-[#93ae63]"
+                onClick={() => handleNavigation("/sign-up", "signUp")}
+                disabled={buttonLoading.signUp || pathname === "/sign-up"}
+                className="group h-10 sm:h-11 rounded-full bg-gradient-to-r from-[#b7cf8a] to-[#9fb86d] px-5 sm:px-6 text-sm font-medium text-black shadow-[0_6px_18px_rgba(183,207,138,0.35)] hover:from-[#a8c47a] hover:to-[#93ae63] disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200"
               >
-                Sign UP
+                {buttonLoading.signUp ? (
+                  "Signing Up..."
+                ) : pathname === "/sign-up" ? (
+                  "Already Signed Up"
+                ) : (
+                  "Sign UP"
+                )}
                 <span className="ml-2 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-white">
-                  <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" />
+                  {buttonLoading.signUp ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                      className="w-3 h-3 border-2 border-black border-t-transparent rounded-full"
+                    />
+                  ) : (
+                    <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  )}
                 </span>
               </Button>
             </motion.div>
 
+            {/* Explore Fieldly Button */}
             <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}>
               <Button
-                onClick={() => router.push("/sign-in")}
+                onClick={() => handleNavigation("/sign-in", "explore")}
+                disabled={buttonLoading.explore || pathname === "/sign-in"}
                 variant="outline"
-                className="group h-10 sm:h-11 rounded-full border-zinc-200 px-5 sm:px-6 text-sm hover:bg-zinc-50"
+                className="group h-10 sm:h-11 rounded-full border-zinc-200 px-5 sm:px-6 text-sm hover:bg-zinc-50 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200"
               >
-                Explore Fieldly
+                {buttonLoading.explore ? (
+                  "Loading..."
+                ) : pathname === "/sign-in" ? (
+                  "Already Logged In"
+                ) : (
+                  "Explore Fieldly"
+                )}
                 <span className="ml-2 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-[#b7cf8a]">
-                  <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" />
+                  {buttonLoading.explore ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                      className="w-3 h-3 border-2 border-black border-t-transparent rounded-full"
+                    />
+                  ) : (
+                    <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  )}
                 </span>
               </Button>
             </motion.div>
@@ -210,20 +290,21 @@ export default function HeroSection() {
                   <motion.div
                     key={index}
                     whileHover={{ scale: 1.08 }}
-                    className="relative h-10 w-10 rounded-full overflow-hidden shadow-sm"
+                    className="relative h-10 w-10 rounded-full overflow-hidden shadow-sm border-2 border-white"
                   >
                     {imageErrors[index] ? (
-                      <div className="h-full w-full flex items-center justify-center text-white text-xs font-semibold">
+                      <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-[#b7cf8a] to-[#9fb86d] text-white text-xs font-semibold">
                         {index + 1}
                       </div>
                     ) : (
                       <Image
                         src={src}
-                        alt="Investor"
+                        alt={`Investor ${index + 1}`}
                         width={40}
                         height={40}
                         className="object-cover h-full w-full"
                         onError={() => handleImageError(index)}
+                        loading="lazy"
                       />
                     )}
                   </motion.div>
@@ -231,18 +312,20 @@ export default function HeroSection() {
               </div>
 
               {/* Text */}
-              <p className="text-sm text-zinc-700">
+              <motion.p 
+                variants={fadeUp}
+                className="text-sm text-zinc-700"
+              >
                 <span className="font-semibold text-black">
                   1000+ investors
                 </span>{" "}
                 have trusted Fieldly.
-              </p>
+              </motion.p>
             </div>
           </motion.div>
         </motion.div>
 
         {/* ================= RIGHT ================= */}
-
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -252,7 +335,7 @@ export default function HeroSection() {
           <div className="relative h-full w-full pt-12 sm:pt-16 md:pt-20">
             <Image
               src="/fainancehero.png"
-              alt="Cultivated farmland"
+              alt="Cultivated farmland with sustainable agricultural practices"
               fill
               priority
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
@@ -266,7 +349,7 @@ opacity-0 translate-y-6
 group-hover:opacity-100 group-hover:translate-y-0 
 transition-all duration-500 ease-out"
             >
-              <div className="bg-black/50 border border-white/20 rounded-2xl p-6">
+              <div className="bg-black/50 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
                 {/* LIVE INDICATOR */}
                 <div className="flex items-center gap-2 text-sm mb-3 tracking-wide">
                   <motion.div
