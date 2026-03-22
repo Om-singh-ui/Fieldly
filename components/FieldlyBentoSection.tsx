@@ -3,11 +3,11 @@
 
 import { motion } from "framer-motion";
 import {
+  ShieldCheck,
+  LayoutDashboard,
   Globe,
-  HandCoins,
-  BookOpen,
-  Activity,
-  Sprout,
+  Database,
+  Workflow,
 } from "lucide-react";
 import { useState, useEffect, memo, useMemo } from "react";
 
@@ -21,33 +21,33 @@ interface Card {
 const cards: readonly Card[] = [
   {
     number: "01",
-    icon: Globe,
-    title: "Land Marketplace",
-    desc: "Fieldly enables landowners to list agricultural land while farmers discover verified farmland ready for cultivation.",
+    icon: ShieldCheck,
+    title: "Protected Auth Environment",
+    desc: "Fieldly operates on a secure end-to-end authentication system ensuring verified onboarding, role-based access, and protected data flows across the platform.",
   },
   {
     number: "02",
-    icon: HandCoins,
-    title: "Flexible Leasing",
-    desc: "Farmers can access land through transparent leasing agreements designed to support productive agricultural partnerships.",
+    icon: Globe,
+    title: "Agricultural Land Marketplace",
+    desc: "A structured digital marketplace enabling landowners to list farmland while farmers discover verified opportunities through transparent and scalable workflows.",
   },
   {
     number: "03",
-    icon: BookOpen,
-    title: "Farmer Access",
-    desc: "Farmers can explore verified listings, apply directly, and connect with landowners through a simple digital workflow.",
+    icon: LayoutDashboard,
+    title: "Dynamic Smart Dashboards",
+    desc: "Personalized dashboards deliver real-time insights, lease tracking, activity monitoring, and operational clarity tailored for both landowners and farmers.",
   },
   {
     number: "04",
-    icon: Activity,
-    title: "Monitoring & Verification",
-    desc: "All listings on Fieldly go through verification processes to ensure reliable land data and transparent agreements.",
+    icon: Database,
+    title: "Optimized Data Infrastructure",
+    desc: "Fieldly’s backend architecture ensures fast data processing, reliable listing verification, and scalable infrastructure to support large-scale agricultural ecosystems.",
   },
   {
     number: "05",
-    icon: Sprout,
-    title: "Productive Land Use",
-    desc: "By connecting farmers and landowners, Fieldly unlocks unused farmland and increases agricultural productivity.",
+    icon: Workflow,
+    title: "End-to-End Digital Workflow",
+    desc: "From discovery to agreement execution, Fieldly provides a seamless digital lifecycle that simplifies land access and improves agricultural productivity outcomes.",
   },
 ];
 
@@ -108,7 +108,6 @@ export default function FieldlyBentoCards() {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1500);
-
     return () => clearTimeout(timer);
   }, []);
 

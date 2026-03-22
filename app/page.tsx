@@ -11,6 +11,7 @@ import MultiModalMonitoring from "@/components/MultiModalMonitoring";
 import { Plus, Minus } from "lucide-react";
 import FindLandHero from "@/components/FindLandHero";
 import CTA from "@/components/shared/CTA";
+import FieldlyBentoCards from "@/components/FieldlyBentoSection";
 
 // FAQ Data
 const faqs = [
@@ -60,7 +61,7 @@ export default function Home() {
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
       <HeroSection />
-
+      <FieldlyBentoCards />
       {/* News & Image Cards Section - Responsive */}
       <section className="mx-auto mt-16 sm:mt-20 md:mt-24 lg:mt-28 px-4 sm:px-6 md:px-8 max-w-[1400px]">
         {loading ? (
