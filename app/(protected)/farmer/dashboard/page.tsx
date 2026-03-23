@@ -23,12 +23,7 @@ export default async function FarmerDashboardPage() {
     getFarmerActivityFeed(userId),
   ]);
 
-  // HARD TYPE NARROWING (IMPORTANT)
-  if (!dashboard) {
-    redirect("/onboarding/farmer");
-  }
-
-  if (!dashboard.user?.farmerProfile) {
+  if (!dashboard || !dashboard.user?.farmerProfile) {
     redirect("/onboarding/farmer");
   }
 
@@ -41,22 +36,31 @@ export default async function FarmerDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/30 via-background to-background">
-      <section className="relative pt-24 md:pt-28 lg:pt-32 pb-8">
-        <div className="relative max-w-7xl mx-auto px-6">
+    <div className="min-h-screen bg-white mt-14 dark:bg-black">
+      {/* HERO */}
+      <section className="pt-20 pb-6">
+        <div className="max-w-7xl mx-auto px-6">
           <DashboardHeroHeader name={dashboard.user.name} />
         </div>
       </section>
 
-      <main className="relative max-w-7xl mx-auto px-6 pb-16 space-y-8">
-        <FarmerStatsGrid stats={stats} />
+      {/* MAIN */}
+      <main className="max-w-7xl mx-auto px-6 pb-20 space-y-10">
+        {/* STATS */}
+        <section>
+          <FarmerStatsGrid stats={stats} />
+        </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* PROFILE + ACTIONS */}
+        <section className="grid grid-cols-1 xl:grid-cols-[1.15fr_0.85fr] gap-8 items-start">
           <FarmerProfileCard profile={dashboard.user.farmerProfile} />
           <FarmerQuickActions />
-        </div>
+        </section>
 
-        <FarmerRecentActivity activities={activities} />
+        {/* ACTIVITY */}
+        <section>
+          <FarmerRecentActivity activities={activities} />
+        </section>
       </main>
     </div>
   );

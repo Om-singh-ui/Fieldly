@@ -1,16 +1,16 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
-import { 
-  Leaf, 
-  Calendar, 
-  MapPin, 
-  Landmark, 
+import {
+  Leaf,
+  Calendar,
+  MapPin,
+  Landmark,
   Droplets,
   Wheat,
   Sprout,
   Edit3,
-  CheckCircle
+  CheckCircle,
 } from "lucide-react";
 
 interface FarmerProfile {
@@ -29,203 +29,118 @@ interface ProfileCardProps {
 
 export function FarmerProfileCard({ profile }: ProfileCardProps) {
   const profileItems = [
-    {
-      icon: Wheat,
-      label: "Primary Crops",
-      value: profile.primaryCrops.join(", "),
-      color: "text-green-600",
-      bg: "bg-green-100",
-      darkBg: "dark:bg-green-900/30",
-    },
-    {
-      icon: Calendar,
-      label: "Experience",
-      value: `${profile.farmingExperience} years`,
-      color: "text-blue-600",
-      bg: "bg-blue-100",
-      darkBg: "dark:bg-blue-900/30",
-    },
-    {
-      icon: MapPin,
-      label: "Required Land",
-      value: `${profile.requiredLandSize} acres`,
-      color: "text-purple-600",
-      bg: "bg-purple-100",
-      darkBg: "dark:bg-purple-900/30",
-    },
-    {
-      icon: Landmark,
-      label: "Lease Duration",
-      value: `${profile.leaseDuration} months`,
-      color: "text-orange-600",
-      bg: "bg-orange-100",
-      darkBg: "dark:bg-orange-900/30",
-    },
-    {
-      icon: Sprout,
-      label: "Farming Type",
-      value: profile.farmingType || "Conventional",
-      color: "text-indigo-600",
-      bg: "bg-indigo-100",
-      darkBg: "dark:bg-indigo-900/30",
-    },
-    {
-      icon: Droplets,
-      label: "Irrigation",
-      value: profile.irrigationNeeded ? "Required" : "Not Required",
-      color: "text-cyan-600",
-      bg: "bg-cyan-100",
-      darkBg: "dark:bg-cyan-900/30",
-    },
+    { icon: Wheat, label: "Primary Crops", value: profile.primaryCrops.join(", ") },
+    { icon: Calendar, label: "Experience", value: `${profile.farmingExperience} years` },
+    { icon: MapPin, label: "Required Land", value: `${profile.requiredLandSize} acres` },
+    { icon: Landmark, label: "Lease Duration", value: `${profile.leaseDuration} months` },
+    { icon: Sprout, label: "Farming Type", value: profile.farmingType || "Conventional" },
+    { icon: Droplets, label: "Irrigation", value: profile.irrigationNeeded ? "Required" : "Not Required" },
   ];
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05,
-      },
-    },
+    visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
   };
 
   const itemVariants: Variants = {
-    hidden: { x: -20, opacity: 0 },
+    hidden: { opacity: 0, y: 10 },
     visible: {
-      x: 0,
       opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 12,
-      },
+      y: 0,
+      transition: { type: "spring", stiffness: 180, damping: 20 },
     },
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
-      className="rounded-2xl p-8 bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700"
+      className="rounded-3xl border border-black/10 dark:border-white/10 bg-white dark:bg-black p-8 shadow-sm"
     >
-      {/* Header */}
+      {/* HEADER */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <motion.div
-            whileHover={{ rotate: 360 }}
-            transition={{ duration: 0.5 }}
-            className="relative"
-          >
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center">
-              <Leaf className="h-8 w-8 text-white" />
+          <div className="relative">
+            <div className="w-14 h-14 rounded-2xl bg-black/5 dark:bg-white/10 flex items-center justify-center">
+              <Leaf className="h-7 w-7" />
             </div>
             {profile.isVerified && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-                className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1 border-4 border-white dark:border-gray-800"
-              >
-                <CheckCircle className="h-4 w-4 text-white" />
-              </motion.div>
+              <div className="absolute -bottom-1 -right-1 bg-black dark:bg-white rounded-full p-1 border-2 border-white dark:border-black">
+                <CheckCircle className="h-4 w-4 text-white dark:text-black" />
+              </div>
             )}
-          </motion.div>
-          
+          </div>
+
           <div>
-            <motion.h2 
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              className="text-2xl font-bold text-gray-900 dark:text-white"
-            >
-              Your Farming Profile
-            </motion.h2>
-            <motion.p 
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="text-sm text-gray-600 dark:text-gray-400"
-            >
-              Complete your profile to get better matches
-            </motion.p>
+            <h2 className="text-xl font-semibold tracking-tight">
+              Farming Profile
+            </h2>
+            <p className="text-sm opacity-60">
+              Profile details & requirements
+            </p>
           </div>
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
-        >
+        <button className="flex items-center gap-2 px-4 h-10 rounded-full border border-black/10 dark:border-white/10 bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.06] dark:hover:bg-white/[0.08] text-sm font-medium transition">
           <Edit3 className="h-4 w-4" />
-          <span className="font-medium">Edit Profile</span>
-        </motion.button>
+          Edit
+        </button>
       </div>
 
-      {/* Profile Stats */}
-      <motion.div 
+      {/* GRID */}
+      <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 auto-rows-min"
       >
         {profileItems.map((item) => {
           const Icon = item.icon;
+
           return (
             <motion.div
               key={item.label}
               variants={itemVariants}
-              whileHover={{ scale: 1.02, x: 5 }}
-              className="flex items-start gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 group cursor-pointer"
+              whileHover={{ y: -3 }}
+              className={`rounded-2xl border border-black/5 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.04] p-5 transition ${
+                item.label === "Primary Crops" ? "lg:col-span-2" : ""
+              }`}
             >
-              <motion.div
-                whileHover={{ rotate: 15 }}
-                className={`p-2 rounded-lg ${item.bg} ${item.darkBg} group-hover:scale-110 transition-transform`}
-              >
-                <Icon className={`h-5 w-5 ${item.color}`} />
-              </motion.div>
-              
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  {item.label}
-                </p>
-                <p className="font-semibold text-gray-900 dark:text-white truncate">
-                  {item.value}
-                </p>
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl bg-black/5 dark:bg-white/10">
+                  <Icon className="h-5 w-5" />
+                </div>
+
+                <div className="flex-1">
+                  <p className="text-xs opacity-50 mb-1">{item.label}</p>
+                  <p className="font-medium leading-snug">{item.value}</p>
+                </div>
               </div>
             </motion.div>
           );
         })}
       </motion.div>
 
-      {/* Profile Strength */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-        className="mt-8"
-      >
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Profile Strength</span>
-          <span className="text-sm font-semibold text-green-600">85%</span>
+      {/* PROFILE STRENGTH */}
+      <div className="mt-8">
+        <div className="flex justify-between text-sm mb-2">
+          <span className="opacity-50">Profile Strength</span>
+          <span className="font-medium">85%</span>
         </div>
-        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+
+        <div className="h-2 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: "85%" }}
-            transition={{ delay: 1, duration: 1, type: "spring", stiffness: 50 }}
-            className="h-full bg-gradient-to-r from-green-400 to-emerald-600 rounded-full"
+            transition={{ duration: 0.8 }}
+            className="h-full bg-black dark:bg-white"
           />
         </div>
-        <motion.p 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className="text-xs text-gray-500 dark:text-gray-400 mt-2"
-        >
-          Add more details to reach 100%
-        </motion.p>
-      </motion.div>
+
+        <p className="text-xs opacity-50 mt-2">
+          Add more details to improve matching accuracy
+        </p>
+      </div>
     </motion.div>
   );
 }
