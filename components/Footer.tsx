@@ -98,9 +98,9 @@ export default function Footer() {
 
             {/* Social */}
             <div className="mt-7 flex items-center gap-4">
-              <SocialIcon href="https://linkedin.com/company/fieldly" icon={<Linkedin size={18} />} />
+              <SocialIcon href="https://www.linkedin.com/in/om-singh-chouhan-1a761a323" icon={<Linkedin size={18} />} />
               <SocialIcon href="https://twitter.com/fieldly" icon={<Twitter size={18} />} />
-              <SocialIcon href="https://github.com/fieldly" icon={<Github size={18} />} />
+              <SocialIcon href="https://github.com/Om-singh-ui/Fieldly" icon={<Github size={18} />} />
             </div>
 
           </motion.div>
