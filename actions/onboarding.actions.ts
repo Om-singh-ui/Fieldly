@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import type { LandownerOnboardingInput } from "@/lib/validations/onboarding";
 
+
 /* ============================================================
    TYPES
 ============================================================ */
@@ -52,60 +53,17 @@ function toNumber(value?: number | string | null): number {
 }
 
 /* ============================================================
-   SET USER ROLE
+   GET OR CREATE USER (PRODUCTION-GRADE)
 ============================================================ */
 
-export async function setUserRole(
-  role: "FARMER" | "LANDOWNER"
-): Promise<OnboardingResult> {
-  try {
-    const { userId } = await auth();
-    if (!userId)
-      return { success: false, error: "User not authenticated" };
-
-    const clerkUser = await currentUser();
-
-    await prisma.user.upsert({
-      where: { clerkUserId: userId },
-      update: { role },
-      create: {
-        clerkUserId: userId,
-        email:
-          clerkUser?.emailAddresses[0]?.emailAddress ??
-          `${userId}@temp.com`,
-        name:
-          `${clerkUser?.firstName ?? ""} ${
-            clerkUser?.lastName ?? ""
-          }`.trim() || "User",
-        role,
-        isOnboarded: false,
-      },
-    });
-
-    // Revalidate only auth flow page
-    revalidatePath("/post-auth");
-
-    return {
-      success: true,
-      redirectTo: `/onboarding/${role.toLowerCase()}`,
-    };
-  } catch (error) {
-    console.error("setUserRole error:", error);
-
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to set role",
-    };
-  }
-}
-
-/* ============================================================
-   GET OR CREATE USER
-============================================================ */
-
+/**
+ * Gets or creates a user in the database
+ * This is the ONLY function that should be used to get the current user
+ * It ensures the user exists in the database and returns the DB user object
+ * 
+ * @throws {Error} If not authenticated
+ * @returns {Promise<Object>} The database user object
+ */
 export async function getOrCreateUser() {
   const { userId } = await auth();
   if (!userId) throw new Error("Not authenticated");
@@ -131,6 +89,43 @@ export async function getOrCreateUser() {
 }
 
 /* ============================================================
+   SET USER ROLE
+============================================================ */
+
+export async function setUserRole(
+  role: "FARMER" | "LANDOWNER"
+): Promise<OnboardingResult> {
+  try {
+    // ✅ Use getOrCreateUser to ensure user exists and get DB user
+    const user = await getOrCreateUser();
+
+    // Update the user's role using DB id
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { role },
+    });
+
+    // Revalidate only auth flow page
+    revalidatePath("/post-auth");
+
+    return {
+      success: true,
+      redirectTo: `/onboarding/${role.toLowerCase()}`,
+    };
+  } catch (error) {
+    console.error("setUserRole error:", error);
+
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to set role",
+    };
+  }
+}
+
+/* ============================================================
    FARMER ONBOARDING
 ============================================================ */
 
@@ -138,23 +133,18 @@ export async function completeFarmerOnboarding(
   formData: FarmerFormData
 ): Promise<OnboardingResult> {
   try {
-    const { userId } = await auth();
-    if (!userId)
-      return { success: false, error: "Not authenticated" };
+    // ✅ Use getOrCreateUser to ensure user exists and get DB user
+    const user = await getOrCreateUser();
 
-    const user = await prisma.user.findUnique({
-      where: { clerkUserId: userId },
-    });
-
-    if (!user)
-      return { success: false, error: "User not found" };
-
-    if (user.role !== "FARMER")
+    // ✅ Check role using DB user object
+    if (user.role !== "FARMER") {
       return { success: false, error: "Invalid role" };
+    }
 
     await prisma.$transaction(async (tx) => {
+      // ✅ Update user using DB id
       await tx.user.update({
-        where: { clerkUserId: userId },
+        where: { id: user.id },
         data: {
           phone: formData.phone,
           district: formData.district,
@@ -164,6 +154,7 @@ export async function completeFarmerOnboarding(
         },
       });
 
+      // ✅ Create farmer profile using DB user.id
       await tx.farmerProfile.upsert({
         where: { userId: user.id },
         update: {
@@ -208,6 +199,7 @@ export async function completeFarmerOnboarding(
       });
     });
 
+    // ✅ Create notifications using DB user.id
     await Promise.allSettled([
       prisma.notification.create({
         data: {
@@ -256,23 +248,18 @@ export async function completeLandownerOnboarding(
   formData: LandownerOnboardingInput
 ): Promise<OnboardingResult> {
   try {
-    const { userId } = await auth();
-    if (!userId)
-      return { success: false, error: "Not authenticated" };
+    // ✅ Use getOrCreateUser to ensure user exists and get DB user
+    const user = await getOrCreateUser();
 
-    const user = await prisma.user.findUnique({
-      where: { clerkUserId: userId },
-    });
-
-    if (!user)
-      return { success: false, error: "User not found" };
-
-    if (user.role !== "LANDOWNER")
+    // ✅ Check role using DB user object
+    if (user.role !== "LANDOWNER") {
       return { success: false, error: "Invalid role" };
+    }
 
     await prisma.$transaction(async (tx) => {
+      // ✅ Update user using DB id
       await tx.user.update({
-        where: { clerkUserId: userId },
+        where: { id: user.id },
         data: {
           phone: formData.phone,
           district: formData.district,
@@ -282,6 +269,7 @@ export async function completeLandownerOnboarding(
         },
       });
 
+      // ✅ Create landowner profile using DB user.id
       await tx.landownerProfile.upsert({
         where: { userId: user.id },
         update: {
@@ -304,6 +292,7 @@ export async function completeLandownerOnboarding(
       });
     });
 
+    // ✅ Create notifications using DB user.id
     await Promise.allSettled([
       prisma.notification.create({
         data: {
@@ -346,5 +335,61 @@ export async function completeLandownerOnboarding(
           ? error.message
           : "Onboarding failed",
     };
+  }
+}
+
+/* ============================================================
+   HELPER FUNCTIONS FOR API ROUTES
+============================================================ */
+
+/**
+ * Gets the current user with their role
+ * Useful for API routes that need user data
+ * Returns null if not authenticated
+ */
+export async function getCurrentUser() {
+  try {
+    const user = await getOrCreateUser();
+    return user;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Gets the current user and verifies they have a specific role
+ * @throws {Error} If not authenticated or role mismatch
+ */
+export async function getCurrentUserWithRole(role: "FARMER" | "LANDOWNER") {
+  const user = await getOrCreateUser();
+  
+  if (user.role !== role) {
+    throw new Error(`User must be a ${role.toLowerCase()}`);
+  }
+  
+  return user;
+}
+
+/**
+ * Checks if the current user is onboarded
+ */
+export async function isUserOnboarded() {
+  try {
+    const user = await getOrCreateUser();
+    return user.isOnboarded;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Gets the current user's role
+ */
+export async function getUserRole() {
+  try {
+    const user = await getOrCreateUser();
+    return user.role;
+  } catch {
+    return null;
   }
 }
