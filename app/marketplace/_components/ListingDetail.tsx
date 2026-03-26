@@ -363,6 +363,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                 priority
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
                 onLoad={() => setIsImageLoading(false)}
+                unoptimized={process.env.NODE_ENV === "development"}
               />
 
               {/* Navigation Arrows */}
@@ -435,6 +436,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                       fill
                       className="object-cover"
                       sizes="80px"
+                      unoptimized={process.env.NODE_ENV === "development"}
                     />
                   </button>
                 ))}

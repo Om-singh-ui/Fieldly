@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useEffect, useMemo, useRef, useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   MapPin,
   Droplets,
@@ -18,20 +18,25 @@ import {
   Clock,
   Navigation,
   ExternalLink,
-} from "lucide-react"
-import { SavedButton } from "./SavedButton"
-import { VerifiedBadge } from "./VerifiedBadge"
-import { formatCurrency, formatTimeLeft, cn, getInitials } from "@/lib/utils"
-import { MarketplaceFeedItem, formatLocation, hasLocationData, getMapUrl } from "@/types/marketplace"
-import { useToast } from "@/hooks/use-toast"
+} from "lucide-react";
+import { SavedButton } from "./SavedButton";
+import { VerifiedBadge } from "./VerifiedBadge";
+import { formatCurrency, formatTimeLeft, cn, getInitials } from "@/lib/utils";
+import {
+  MarketplaceFeedItem,
+  formatLocation,
+  hasLocationData,
+  getMapUrl,
+} from "@/types/marketplace";
+import { useToast } from "@/hooks/use-toast";
 
-const LAND_PLACEHOLDER = "/images/placeholder-land.jpg"
+const LAND_PLACEHOLDER = "/images/placeholder-land.jpg";
 
 export interface ListingCardProps {
-  listing: MarketplaceFeedItem
-  isSaved?: boolean
-  onSaveAction?: () => void
-  className?: string
+  listing: MarketplaceFeedItem;
+  isSaved?: boolean;
+  onSaveAction?: () => void;
+  className?: string;
 }
 
 export function ListingCard({
@@ -40,168 +45,168 @@ export function ListingCard({
   onSaveAction,
   className,
 }: ListingCardProps) {
-  const [timeLeft, setTimeLeft] = useState(0)
-  const [index, setIndex] = useState(0)
-  const [manual, setManual] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
-  const [imageError, setImageError] = useState<Record<number, boolean>>({})
-  const { toast } = useToast()
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [index, setIndex] = useState(0);
+  const [manual, setManual] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState<Record<number, boolean>>({});
+  const { toast } = useToast();
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const touchStart = useRef<number | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const touchStart = useRef<number | null>(null);
 
   //  stable images list
   const images = useMemo(() => {
-    const landImgs = listing.land?.images?.map(i => i.url) ?? []
-    const listingImgs = listing.images?.map(i => i.url) ?? []
-    const merged = [...landImgs, ...listingImgs].filter(Boolean)
-    return merged.length ? merged : [LAND_PLACEHOLDER]
-  }, [listing.land?.images, listing.images])
+    const landImgs = listing.land?.images?.map((i) => i.url) ?? [];
+    const listingImgs = listing.images?.map((i) => i.url) ?? [];
+    const merged = [...landImgs, ...listingImgs].filter(Boolean);
+    return merged.length ? merged : [LAND_PLACEHOLDER];
+  }, [listing.land?.images, listing.images]);
 
   //  Get formatted location using helper (fixes ESLint warning)
   const formattedLocation = useMemo(() => {
-    return formatLocation(listing.land)
-  }, [listing.land]) //  Now depends on listing.land, not individual properties
+    return formatLocation(listing.land);
+  }, [listing.land]); //  Now depends on listing.land, not individual properties
 
   //  Check if location data is available using helper
   const locationAvailable = useMemo(() => {
-    return hasLocationData(listing.land)
-  }, [listing.land])
+    return hasLocationData(listing.land);
+  }, [listing.land]);
 
   //  Get map URL using helper
   const mapUrl = useMemo(() => {
-    return getMapUrl(listing.land)
-  }, [listing.land])
+    return getMapUrl(listing.land);
+  }, [listing.land]);
 
   // Handle View on Map click
   const handleViewOnMap = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
+    e.preventDefault();
+    e.stopPropagation();
+
     if (mapUrl) {
-      window.open(mapUrl, '_blank', 'noopener,noreferrer')
+      window.open(mapUrl, "_blank", "noopener,noreferrer");
     } else {
       toast({
         title: "Location unavailable",
         description: "Map location is not available for this listing",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   //Handle Get Directions click
   const handleGetDirections = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    const land = listing.land
-    
+    e.preventDefault();
+    e.stopPropagation();
+
+    const land = listing.land;
+
     if (land?.latitude && land?.longitude) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${land.latitude},${land.longitude}`
-      window.open(url, '_blank', 'noopener,noreferrer')
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${land.latitude},${land.longitude}`;
+      window.open(url, "_blank", "noopener,noreferrer");
     } else if (formattedLocation !== "Location not specified") {
-      const destination = encodeURIComponent(formattedLocation)
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`
-      window.open(url, '_blank', 'noopener,noreferrer')
+      const destination = encodeURIComponent(formattedLocation);
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+      window.open(url, "_blank", "noopener,noreferrer");
     } else {
       toast({
         title: "Directions unavailable",
         description: "Cannot get directions for this location",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   // timer
   useEffect(() => {
     const update = () => {
       const remaining =
-        new Date(listing.endDate).getTime() - new Date().getTime()
-      setTimeLeft(Math.max(0, remaining))
-    }
+        new Date(listing.endDate).getTime() - new Date().getTime();
+      setTimeLeft(Math.max(0, remaining));
+    };
 
-    update()
-    const timer = setInterval(update, 1000)
+    update();
+    const timer = setInterval(update, 1000);
 
-    return () => clearInterval(timer)
-  }, [listing.endDate])
+    return () => clearInterval(timer);
+  }, [listing.endDate]);
 
   // auto slider
   useEffect(() => {
-    if (manual || images.length <= 1 || !isHovered) return
+    if (manual || images.length <= 1 || !isHovered) return;
 
     intervalRef.current = setInterval(() => {
-      setIndex(i => (i + 1) % images.length)
-    }, 4000)
+      setIndex((i) => (i + 1) % images.length);
+    }, 4000);
 
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [manual, images.length, isHovered])
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [manual, images.length, isHovered]);
 
   const prev = (e?: React.MouseEvent) => {
-    e?.preventDefault()
-    e?.stopPropagation()
-    setManual(true)
-    setIndex(i => (i === 0 ? images.length - 1 : i - 1))
-  }
+    e?.preventDefault();
+    e?.stopPropagation();
+    setManual(true);
+    setIndex((i) => (i === 0 ? images.length - 1 : i - 1));
+  };
 
   const next = (e?: React.MouseEvent) => {
-    e?.preventDefault()
-    e?.stopPropagation()
-    setManual(true)
-    setIndex(i => (i + 1) % images.length)
-  }
+    e?.preventDefault();
+    e?.stopPropagation();
+    setManual(true);
+    setIndex((i) => (i + 1) % images.length);
+  };
 
   // swipe support
   const handleTouchStart = (e: React.TouchEvent) => {
-    touchStart.current = e.touches[0].clientX
-  }
+    touchStart.current = e.touches[0].clientX;
+  };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStart.current === null) return
+    if (touchStart.current === null) return;
 
-    const diff = touchStart.current - e.changedTouches[0].clientX
+    const diff = touchStart.current - e.changedTouches[0].clientX;
 
     if (Math.abs(diff) > 50) {
-      setManual(true)
+      setManual(true);
       if (diff > 0) {
-        next()
+        next();
       } else {
-        prev()
+        prev();
       }
     }
 
-    touchStart.current = null
-  }
+    touchStart.current = null;
+  };
 
   const handleImageError = (imageIndex: number) => {
-    setImageError(prev => ({ ...prev, [imageIndex]: true }))
-  }
+    setImageError((prev) => ({ ...prev, [imageIndex]: true }));
+  };
 
   const getImageSrc = (imageIndex: number) => {
     if (imageError[imageIndex]) {
-      return LAND_PLACEHOLDER
+      return LAND_PLACEHOLDER;
     }
-    return images[imageIndex]
-  }
+    return images[imageIndex];
+  };
 
-  const isLive = listing.auctionStatus === "LIVE" && timeLeft > 0
-  const isEndingSoon = timeLeft > 0 && timeLeft < 24 * 60 * 60 * 1000
-  const bidCount = listing._count?.bids || 0
-  const savedCount = listing._count?.savedBy || 0
+  const isLive = listing.auctionStatus === "LIVE" && timeLeft > 0;
+  const isEndingSoon = timeLeft > 0 && timeLeft < 24 * 60 * 60 * 1000;
+  const bidCount = listing._count?.bids || 0;
+  const savedCount = listing._count?.savedBy || 0;
 
   return (
     <Card
       className={cn(
         "group overflow-hidden hover:shadow-xl transition-all duration-300",
         "border border-border/50 hover:border-primary/20",
-        className
+        className,
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
-        setIsHovered(false)
-        setManual(false)
+        setIsHovered(false);
+        setManual(false);
       }}
     >
       <Link href={`/marketplace/listings/${listing.id}`} className="block">
@@ -217,17 +222,21 @@ export function ListingCard({
             fill
             className={cn(
               "object-cover transition-all duration-700",
-              isHovered ? "scale-110" : "scale-100"
+              isHovered ? "scale-110" : "scale-100",
             )}
             onError={() => handleImageError(index)}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             priority={index === 0}
+            unoptimized={process.env.NODE_ENV === "development"}
           />
 
           {/* Image Counter */}
           {images.length > 1 && (
             <div className="absolute bottom-2 left-2 z-10">
-              <Badge variant="secondary" className="bg-black/50 text-white border-0 backdrop-blur-sm">
+              <Badge
+                variant="secondary"
+                className="bg-black/50 text-white border-0 backdrop-blur-sm"
+              >
                 {index + 1}/{images.length}
               </Badge>
             </div>
@@ -268,12 +277,18 @@ export function ListingCard({
               </Badge>
             )}
             {listing.auctionStatus === "UPCOMING" && (
-              <Badge variant="secondary" className="bg-blue-500 text-white border-0 shadow-lg">
+              <Badge
+                variant="secondary"
+                className="bg-blue-500 text-white border-0 shadow-lg"
+              >
                 UPCOMING
               </Badge>
             )}
             {listing.land?.irrigationAvailable && (
-              <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-0 shadow-sm">
+              <Badge
+                variant="secondary"
+                className="bg-blue-100 text-blue-700 border-0 shadow-sm"
+              >
                 <Droplets className="w-3 h-3 mr-1" />
                 Irrigated
               </Badge>
@@ -290,8 +305,13 @@ export function ListingCard({
 
           {/* Price Tag */}
           <div className="absolute bottom-2 right-2 z-10">
-            <Badge variant="secondary" className="bg-black/70 text-white border-0 backdrop-blur-sm py-1.5">
-              <span className="font-bold text-lg">{formatCurrency(listing.basePrice)}</span>
+            <Badge
+              variant="secondary"
+              className="bg-black/70 text-white border-0 backdrop-blur-sm py-1.5"
+            >
+              <span className="font-bold text-lg">
+                {formatCurrency(listing.basePrice)}
+              </span>
               <span className="ml-1 text-xs opacity-80">start</span>
             </Badge>
           </div>
@@ -303,16 +323,14 @@ export function ListingCard({
             <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors">
               {listing.title}
             </h3>
-            
+
             {/* Location with Map Actions */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center text-sm text-muted-foreground min-w-0 flex-1">
                 <MapPin className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
-                <span className="truncate">
-                  {formattedLocation}
-                </span>
+                <span className="truncate">{formattedLocation}</span>
               </div>
-              
+
               {/* Map Actions - Only show if location data available */}
               {locationAvailable && (
                 <div className="flex gap-1 flex-shrink-0">
@@ -351,23 +369,25 @@ export function ListingCard({
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-2">
               <Avatar className="h-6 w-6 border border-border">
-                <AvatarImage src={listing.owner?.imageUrl || ''} />
+                <AvatarImage src={listing.owner?.imageUrl || ""} />
                 <AvatarFallback className="text-xs bg-primary/10">
-                  {getInitials(listing.owner?.name || 'U')}
+                  {getInitials(listing.owner?.name || "U")}
                 </AvatarFallback>
               </Avatar>
               <span className="text-sm font-medium line-clamp-1">
-                {listing.owner?.name || 'Unknown'}
+                {listing.owner?.name || "Unknown"}
               </span>
               {listing.owner?.landownerProfile?.isVerified && (
                 <VerifiedBadge size="sm" />
               )}
             </div>
-            
+
             {/* Bid Count */}
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <Users className="w-3.5 h-3.5" />
-              <span>{bidCount} {bidCount === 1 ? 'bid' : 'bids'}</span>
+              <span>
+                {bidCount} {bidCount === 1 ? "bid" : "bids"}
+              </span>
             </div>
           </div>
 
@@ -383,10 +403,16 @@ export function ListingCard({
             {timeLeft > 0 && (
               <div className="flex-1 text-right">
                 <p className="text-xs text-muted-foreground">Time Left</p>
-                <p className={cn(
-                  "font-semibold flex items-center justify-end gap-1",
-                  isLive ? "text-green-600" : isEndingSoon ? "text-orange-600" : "text-muted-foreground"
-                )}>
+                <p
+                  className={cn(
+                    "font-semibold flex items-center justify-end gap-1",
+                    isLive
+                      ? "text-green-600"
+                      : isEndingSoon
+                        ? "text-orange-600"
+                        : "text-muted-foreground",
+                  )}
+                >
                   <Timer className="w-3.5 h-3.5" />
                   {formatTimeLeft(timeLeft)}
                 </p>
@@ -408,11 +434,13 @@ export function ListingCard({
           {listing.marketplaceScore && (
             <div className="flex items-center gap-1 text-xs text-gray-700 bg-[#b7cf8a] px-2 py-1 rounded-md">
               <span>Popular</span>
-              <span className="ml-auto">Score: {Math.round(listing.marketplaceScore)}</span>
+              <span className="ml-auto">
+                Score: {Math.round(listing.marketplaceScore)}
+              </span>
             </div>
           )}
         </CardContent>
       </Link>
     </Card>
-  )
+  );
 }
