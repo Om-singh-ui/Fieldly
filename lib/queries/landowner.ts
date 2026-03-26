@@ -96,7 +96,7 @@ export const getLandownerDashboardData = cache(
 
       prisma.payment.aggregate({
         where: {
-          lease: { ownerId: userId },
+          lease: { ownerId: user.id },
           status: "SUCCESS",
         },
         _sum: { amount: true },
