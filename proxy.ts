@@ -13,7 +13,7 @@ export default clerkMiddleware(async (auth, req) => {
   const pathname = req.nextUrl.pathname;
 
   ////////////////////////////////////////
-  // ✅ CRITICAL FIX: BYPASS API ROUTES
+  // CRITICAL FIX: BYPASS API ROUTES
   ////////////////////////////////////////
 
   if (pathname.startsWith("/api")) {
