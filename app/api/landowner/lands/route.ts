@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { getAuth } from "@clerk/nextjs/server"; 
 import { prisma } from "@/lib/prisma";
 import { supabaseAdmin } from "@/lib/storage/supabase-server";
 import { v4 as uuid } from "uuid";
@@ -15,13 +15,20 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId: clerkId } = await auth();
+    // ---------------- AUTH (FIXED) ----------------
+    const { userId: clerkId } = getAuth(req);
+
     if (!clerkId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
+    // ---------------- INPUT ----------------
     const formData = await req.formData();
 
+    // ---------------- USER ----------------
     const user = await prisma.user.findUnique({
       where: { clerkUserId: clerkId },
       include: { landownerProfile: true },
@@ -29,12 +36,14 @@ export async function POST(req: NextRequest) {
 
     if (!user || !user.landownerProfile) {
       return NextResponse.json(
-        { error: "Complete landowner profile first" },
-        { status: 400 },
+        { success: false, error: "Complete landowner profile first" },
+        { status: 400 }
       );
     }
 
-    // ---------- SAFE PARSERS ----------
+    const landownerProfile = user.landownerProfile;
+
+    // ---------------- HELPERS ----------------
     type FDValue = FormDataEntryValue | null;
 
     const num = (v: FDValue): number | null => {
@@ -43,133 +52,166 @@ export async function POST(req: NextRequest) {
       return isNaN(n) ? null : n;
     };
 
-    const bool = (v: FDValue): boolean => {
-      return v === "true";
+    const bool = (v: FDValue): boolean => v === "true";
+
+    const parseJSON = <T>(v: FDValue, fallback: T): T => {
+      try {
+        return v && typeof v === "string" ? (JSON.parse(v) as T) : fallback;
+      } catch {
+        return fallback;
+      }
     };
 
-    const allowedCropTypes = JSON.parse(
-      (formData.get("allowedCropTypes") as string) || "[]",
+    // ---------------- PARSED ----------------
+    const allowedCropTypes = parseJSON<string[]>(
+      formData.get("allowedCropTypes"),
+      []
     );
 
-    const previousCrops = JSON.parse(
-      (formData.get("previousCrops") as string) || "[]",
+    const previousCrops = parseJSON<string[]>(
+      formData.get("previousCrops"),
+      []
     );
 
-    // ---------- LAND ----------
-    const land = await prisma.land.create({
-      data: {
-        landownerId: user.landownerProfile.id,
-        title: formData.get("title") as string,
-        size: Number(formData.get("size")),
-        landType: formData.get("landType") as LandType,
-        village: formData.get("village") as string,
-        soilType: (formData.get("soilType") as string) || null,
-        latitude: num(formData.get("latitude")),
-        longitude: num(formData.get("longitude")),
-        irrigationAvailable: bool(formData.get("irrigationAvailable")),
-        electricityAvailable: bool(formData.get("electricityAvailable")),
-        roadAccess: bool(formData.get("roadAccess")),
-        fencingAvailable: bool(formData.get("fencingAvailable")),
-        storageAvailable: bool(formData.get("storageAvailable")),
-        allowedCropTypes,
-        previousCrops,
-        allowsInfrastructureModification: bool(
-          formData.get("allowsInfrastructureModification"),
-        ),
-        allowsOrganicFarming: formData.get("allowsOrganicFarming") !== "false",
-        allowsSubleasing: bool(formData.get("allowsSubleasing")),
-        minLeaseDuration: Number(formData.get("minLeaseDuration") || 12),
-        maxLeaseDuration: Number(formData.get("maxLeaseDuration") || 60),
-        expectedRentMin: num(formData.get("expectedRentMin")),
-        expectedRentMax: num(formData.get("expectedRentMax")),
-        depositAmount: num(formData.get("depositAmount")),
-      },
+    // ---------------- VALIDATION ----------------
+    if (!formData.get("title") || !formData.get("size")) {
+      return NextResponse.json(
+        { success: false, error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // ---------------- TRANSACTION ----------------
+    const result = await prisma.$transaction(async (tx) => {
+      const land = await tx.land.create({
+        data: {
+          landownerId: landownerProfile.id,
+          title: formData.get("title") as string,
+          size: Number(formData.get("size")),
+          landType: formData.get("landType") as LandType,
+          village: formData.get("village") as string,
+          soilType: (formData.get("soilType") as string) || null,
+          latitude: num(formData.get("latitude")),
+          longitude: num(formData.get("longitude")),
+          irrigationAvailable: bool(formData.get("irrigationAvailable")),
+          electricityAvailable: bool(formData.get("electricityAvailable")),
+          roadAccess: bool(formData.get("roadAccess")),
+          fencingAvailable: bool(formData.get("fencingAvailable")),
+          storageAvailable: bool(formData.get("storageAvailable")),
+          allowedCropTypes,
+          previousCrops,
+          allowsInfrastructureModification: bool(
+            formData.get("allowsInfrastructureModification")
+          ),
+          allowsOrganicFarming:
+            formData.get("allowsOrganicFarming") !== "false",
+          allowsSubleasing: bool(formData.get("allowsSubleasing")),
+          minLeaseDuration: Number(formData.get("minLeaseDuration") || 12),
+          maxLeaseDuration: Number(formData.get("maxLeaseDuration") || 60),
+          expectedRentMin: num(formData.get("expectedRentMin")),
+          expectedRentMax: num(formData.get("expectedRentMax")),
+          depositAmount: num(formData.get("depositAmount")),
+        },
+      });
+
+      const listing = await tx.landListing.create({
+        data: {
+          landId: land.id,
+          ownerId: user.id,
+          title: land.title,
+          description: (formData.get("description") as string) || null,
+          listingType:
+            (formData.get("listingType") as ListingType) || "OPEN_BIDDING",
+          basePrice: Number(formData.get("basePrice")),
+          reservePrice: num(formData.get("reservePrice")),
+          buyNowPrice: num(formData.get("buyNowPrice")),
+          startDate: new Date(formData.get("listingStartDate") as string),
+          endDate: new Date(formData.get("listingEndDate") as string),
+          minimumLeaseDuration: land.minLeaseDuration,
+          maximumLeaseDuration: land.maxLeaseDuration,
+          status: "ACTIVE" as ListingStatus,
+        },
+      });
+
+      await tx.listingTerms.create({
+        data: {
+          listingId: listing.id,
+          paymentFrequency:
+            (formData.get("paymentFrequency") as PaymentFrequency) ||
+            "MONTHLY",
+          securityDepositRequired:
+            formData.get("securityDepositRequired") === "true",
+          depositAmount: num(formData.get("depositAmount")),
+          additionalTerms:
+            (formData.get("additionalTerms") as string) || null,
+        },
+      });
+
+      return { land, listing };
     });
 
-    // ---------- LISTING ----------
-    const listing = await prisma.landListing.create({
-      data: {
-        landId: land.id,
-        ownerId: user.id,
-        title: land.title,
-        description: (formData.get("description") as string) || null,
-        listingType:
-          (formData.get("listingType") as ListingType) || "OPEN_BIDDING",
-        basePrice: Number(formData.get("basePrice")),
-        reservePrice: num(formData.get("reservePrice")),
-        buyNowPrice: num(formData.get("buyNowPrice")),
-        startDate: new Date(formData.get("listingStartDate") as string),
-        endDate: new Date(formData.get("listingEndDate") as string),
-        minimumLeaseDuration: land.minLeaseDuration,
-        maximumLeaseDuration: land.maxLeaseDuration,
-        status: "ACTIVE" as ListingStatus,
-      },
-    });
-
-    // ---------- TERMS ----------
-    await prisma.listingTerms.create({
-      data: {
-        listingId: listing.id,
-        paymentFrequency:
-          (formData.get("paymentFrequency") as PaymentFrequency) || "MONTHLY",
-        securityDepositRequired:
-          formData.get("securityDepositRequired") === "true",
-        depositAmount: num(formData.get("depositAmount")),
-        additionalTerms: (formData.get("additionalTerms") as string) || null,
-      },
-    });
-
-    // ---------- IMAGE UPLOAD (PARALLEL CDN) ----------
+    // ---------------- IMAGE UPLOAD ----------------
     const files = formData.getAll("images") as File[];
 
     if (files.length) {
-      const uploads = files.map(async (file, i) => {
-        const ext = file.name.split(".").pop();
-        const key = `${listing.id}/${uuid()}.${ext}`;
+      await Promise.all(
+        files.map(async (file, i) => {
+          const ext = file.name.split(".").pop();
+          const key = `${result.listing.id}/${uuid()}.${ext}`;
 
-        const { error } = await supabaseAdmin.storage
-          .from("lands")
-          .upload(key, file);
+          const { error } = await supabaseAdmin.storage
+            .from("lands")
+            .upload(key, file);
 
-        if (error) throw error;
+          if (error) throw error;
 
-        const { data } = supabaseAdmin.storage.from("lands").getPublicUrl(key);
+          const { data } = supabaseAdmin.storage
+            .from("lands")
+            .getPublicUrl(key);
 
-        return prisma.listingImage.create({
-          data: {
-            listingId: listing.id,
-            url: data.publicUrl,
-            isPrimary: i === 0,
-            sortOrder: i,
-          },
-        });
-      });
-
-      await Promise.all(uploads);
+          await prisma.listingImage.create({
+            data: {
+              listingId: result.listing.id,
+              url: data.publicUrl,
+              isPrimary: i === 0,
+              sortOrder: i,
+            },
+          });
+        })
+      );
     }
 
-    // ---------- AUDIT ----------
+    // ---------------- AUDIT ----------------
     await prisma.auditLog.create({
       data: {
         userId: user.id,
         action: "LAND_CREATED",
         metadata: {
-          landId: land.id,
-          listingId: listing.id,
+          landId: result.land.id,
+          listingId: result.listing.id,
         },
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      landId: land.id,
-      listingId: listing.id,
-    });
+    // ---------------- SUCCESS ----------------
+    return NextResponse.json(
+      {
+        success: true,
+        landId: result.land.id,
+        listingId: result.listing.id,
+        data: result.land,
+      },
+      { status: 201 }
+    );
   } catch (err) {
     console.error("LAND CREATE ERROR:", err);
+
     return NextResponse.json(
-      { error: "Failed to create listing" },
-      { status: 500 },
+      {
+        success: false,
+        error: "Failed to create listing",
+      },
+      { status: 500 }
     );
   }
 }

@@ -13,7 +13,15 @@ export default clerkMiddleware(async (auth, req) => {
   const pathname = req.nextUrl.pathname;
 
   ////////////////////////////////////////
-  // NOT SIGNED IN
+  // ✅ CRITICAL FIX: BYPASS API ROUTES
+  ////////////////////////////////////////
+
+  if (pathname.startsWith("/api")) {
+    return NextResponse.next();
+  }
+
+  ////////////////////////////////////////
+  // NOT SIGNED IN (ONLY FOR PAGES)
   ////////////////////////////////////////
 
   if (!userId && !isPublicRoute(req)) {
@@ -36,18 +44,12 @@ export default clerkMiddleware(async (auth, req) => {
         },
       });
 
-      ////////////////////////////////////
-      // USER NOT IN DB → post-auth
-      ////////////////////////////////////
-
+      // USER NOT IN DB
       if (!user && !pathname.startsWith("/post-auth")) {
         return NextResponse.redirect(new URL("/post-auth", req.url));
       }
 
-      ////////////////////////////////////
       // ROLE NOT CHOSEN
-      ////////////////////////////////////
-
       if (user && !user.role) {
         if (!pathname.startsWith("/onboarding/role")) {
           return NextResponse.redirect(
@@ -56,10 +58,7 @@ export default clerkMiddleware(async (auth, req) => {
         }
       }
 
-      ////////////////////////////////////
       // ONBOARDING NOT COMPLETE
-      ////////////////////////////////////
-
       if (user?.role && !user.isOnboarded) {
         const onboardingPath =
           user.role === "FARMER"
@@ -73,10 +72,7 @@ export default clerkMiddleware(async (auth, req) => {
         }
       }
 
-      ////////////////////////////////////
-      // FULLY ONBOARDED → BLOCK ROLE PAGE
-      ////////////////////////////////////
-
+      // FULLY ONBOARDED
       if (user?.role && user.isOnboarded) {
         const dashboard =
           user.role === "FARMER"
@@ -96,7 +92,5 @@ export default clerkMiddleware(async (auth, req) => {
 });
 
 export const config = {
-  matcher: [
-    "/((?!_next|.*\\..*).*)",
-  ],
+  matcher: ["/((?!_next|.*\\..*).*)"],
 };
