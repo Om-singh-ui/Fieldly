@@ -15,7 +15,6 @@ export function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-// Add this function
 export function formatNumber(amount: number): string {
   return new Intl.NumberFormat('en-IN', {
     maximumFractionDigits: 0,
@@ -55,4 +54,14 @@ export function getInitials(name: string): string {
     .join('')
     .toUpperCase()
     .slice(0, 2)
+}
+
+export function formatDate(date: Date | string | null | undefined): string {
+  if (!date) return "N/A"
+  const dateObj = typeof date === "string" ? new Date(date) : date
+  return new Intl.DateTimeFormat('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(dateObj)
 }

@@ -96,7 +96,7 @@ export async function setUserRole(
   role: "FARMER" | "LANDOWNER"
 ): Promise<OnboardingResult> {
   try {
-    // ✅ Use getOrCreateUser to ensure user exists and get DB user
+    // Use getOrCreateUser to ensure user exists and get DB user
     const user = await getOrCreateUser();
 
     // Update the user's role using DB id
@@ -133,16 +133,16 @@ export async function completeFarmerOnboarding(
   formData: FarmerFormData
 ): Promise<OnboardingResult> {
   try {
-    // ✅ Use getOrCreateUser to ensure user exists and get DB user
+    // Use getOrCreateUser to ensure user exists and get DB user
     const user = await getOrCreateUser();
 
-    // ✅ Check role using DB user object
+    // Check role using DB user object
     if (user.role !== "FARMER") {
       return { success: false, error: "Invalid role" };
     }
 
     await prisma.$transaction(async (tx) => {
-      // ✅ Update user using DB id
+      // Update user using DB id
       await tx.user.update({
         where: { id: user.id },
         data: {
@@ -154,7 +154,7 @@ export async function completeFarmerOnboarding(
         },
       });
 
-      // ✅ Create farmer profile using DB user.id
+      // Create farmer profile using DB user.id
       await tx.farmerProfile.upsert({
         where: { userId: user.id },
         update: {
@@ -199,7 +199,7 @@ export async function completeFarmerOnboarding(
       });
     });
 
-    // ✅ Create notifications using DB user.id
+    // Create notifications using DB user.id
     await Promise.allSettled([
       prisma.notification.create({
         data: {
@@ -248,16 +248,16 @@ export async function completeLandownerOnboarding(
   formData: LandownerOnboardingInput
 ): Promise<OnboardingResult> {
   try {
-    // ✅ Use getOrCreateUser to ensure user exists and get DB user
+    // Use getOrCreateUser to ensure user exists and get DB user
     const user = await getOrCreateUser();
 
-    // ✅ Check role using DB user object
+    // Check role using DB user object
     if (user.role !== "LANDOWNER") {
       return { success: false, error: "Invalid role" };
     }
 
     await prisma.$transaction(async (tx) => {
-      // ✅ Update user using DB id
+      // Update user using DB id
       await tx.user.update({
         where: { id: user.id },
         data: {
@@ -269,7 +269,7 @@ export async function completeLandownerOnboarding(
         },
       });
 
-      // ✅ Create landowner profile using DB user.id
+      // Create landowner profile using DB user.id
       await tx.landownerProfile.upsert({
         where: { userId: user.id },
         update: {
@@ -292,7 +292,7 @@ export async function completeLandownerOnboarding(
       });
     });
 
-    // ✅ Create notifications using DB user.id
+    //Create notifications using DB user.id
     await Promise.allSettled([
       prisma.notification.create({
         data: {

@@ -57,6 +57,17 @@ export async function deleteOrArchiveLand(landId: string) {
 
 /* ================= EDIT LAND ================= */
 
+type UpdateData = {
+  title?: string;
+  description?: string | null;
+  irrigationAvailable?: boolean;
+  electricityAvailable?: boolean;
+  roadAccess?: boolean;
+  fencingAvailable?: boolean;
+  editCount: { increment: number };
+  lastEditedAt: Date;
+};
+
 export async function editLandAction(data: {
   id: string;
   title?: string;
@@ -95,20 +106,45 @@ export async function editLandAction(data: {
 
   if (listingActive && land.editCount >= 3) {
     throw new Error("Edit limit reached. Close listing.");
-  } 
+  }
+
+  /* ================= SAFE UPDATE BUILD ================= */
+
+  const updateData: UpdateData = {
+    editCount: { increment: 1 },
+    lastEditedAt: new Date(),
+  };
+
+  if (data.title !== undefined) {
+    updateData.title = data.title.trim();
+  }
+
+  if (data.description !== undefined) {
+    //CRITICAL FIX
+    updateData.description = data.description.trim() || null;
+  }
+
+  if (data.irrigationAvailable !== undefined) {
+    updateData.irrigationAvailable = data.irrigationAvailable;
+  }
+
+  if (data.electricityAvailable !== undefined) {
+    updateData.electricityAvailable = data.electricityAvailable;
+  }
+
+  if (data.roadAccess !== undefined) {
+    updateData.roadAccess = data.roadAccess;
+  }
+
+  if (data.fencingAvailable !== undefined) {
+    updateData.fencingAvailable = data.fencingAvailable;
+  }
+
+  /* ================= UPDATE ================= */
 
   await prisma.land.update({
     where: { id: data.id },
-    data: {
-      title: data.title,
-      description: data.description,
-      irrigationAvailable: data.irrigationAvailable,
-      electricityAvailable: data.electricityAvailable,
-      roadAccess: data.roadAccess,
-      fencingAvailable: data.fencingAvailable,
-      editCount: { increment: 1 },
-      lastEditedAt: new Date(),
-    },
+    data: updateData,
   });
 
   revalidateTag(`lands-${user.id}`, "max");
