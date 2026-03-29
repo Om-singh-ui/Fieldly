@@ -2,8 +2,9 @@
 
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Calendar, Star, Shield } from "lucide-react";
+import { MapPin, Calendar, Star, Shield, Share2 } from "lucide-react";
 import { ProfileUser } from "@/types/profile";
+import { useState } from "react";
 
 interface Props {
   user: ProfileUser & {
@@ -13,10 +14,31 @@ interface Props {
 }
 
 export function ProfileHeader({ user }: Props) {
+  const [isSharing, setIsSharing] = useState(false);
+
   const joinDate = new Date(user.joinedAt).toLocaleDateString("en-US", {
     month: "long",
     year: "numeric",
   });
+
+  const handleShare = async () => {
+    setIsSharing(true);
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${user.name} - Profile`,
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert("Profile link copied!");
+      }
+    } catch (err) {
+      console.error("Share failed:", err);
+    } finally {
+      setIsSharing(false);
+    }
+  };
 
   return (
     <motion.section
@@ -24,7 +46,7 @@ export function ProfileHeader({ user }: Props) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
     >
-      {/*CAPSULE */}
+      {/* CAPSULE */}
       <motion.div
         whileHover={{ y: -2, scale: 1.01 }}
         transition={{ type: "spring", stiffness: 180, damping: 20 }}
@@ -38,7 +60,7 @@ export function ProfileHeader({ user }: Props) {
         {/* inner stroke */}
         <div className="absolute inset-[1px] rounded-full border border-white/40 pointer-events-none" />
 
-        {/* shine sweep */}
+        {/* shine */}
         <motion.div
           initial={{ x: "-120%", opacity: 0 }}
           whileHover={{ x: "120%", opacity: 1 }}
@@ -48,21 +70,16 @@ export function ProfileHeader({ user }: Props) {
           <div className="w-1/3 h-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12" />
         </motion.div>
 
-        {/* 🔹 MAIN ROW */}
+        {/* MAIN ROW */}
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
           {/* LEFT */}
           <div className="flex items-center gap-4 flex-1">
-
-            {/* Avatar */}
             <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-lg font-semibold text-primary border border-primary/20 shrink-0">
               {user.name?.charAt(0).toUpperCase()}
             </div>
 
-            {/* TEXT */}
             <div className="flex flex-col gap-1">
-
-              {/* Name */}
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-lg md:text-xl font-semibold">
                   {user.name}
@@ -83,9 +100,7 @@ export function ProfileHeader({ user }: Props) {
                 )}
               </div>
 
-              {/* Meta */}
               <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-
                 {user.location && (
                   <div className="flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5" />
@@ -103,6 +118,7 @@ export function ProfileHeader({ user }: Props) {
 
           {/* RIGHT */}
           <div className="flex gap-2 shrink-0">
+
             <motion.button
               whileTap={{ scale: 0.95 }}
               className="rounded-full px-4 h-9 bg-primary text-primary-foreground text-sm font-medium"
@@ -112,13 +128,18 @@ export function ProfileHeader({ user }: Props) {
 
             <motion.button
               whileTap={{ scale: 0.95 }}
-              className="rounded-full px-4 h-9 border text-sm font-medium"
+              onClick={handleShare}
+              disabled={isSharing}
+              className="rounded-full px-4 h-9 border text-sm font-medium flex items-center gap-1"
             >
-              Share
+              <Share2 className="w-3.5 h-3.5" />
+              {isSharing ? "Sharing..." : "Share"}
             </motion.button>
+
           </div>
         </div>
 
+        {/* BIO */}
         {user.bio && (
           <p className="relative z-10 text-sm text-muted-foreground leading-relaxed">
             {user.bio}
