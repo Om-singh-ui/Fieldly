@@ -24,7 +24,7 @@ export function LandDescription({
   return (
     <div className="relative mt-6">
 
-      {/* 🔥 CAPSULE CONTAINER (MATCHES STATS & FEATURES) */}
+      {/* CAPSULE CONTAINER (MATCHES STATS & FEATURES) */}
       <div
         className="
           absolute inset-0 rounded-[70px]

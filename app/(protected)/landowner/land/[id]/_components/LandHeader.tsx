@@ -74,7 +74,7 @@ export function LandHeader({
   };
 
   /* =========================
-     🔄 PREMIUM SKELETON
+     PREMIUM SKELETON
   ========================= */
 
   if (isLoading) {
