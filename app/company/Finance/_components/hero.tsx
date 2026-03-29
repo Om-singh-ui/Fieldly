@@ -349,7 +349,7 @@ opacity-0 translate-y-6
 group-hover:opacity-100 group-hover:translate-y-0 
 transition-all duration-500 ease-out"
             >
-              <div className="bg-black/50 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+              <div className="bg-black/50 border border-white/20 rounded-2xl p-6">
                 {/* LIVE INDICATOR */}
                 <div className="flex items-center gap-2 text-sm mb-3 tracking-wide">
                   <motion.div
