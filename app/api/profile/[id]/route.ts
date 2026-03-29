@@ -1,12 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getLandownerProfileData } from "@/lib/queries/getLandownerProfileData";
 
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const data = await getLandownerProfileData(params.id);
+    const { id } = await params; 
+    const data = await getLandownerProfileData(id);
 
     if (!data) {
       return NextResponse.json(
