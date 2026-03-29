@@ -114,7 +114,7 @@ export function LandFeatures({
   return (
     <div className="relative mt-6">
 
-      {/* 🔥 CAPSULE CONTAINER (MATCHES STATS) */}
+      {/* CAPSULE CONTAINER (MATCHES STATS) */}
       <div
         className="
           absolute inset-0 rounded-[70px]

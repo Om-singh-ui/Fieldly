@@ -70,7 +70,7 @@ function StatCard({ label, value, icon, trend }: StatCardProps) {
 }
 
 /* =========================
-   🔄 SKELETON CARD
+    SKELETON CARD
 ========================= */
 
 function StatCardSkeleton() {

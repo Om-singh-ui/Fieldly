@@ -146,7 +146,7 @@ export function ListingsSection({
   return (
     <div className="relative mt-6">
 
-      {/* 🔥 CAPSULE CONTAINER */}
+      {/* CAPSULE CONTAINER */}
       <div
         className="
           absolute inset-0 rounded-[70px]
