@@ -2,7 +2,15 @@
 
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Calendar, Star, Shield, Share2 } from "lucide-react";
+import { 
+  MapPin, 
+  Calendar, 
+  Star, 
+  Shield, 
+  Share2,
+  MessageSquare,
+  Loader2
+} from "lucide-react";
 import { ProfileUser } from "@/types/profile";
 import { useState } from "react";
 
@@ -72,7 +80,6 @@ export function ProfileHeader({ user }: Props) {
 
         {/* MAIN ROW */}
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-
           {/* LEFT */}
           <div className="flex items-center gap-4 flex-1">
             <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-lg font-semibold text-primary border border-primary/20 shrink-0">
@@ -116,32 +123,74 @@ export function ProfileHeader({ user }: Props) {
             </div>
           </div>
 
-          {/* RIGHT */}
-          <div className="flex gap-2 shrink-0">
-
+          {/* RIGHT - Premium Gradient Buttons */}
+          <div className="flex gap-3 shrink-0 mt-7 lg:mt-0">
+            {/* Contact Button - Premium Gradient */}
             <motion.button
-              whileTap={{ scale: 0.95 }}
-              className="rounded-full px-4 h-9 bg-primary text-primary-foreground text-sm font-medium"
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              className="group relative rounded-full px-5 h-10 bg-gradient-to-r from-primary via-primary/90 to-primary text-primary-foreground text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              Contact
+              {/* Animated gradient overlay */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              
+              {/* Border glow effect */}
+              <div className="absolute inset-0 rounded-full ring-1 ring-white/20 group-hover:ring-white/40 transition-all" />
+              
+              <div className="relative z-10 flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-black" />
+                <span  className="text-black">Contact</span>
+              </div>
             </motion.button>
 
+            {/* Share Button - Premium Outline */}
             <motion.button
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleShare}
               disabled={isSharing}
-              className="rounded-full px-4 h-9 border text-sm font-medium flex items-center gap-1"
+              className="group relative rounded-full px-5 h-10  border-2 border-primary/20 text-foreground text-sm font-medium flex items-center gap-2 hover:border-primary/60 hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Share2 className="w-3.5 h-3.5" />
-              {isSharing ? "Sharing..." : "Share"}
+              {/* Hover gradient background */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition" />
+              
+              <div className="relative z-10 flex items-center gap-2">
+                {isSharing ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Loader2 className="w-4 h-4" />
+                    </motion.div>
+                    <span>Sharing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-4 h-4 transition-transform group-hover:rotate-12" />
+                    <span>Share</span>
+                  </>
+                )}
+              </div>
             </motion.button>
-
           </div>
         </div>
 
         {/* BIO */}
         {user.bio && (
-          <p className="relative z-10 text-sm text-muted-foreground leading-relaxed">
+          <p
+            className="
+              relative z-10 
+              text-sm leading-relaxed 
+              text-muted-foreground
+              max-w-2xl
+              -mt-1 pt-3
+              border-t border-border/50
+              before:absolute before:inset-x-0 before:-top-3 before:h-6
+              before:bg-gradient-to-b before:from-card/80 before:to-transparent
+              before:pointer-events-none
+            "
+          >
             {user.bio}
           </p>
         )}
