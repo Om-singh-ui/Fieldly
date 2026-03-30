@@ -10,10 +10,15 @@ import {
   Clock,
   ChevronRight,
   Package,
+  ArrowUpDown,
+  IndianRupee,
+  Flame,
+  Timer,
 } from "lucide-react";
 import { ProfileListing } from "@/types/profile";
 import { useState, useMemo } from "react";
 import { formatINR } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 interface Props {
   listings: ProfileListing[];
@@ -33,7 +38,7 @@ export function ListingsGrid({ listings }: Props) {
   // Stable "now" to prevent hydration mismatch
   const now = useMemo(() => new Date(), []);
 
-  // Sorting (unchanged but optimized)
+  // Sorting
   const sortedListings = useMemo(() => {
     const sorted = [...listings];
 
@@ -60,7 +65,7 @@ export function ListingsGrid({ listings }: Props) {
     }
   }, [listings, sortBy]);
 
-  //Hydration-safe time calc
+  // Hydration-safe time calc
   const getTimeRemaining = (endDate: Date | string) => {
     const end = new Date(endDate).getTime();
     const diff = end - now.getTime();
@@ -91,42 +96,87 @@ export function ListingsGrid({ listings }: Props) {
   };
 
   const sortOptions = [
-    { value: "latest", label: "Latest" },
-    { value: "price_asc", label: "Price: Low to High" },
-    { value: "price_desc", label: "Price: High to Low" },
-    { value: "most_bids", label: "Most Bids" },
-    { value: "ending_soon", label: "Ending Soon" },
+    { 
+      value: "latest", 
+      label: "Latest", 
+      icon: ChevronRight,
+    },
+    { 
+      value: "price_asc", 
+      label: "Price: Low to High", 
+      icon: ArrowUpDown,
+    },
+    { 
+      value: "price_desc", 
+      label: "Price: High to Low", 
+      icon: IndianRupee,
+    },
+    { 
+      value: "most_bids", 
+      label: "Most Bids", 
+      icon: Flame,
+    },
+    { 
+      value: "ending_soon", 
+      label: "Ending Soon", 
+      icon: Timer,
+    },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Active Listings
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {listings.length}{" "}
-            {listings.length === 1 ? "listing" : "listings"} available
-          </p>
+      <div className="flex flex-col gap-4">
+        {/* Title Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                Active Listings
+              </h2>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {listings.length === 0 
+                ? "No listings available at the moment" 
+                : `${listings.length} ${listings.length === 1 ? "listing" : "listings"} waiting for bids`
+              }
+            </p>
+          </div>
         </div>
 
+        {/* Clean Sort Buttons */}
         {listings.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {sortOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setSortBy(option.value as SortOption)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-200 ${
-                  sortBy === option.value
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "hover:bg-accent"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
+          <div className="flex flex-wrap gap-2 pt-2">
+            {sortOptions.map((option) => {
+              const Icon = option.icon;
+              const isActive = sortBy === option.value;
+              
+              return (
+                <motion.button
+                  key={option.value}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSortBy(option.value as SortOption)}
+                  className={cn(
+                    "group relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "bg-card border hover:bg-accent/50 hover:border-primary/20"
+                  )}
+                >
+                  <div className="relative flex items-center gap-2">
+                    <Icon className={cn(
+                      "w-4 h-4 transition-all duration-200",
+                      isActive 
+                        ? "text-primary-foreground" 
+                        : "text-muted-foreground group-hover:text-primary",
+                      !isActive && "group-hover:scale-110"
+                    )} />
+                    <span>{option.label}</span>
+                  </div>
+                </motion.button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -137,10 +187,10 @@ export function ListingsGrid({ listings }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-center py-16 rounded-2xl border-2 border-dashed bg-muted/20"
+            className="text-center py-20 rounded-2xl border-2 border-dashed bg-muted/20"
           >
-            <Package className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
-            <p className="text-muted-foreground font-medium">
+            <Package className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
+            <p className="text-muted-foreground font-medium text-lg">
               No active listings yet
             </p>
             <p className="text-sm text-muted-foreground/60 mt-1">
@@ -152,7 +202,7 @@ export function ListingsGrid({ listings }: Props) {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid md:grid-cols-2 lg:grid-cols-3 gap-5"
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {sortedListings.map((listing) => (
               <motion.div
@@ -163,40 +213,44 @@ export function ListingsGrid({ listings }: Props) {
                 onHoverEnd={() => setHoveredId(null)}
               >
                 <Link href={`/marketplace/listings/${listing.id}`}>
-                  <div className="group relative rounded-2xl border bg-card overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <div className="group relative rounded-2xl border bg-card overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
                     {/* Image */}
-                    <div className="relative h-48 bg-gradient-to-br from-primary/5 to-primary/10 overflow-hidden">
+                    <div className="relative h-52 bg-gradient-to-br from-primary/5 to-primary/10 overflow-hidden">
                       {listing.images?.[0]?.url ? (
                         <Image
                           src={listing.images[0].url}
                           alt={listing.title}
                           fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <Package className="w-12 h-12 text-muted-foreground/30" />
+                          <Package className="w-16 h-16 text-muted-foreground/20" />
                         </div>
                       )}
+
+                      {/* Overlay gradient */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                       {/* Badges */}
                       <div className="absolute top-3 left-3 flex gap-2">
                         {listing.isUrgent && (
-                          <span className="px-2 py-1 text-xs font-medium bg-red-500 text-white rounded-lg">
+                          <span className="px-2.5 py-1 text-xs font-semibold bg-red-500 text-white rounded-full shadow-lg flex items-center gap-1">
+                            <Flame className="w-3 h-3" />
                             Urgent
                           </span>
                         )}
                         {(listing.hotnessScore ?? 0) > 70 && (
-                          <span className="px-2 py-1 text-xs font-medium bg-orange-500 text-white rounded-lg flex items-center gap-1">
+                          <span className="px-2.5 py-1 text-xs font-semibold bg-orange-500 text-white rounded-full shadow-lg flex items-center gap-1">
                             <TrendingUp className="w-3 h-3" />
-                            Hot
+                            Hot Deal
                           </span>
                         )}
                       </div>
 
                       {/* Time */}
                       <div className="absolute bottom-3 right-3">
-                        <span className="px-2 py-1 text-xs font-medium bg-black/50 backdrop-blur-sm text-white rounded-lg flex items-center gap-1">
+                        <span className="px-2.5 py-1 text-xs font-medium bg-black/60 backdrop-blur-md text-white rounded-full flex items-center gap-1 shadow-lg">
                           <Clock className="w-3 h-3" />
                           {getTimeRemaining(listing.endDate)}
                         </span>
@@ -204,54 +258,54 @@ export function ListingsGrid({ listings }: Props) {
                     </div>
 
                     {/* Content */}
-                    <div className="p-4 space-y-3">
-                      <h3 className="font-semibold line-clamp-1 group-hover:text-primary transition-colors">
+                    <div className="p-5 space-y-3">
+                      <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors">
                         {listing.title}
                       </h3>
 
                       <div className="flex items-center gap-4 text-sm">
-                        <div className="flex items-center gap-1 text-muted-foreground">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
                           <MapPin className="w-3.5 h-3.5" />
                           <span className="text-xs">
                             {listing.land?.village ?? "Location not specified"}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1 text-muted-foreground">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
                           <Gavel className="w-3.5 h-3.5" />
-                          <span className="text-xs">
-                            {listing.totalBids} bids
+                          <span className="text-xs font-medium">
+                            {listing.totalBids} {listing.totalBids === 1 ? "bid" : "bids"}
                           </span>
                         </div>
                       </div>
 
                       {listing.land?.size && (
-                        <div className="text-xs text-muted-foreground">
-                          {listing.land.size} acres ·{" "}
-                          {listing.land.landType?.toLowerCase()}
+                        <div className="text-xs text-muted-foreground flex items-center gap-2">
+                          <span className="font-medium">{listing.land.size} acres</span>
+                          <span className="text-border">•</span>
+                          <span className="capitalize">{listing.land.landType?.toLowerCase()}</span>
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between pt-2 border-t">
+                      <div className="flex items-center justify-between pt-3 border-t">
                         <div>
-                          <p className="text-xs text-muted-foreground">
-                            Base Price
-                          </p>
-                          <p className="text-lg font-bold text-primary">
+                          <p className="text-xs text-muted-foreground mb-0.5">Base Price</p>
+                          <p className="text-xl font-bold text-primary">
                             {formatINR(listing.basePrice)}
-                            <span className="text-xs font-normal text-muted-foreground">
+                            <span className="text-xs font-normal text-muted-foreground ml-1">
                               /year
                             </span>
                           </p>
                         </div>
 
                         <motion.div
-                          initial={{ scale: 0 }}
+                          initial={{ x: -10, opacity: 0 }}
                           animate={{
-                            scale: hoveredId === listing.id ? 1 : 0,
+                            x: hoveredId === listing.id ? 0 : -10,
+                            opacity: hoveredId === listing.id ? 1 : 0,
                           }}
-                          className="text-primary"
+                          className="bg-primary/10 rounded-full p-2"
                         >
-                          <ChevronRight className="w-5 h-5" />
+                          <ChevronRight className="w-5 h-5 text-primary" />
                         </motion.div>
                       </div>
 
@@ -263,17 +317,16 @@ export function ListingsGrid({ listings }: Props) {
                               initial={{ width: 0 }}
                               animate={{
                                 width: `${Math.min(
-                                  (listing.totalBids /
-                                    listing.maxBids) *
-                                    100,
+                                  (listing.totalBids / listing.maxBids) * 100,
                                   100
                                 )}%`,
                               }}
-                              className="h-full bg-primary rounded-full"
+                              className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full"
                             />
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {listing.totalBids} of {listing.maxBids} bids
+                          <p className="text-xs text-muted-foreground mt-1.5 flex justify-between">
+                            <span>{listing.totalBids} bids placed</span>
+                            <span>Target: {listing.maxBids} bids</span>
                           </p>
                         </div>
                       )}

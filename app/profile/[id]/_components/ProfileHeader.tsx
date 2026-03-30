@@ -75,14 +75,14 @@ export function ProfileHeader({ user }: Props) {
           transition={{ duration: 1.5 }}
           className="absolute inset-0 pointer-events-none"
         >
-          <div className="w-1/3 h-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12" />
+          <div className="w-1/3 h-full skew-x-12" />
         </motion.div>
 
         {/* MAIN ROW */}
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           {/* LEFT */}
           <div className="flex items-center gap-4 flex-1">
-            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-lg font-semibold text-primary border border-primary/20 shrink-0">
+            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-lg font-semibold text-black border border-primary/20 shrink-0">
               {user.name?.charAt(0).toUpperCase()}
             </div>
 
@@ -149,11 +149,8 @@ export function ProfileHeader({ user }: Props) {
               whileTap={{ scale: 0.98 }}
               onClick={handleShare}
               disabled={isSharing}
-              className="group relative rounded-full px-5 h-10  border-2 border-primary/20 text-foreground text-sm font-medium flex items-center gap-2 hover:border-primary/60 hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {/* Hover gradient background */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition" />
-              
+              className="group relative rounded-full px-5 h-10 bg-gradient-to-r from-primary via-primary/90 to-primary text-primary-black text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-300 "
+            > 
               <div className="relative z-10 flex items-center gap-2">
                 {isSharing ? (
                   <>
@@ -182,7 +179,7 @@ export function ProfileHeader({ user }: Props) {
             className="
               relative z-10 
               text-sm leading-relaxed 
-              text-muted-foreground
+              text-zinc-900
               max-w-2xl
               -mt-1 pt-3
               border-t border-border/50

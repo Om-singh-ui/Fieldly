@@ -94,9 +94,6 @@ export default function Footer() {
         <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background to-transparent" />
       </div>
 
-      {/* TOP BORDER */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-black/10 to-transparent" />
-
       {/* ================= CONTENT ================= */}
       <motion.div
         variants={container}
