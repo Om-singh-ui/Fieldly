@@ -19,12 +19,12 @@ export default async function ProfilePage({ params }: PageProps) {
   if (!data) return notFound();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8 sm:space-y-12">
         <ProfileHeader user={data.user} />
         <StatsBar stats={data.stats} />
         <ListingsGrid listings={data.listings} />
-      </div>
+      </div>  
     </div>
   );
 }
