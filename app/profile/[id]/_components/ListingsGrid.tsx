@@ -30,10 +30,10 @@ export function ListingsGrid({ listings }: Props) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("latest");
 
-  // ✅ Stable "now" to prevent hydration mismatch
+  // Stable "now" to prevent hydration mismatch
   const now = useMemo(() => new Date(), []);
 
-  // ✅ Sorting (unchanged but optimized)
+  // Sorting (unchanged but optimized)
   const sortedListings = useMemo(() => {
     const sorted = [...listings];
 
@@ -60,7 +60,7 @@ export function ListingsGrid({ listings }: Props) {
     }
   }, [listings, sortBy]);
 
-  // ✅ Hydration-safe time calc
+  //Hydration-safe time calc
   const getTimeRemaining = (endDate: Date | string) => {
     const end = new Date(endDate).getTime();
     const diff = end - now.getTime();
