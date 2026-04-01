@@ -2,7 +2,7 @@
   "use client";
 
   import { motion } from "framer-motion";
-  import { Package, TrendingUp, DollarSign, Star, Landmark, Clock } from "lucide-react";
+  import { Package, TrendingUp, Star, Landmark, Clock, IndianRupeeIcon } from "lucide-react";
   import { ProfileStats } from "@/types/profile";
 
   interface Props {
@@ -72,7 +72,7 @@
       { 
         label: "Total Revenue", 
         value: `₹${stats.totalRevenue.toLocaleString()}`, 
-        icon: DollarSign, 
+        icon: IndianRupeeIcon, 
         trend: stats.revenueTrend,
         subtext: "Lifetime earnings"
       },
