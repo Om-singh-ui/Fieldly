@@ -48,7 +48,7 @@ export function DashboardButton({
     setRedirecting(true);
 
     try {
-      // 🔥 call API instead of navigating to /post-auth
+      // call API instead of navigating to /post-auth
       const res = await fetch("/api/post-auth-check", {
         cache: "no-store",
       });

@@ -170,6 +170,8 @@ interface InfoBadgeProps {
   label: string;
   value: React.ReactNode;
   color?: "primary" | "secondary";
+  className?: string;
+  iconClassName?: string;
 }
 
 interface MapButtonsProps {
@@ -234,9 +236,27 @@ const tapScale = { scale: 0.98 };
 const hoverGlow = { scale: 1.05, boxShadow: "0 0 20px rgba(0,0,0,0.1)" };
 
 // ============= REUSABLE COMPONENTS =============
-const InfoBadge = ({ icon: Icon, label, value, color = "primary" }: InfoBadgeProps) => (
-  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-    <Icon className={cn("h-5 w-5", color === "primary" && "text-primary")} />
+const InfoBadge = ({
+  icon: Icon,
+  label,
+  value,
+  color = "primary",
+  className,
+  iconClassName,
+}: InfoBadgeProps) => (
+  <div
+    className={cn(
+      "flex items-center gap-3 p-3 rounded-lg bg-muted/30",
+      className,
+    )}
+  >
+    <Icon
+      className={cn(
+        "h-5 w-5",
+        color === "primary" && "text-primary",
+        iconClassName,
+      )}
+    />
     <div>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="font-semibold">{value}</p>
@@ -248,17 +268,72 @@ const MapButtons = ({ onDirections, onMap }: MapButtonsProps) => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
-    className="flex items-center gap-2 text-muted-foreground mb-4"
+    className="flex items-center gap-3 mb-4"
   >
-    <Button variant="ghost" size="sm" onClick={onDirections} className="gap-1">
-      <Navigation className="h-3.5 w-3.5" />
-      Directions
-    </Button>
-    <Button variant="ghost" size="sm" onClick={onMap} className="gap-1">
-      <MapPin className="h-4 w-4" />
-      View on Map
-      <ExternalLink className="h-3.5 w-3.5" />
-    </Button>
+    {/* Directions */}
+    <button
+      onClick={onDirections}
+      className="
+      flex items-center gap-3
+      px-4 py-2
+      rounded-full
+
+      bg-white
+      border border-gray-200
+
+      shadow-sm hover:shadow-md
+      transition-all duration-300
+      hover:-translate-y-0.5
+    "
+    >
+      <span
+        className="
+        flex items-center justify-center
+        h-8 w-8
+        rounded-full
+        bg-gray-100
+        shadow-inner
+      "
+      >
+        <Navigation className="h-4 w-4 text-gray-700" />
+      </span>
+
+      <span className="text-sm font-medium text-gray-800">Directions</span>
+    </button>
+
+    {/* View on Map */}
+    <button
+      onClick={onMap}
+      className="
+      flex items-center gap-3
+      px-4 py-2
+      rounded-full
+
+      bg-white
+      border border-gray-200
+
+      shadow-sm hover:shadow-md
+      transition-all duration-300
+      hover:-translate-y-0.5
+    "
+    >
+      <span
+        className="
+        flex items-center justify-center
+        h-8 w-8
+        rounded-full
+        bg-gray-100
+        shadow-inner
+      "
+      >
+        <MapPin className="h-4 w-4 text-gray-700" />
+      </span>
+
+      <span className="text-sm font-medium text-gray-800 flex items-center gap-1">
+        View on Map
+        <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+      </span>
+    </button>
   </motion.div>
 );
 
@@ -277,7 +352,11 @@ const DescriptionTab = ({ description }: { description: string | null }) => (
   </motion.div>
 );
 
-const DetailsTab = ({ land, fullAddress, formattedLocation }: DetailsTabProps) => (
+const DetailsTab = ({
+  land,
+  fullAddress,
+  formattedLocation,
+}: DetailsTabProps) => (
   <motion.div
     variants={tabContentVariants}
     initial="initial"
@@ -289,18 +368,43 @@ const DetailsTab = ({ land, fullAddress, formattedLocation }: DetailsTabProps) =
       <h3 className="font-semibold text-lg">Land Features</h3>
       <dl className="space-y-3">
         {[
-          { icon: Droplets, label: "Irrigation", value: land.irrigationAvailable ? "Available" : "Not available", success: land.irrigationAvailable },
-          { icon: ZapIcon, label: "Electricity", value: land.electricityAvailable ? "Available" : "Not available", success: !!land.electricityAvailable },
-          { icon: Truck, label: "Road Access", value: land.roadAccess ? "Yes" : "No", success: !!land.roadAccess },
-          { icon: Lock, label: "Fencing", value: land.fencingAvailable ? "Available" : "Not available", success: !!land.fencingAvailable },
+          {
+            icon: Droplets,
+            label: "Irrigation",
+            value: land.irrigationAvailable ? "Available" : "Not available",
+            success: land.irrigationAvailable,
+          },
+          {
+            icon: ZapIcon,
+            label: "Electricity",
+            value: land.electricityAvailable ? "Available" : "Not available",
+            success: !!land.electricityAvailable,
+          },
+          {
+            icon: Truck,
+            label: "Road Access",
+            value: land.roadAccess ? "Yes" : "No",
+            success: !!land.roadAccess,
+          },
+          {
+            icon: Lock,
+            label: "Fencing",
+            value: land.fencingAvailable ? "Available" : "Not available",
+            success: !!land.fencingAvailable,
+          },
         ].map((item, idx) => (
-          <div key={`feature-${idx}`} className="flex items-center justify-between">
+          <div
+            key={`feature-${idx}`}
+            className="flex items-center justify-between"
+          >
             <dt className="flex items-center gap-2 text-muted-foreground">
               <item.icon className="h-4 w-4 text-blue-500" />
               {item.label}
             </dt>
             <dd className={cn("font-medium", item.success && "text-green-600")}>
-              {item.success ? <CheckCircle2 className="h-4 w-4 inline mr-1" /> : null}
+              {item.success ? (
+                <CheckCircle2 className="h-4 w-4 inline mr-1" />
+              ) : null}
               {item.value}
             </dd>
           </div>
@@ -316,11 +420,23 @@ const DetailsTab = ({ land, fullAddress, formattedLocation }: DetailsTabProps) =
           { label: "Water Source", value: land.waterSource || "Not specified" },
           ...(land.village ? [{ label: "Village", value: land.village }] : []),
           ...(land.pincode ? [{ label: "Pincode", value: land.pincode }] : []),
-          ...(fullAddress && fullAddress !== formattedLocation ? [{ label: "Full Address", value: fullAddress, rightAlign: true }] : []),
+          ...(fullAddress && fullAddress !== formattedLocation
+            ? [{ label: "Full Address", value: fullAddress, rightAlign: true }]
+            : []),
         ].map((item, idx) => (
-          <div key={`soil-${idx}`} className="flex items-center justify-between">
+          <div
+            key={`soil-${idx}`}
+            className="flex items-center justify-between"
+          >
             <dt className="text-muted-foreground">{item.label}</dt>
-            <dd className={cn("font-medium", item.rightAlign && "text-right max-w-[60%]")}>{item.value}</dd>
+            <dd
+              className={cn(
+                "font-medium",
+                item.rightAlign && "text-right max-w-[60%]",
+              )}
+            >
+              {item.value}
+            </dd>
           </div>
         ))}
       </dl>
@@ -351,7 +467,8 @@ const DocumentsTab = ({ documents }: { documents?: Document[] }) => (
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">{doc.name}</p>
               <p className="text-xs text-muted-foreground">
-                {doc.type && `.${doc.type}`} • {doc.size && `${(doc.size / 1024).toFixed(1)} KB`}
+                {doc.type && `.${doc.type}`} •{" "}
+                {doc.size && `${(doc.size / 1024).toFixed(1)} KB`}
               </p>
             </div>
             <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -390,12 +507,20 @@ const BidsTab = ({ bids }: { bids?: Bid[] }) => (
               </Avatar>
               <div>
                 <p className="font-medium">{bid.farmer?.name || "Anonymous"}</p>
-                <p className="text-xs text-muted-foreground">{new Date(bid.createdAt).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(bid.createdAt).toLocaleString()}
+                </p>
               </div>
             </div>
             <div className="text-right">
-              <p className="font-bold text-lg text-primary">{formatCurrency(bid.amount)}</p>
-              {bid.isAutoBid && <Badge variant="outline" className="text-xs">Auto-bid</Badge>}
+              <p className="font-bold text-lg text-primary">
+                {formatCurrency(bid.amount)}
+              </p>
+              {bid.isAutoBid && (
+                <Badge variant="outline" className="text-xs">
+                  Auto-bid
+                </Badge>
+              )}
             </div>
           </div>
         ))}
@@ -404,7 +529,9 @@ const BidsTab = ({ bids }: { bids?: Bid[] }) => (
       <div className="text-center py-12">
         <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
         <p className="text-muted-foreground">No bids yet</p>
-        <p className="text-sm text-muted-foreground mt-1">Be the first to place a bid!</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Be the first to place a bid!
+        </p>
       </div>
     )}
   </motion.div>
@@ -417,7 +544,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
   const [isSaved, setIsSaved] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(() =>
-    Math.max(0, new Date(listing.endDate).getTime() - Date.now())
+    Math.max(0, new Date(listing.endDate).getTime() - Date.now()),
   );
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("description");
@@ -426,12 +553,12 @@ export function ListingDetail({ listing }: ListingDetailProps) {
   // Memoized values
   const allImages = useMemo(
     () => [...(listing.land.images || []), ...(listing.images || [])],
-    [listing.land.images, listing.images]
+    [listing.land.images, listing.images],
   );
 
   const currentImage = useMemo(
     () => allImages[currentImageIndex]?.url || "/images/placeholder-land.jpg",
-    [allImages, currentImageIndex]
+    [allImages, currentImageIndex],
   );
 
   const isLive = listing.auctionStatus === "LIVE" && timeLeft > 0;
@@ -446,13 +573,18 @@ export function ListingDetail({ listing }: ListingDetailProps) {
     listing.land?.location ||
     `${listing.land?.district || ""}, ${listing.land?.state || ""}`.replace(
       /^,\s|,\s$/,
-      ""
+      "",
     ) ||
     "Location not specified";
 
   const fullAddress =
     listing.land?.address ||
-    [listing.land?.village, listing.land?.district, listing.land?.state, listing.land?.pincode]
+    [
+      listing.land?.village,
+      listing.land?.district,
+      listing.land?.state,
+      listing.land?.pincode,
+    ]
       .filter(Boolean)
       .join(", ");
 
@@ -474,8 +606,8 @@ export function ListingDetail({ listing }: ListingDetailProps) {
     const url = coords
       ? `https://www.google.com/maps?q=${listing.land.latitude},${listing.land.longitude}`
       : formattedLocation !== "Location not specified"
-      ? `https://www.google.com/maps/search/${encodeURIComponent(formattedLocation)}`
-      : null;
+        ? `https://www.google.com/maps/search/${encodeURIComponent(formattedLocation)}`
+        : null;
 
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
@@ -486,15 +618,20 @@ export function ListingDetail({ listing }: ListingDetailProps) {
         variant: "destructive",
       });
     }
-  }, [listing.land?.latitude, listing.land?.longitude, formattedLocation, toast]);
+  }, [
+    listing.land?.latitude,
+    listing.land?.longitude,
+    formattedLocation,
+    toast,
+  ]);
 
   const handleGetDirections = useCallback(() => {
     const coords = listing.land?.latitude && listing.land?.longitude;
     const url = coords
       ? `https://www.google.com/maps/dir/?api=1&destination=${listing.land.latitude},${listing.land.longitude}`
       : formattedLocation !== "Location not specified"
-      ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(formattedLocation)}`
-      : null;
+        ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(formattedLocation)}`
+        : null;
 
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
@@ -505,15 +642,27 @@ export function ListingDetail({ listing }: ListingDetailProps) {
         variant: "destructive",
       });
     }
-  }, [listing.land?.latitude, listing.land?.longitude, formattedLocation, toast]);
+  }, [
+    listing.land?.latitude,
+    listing.land?.longitude,
+    formattedLocation,
+    toast,
+  ]);
 
   const handleShare = async () => {
     setIsSharing(true);
     try {
       await navigator.clipboard.writeText(window.location.href);
-      toast({ title: "Link copied!", description: "Listing URL copied to clipboard" });
+      toast({
+        title: "Link copied!",
+        description: "Listing URL copied to clipboard",
+      });
     } catch {
-      toast({ title: "Failed to copy", description: "Please try again", variant: "destructive" });
+      toast({
+        title: "Failed to copy",
+        description: "Please try again",
+        variant: "destructive",
+      });
     } finally {
       setIsSharing(false);
     }
@@ -523,7 +672,9 @@ export function ListingDetail({ listing }: ListingDetailProps) {
     setIsSaved(saved);
     toast({
       title: saved ? "Added to saved" : "Removed from saved",
-      description: saved ? "Listing saved to your collection" : "Listing removed from your saved items",
+      description: saved
+        ? "Listing saved to your collection"
+        : "Listing removed from your saved items",
     });
   };
 
@@ -535,16 +686,42 @@ export function ListingDetail({ listing }: ListingDetailProps) {
 
   const prevImage = () => {
     setImageDirection(-1);
-    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+    setCurrentImageIndex(
+      (prev) => (prev - 1 + allImages.length) % allImages.length,
+    );
     setIsImageLoading(true);
   };
 
   const getDemandScoreConfig = (score: number | null | undefined) => {
-    if (!score) return { color: "text-gray-400", label: "Low", bg: "bg-gray-100 dark:bg-gray-900/30" };
-    if (score >= 80) return { color: "text-green-600", label: "Very High", bg: "bg-green-100 dark:bg-green-950/30" };
-    if (score >= 60) return { color: "text-yellow-600", label: "High", bg: "bg-yellow-100 dark:bg-yellow-950/30" };
-    if (score >= 40) return { color: "text-orange-600", label: "Medium", bg: "bg-orange-100 dark:bg-orange-950/30" };
-    return { color: "text-gray-400", label: "Low", bg: "bg-gray-100 dark:bg-gray-900/30" };
+    if (!score)
+      return {
+        color: "text-gray-400",
+        label: "Low",
+        bg: "bg-gray-100 dark:bg-gray-900/30",
+      };
+    if (score >= 80)
+      return {
+        color: "text-green-600",
+        label: "Very High",
+        bg: "bg-green-100 dark:bg-green-950/30",
+      };
+    if (score >= 60)
+      return {
+        color: "text-yellow-600",
+        label: "High",
+        bg: "bg-yellow-100 dark:bg-yellow-950/30",
+      };
+    if (score >= 40)
+      return {
+        color: "text-orange-600",
+        label: "Medium",
+        bg: "bg-orange-100 dark:bg-orange-950/30",
+      };
+    return {
+      color: "text-gray-400",
+      label: "Low",
+      bg: "bg-gray-100 dark:bg-gray-900/30",
+    };
   };
 
   const demandConfig = getDemandScoreConfig(listing.analytics?.demandScore);
@@ -572,15 +749,28 @@ export function ListingDetail({ listing }: ListingDetailProps) {
   };
 
   return (
-    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="min-h-screen">
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="min-h-screen"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-18">
         {/* Breadcrumb */}
-        <motion.nav variants={itemVariants} className="flex items-center text-sm text-muted-foreground mb-8">
-          <Link href="/marketplace" className="hover:text-primary transition-colors">
+        <motion.nav
+          variants={itemVariants}
+          className="flex items-center text-sm text-muted-foreground mb-8"
+        >
+          <Link
+            href="/marketplace"
+            className="hover:text-primary transition-colors"
+          >
             Marketplace
           </Link>
           <ChevronRight className="h-4 w-4 mx-2" />
-          <span className="text-foreground font-medium line-clamp-1">{listing.title}</span>
+          <span className="text-foreground font-medium line-clamp-1">
+            {listing.title}
+          </span>
         </motion.nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
@@ -599,7 +789,10 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                 >
                   {isImageLoading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-muted/50 z-10">
-                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }}>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      >
                         <Loader2 className="h-8 w-8 text-primary" />
                       </motion.div>
                     </div>
@@ -610,7 +803,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                     fill
                     className={cn(
                       "object-cover transition-opacity duration-300",
-                      isImageLoading ? "opacity-0" : "opacity-100"
+                      isImageLoading ? "opacity-0" : "opacity-100",
                     )}
                     priority
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
@@ -653,7 +846,10 @@ export function ListingDetail({ listing }: ListingDetailProps) {
 
               <div className="absolute top-4 left-4 flex gap-2 z-20">
                 {isLive && (
-                  <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                  >
                     <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 animate-pulse shadow-lg px-3 py-1.5">
                       <Zap className="h-3.5 w-3.5 mr-1 fill-current" />
                       LIVE NOW
@@ -661,8 +857,14 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                   </motion.div>
                 )}
                 {isEndingSoon && !isLive && (
-                  <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                    <Badge variant="destructive" className="shadow-lg px-3 py-1.5">
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                  >
+                    <Badge
+                      variant="destructive"
+                      className="shadow-lg px-3 py-1.5"
+                    >
                       <Clock className="h-3.5 w-3.5 mr-1" />
                       Ending Soon
                     </Badge>
@@ -687,10 +889,16 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                       "relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden transition-all",
                       index === currentImageIndex
                         ? "ring-2 ring-primary ring-offset-2 scale-105"
-                        : "opacity-70 hover:opacity-100"
+                        : "opacity-70 hover:opacity-100",
                     )}
                   >
-                    <Image src={image.url} alt={`Thumbnail ${index + 1}`} fill className="object-cover" sizes="80px" />
+                    <Image
+                      src={image.url}
+                      alt={`Thumbnail ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                    />
                   </motion.button>
                 ))}
               </div>
@@ -710,11 +918,27 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                 </motion.h1>
                 <div className="flex gap-2">
                   <motion.div whileHover={hoverGlow} whileTap={tapScale}>
-                    <Button variant="outline" size="icon" onClick={handleShare} disabled={isSharing} className="rounded-full">
-                      {isSharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={handleShare}
+                      disabled={isSharing}
+                      className="rounded-full"
+                    >
+                      {isSharing ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Share2 className="h-4 w-4" />
+                      )}
                     </Button>
                   </motion.div>
-                  <SavedButton listingId={listing.id} initialSaved={isSaved} onToggle={handleSave} size="icon" className="rounded-full" />
+                  <SavedButton
+                    listingId={listing.id}
+                    initialSaved={isSaved}
+                    onToggle={handleSave}
+                    size="icon"
+                    className="rounded-full"
+                  />
                 </div>
               </div>
               {hasLocationData && (
@@ -730,17 +954,34 @@ export function ListingDetail({ listing }: ListingDetailProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               whileHover={hoverScale}
-              className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 rounded-2xl p-6 border border-primary/20"
+              className="
+    bg-white 
+    dark:bg-neutral-900
+    rounded-2xl p-6 
+    border border-gray-200 dark:border-neutral-800
+    shadow-[0_10px_30px_rgba(0,0,0,0.06)]
+    hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)]
+    transition-all duration-300
+  "
             >
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Starting Price</p>
-                  <p className="text-2xl font-bold text-primary">{formatCurrency(listing.basePrice)}</p>
+                  <p className="text-sm text-gray-500 mb-1">Starting Price</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {formatCurrency(listing.basePrice)}
+                  </p>
                 </div>
+
                 {listing.highestBid && (
-                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-right">
-                    <p className="text-sm text-muted-foreground mb-1">Current Bid</p>
-                    <p className="text-2xl font-bold text-green-600">{formatCurrency(listing.highestBid)}</p>
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-right"
+                  >
+                    <p className="text-sm text-gray-500 mb-1">Current Bid</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {formatCurrency(listing.highestBid)}
+                    </p>
                   </motion.div>
                 )}
               </div>
@@ -748,25 +989,47 @@ export function ListingDetail({ listing }: ListingDetailProps) {
               {listing.highestBid && (
                 <div className="mb-4">
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">Bid Progress</span>
-                    <span className="font-medium">{Math.round((listing.highestBid / listing.basePrice) * 100)}%</span>
+                    <span className="text-gray-500">Bid Progress</span>
+                    <span className="font-medium text-gray-800 dark:text-gray-200">
+                      {Math.round(
+                        (listing.highestBid / listing.basePrice) * 100,
+                      )}
+                      %
+                    </span>
                   </div>
-                  <Progress value={(listing.highestBid / listing.basePrice) * 100} className="h-2" />
-                  <p className="text-xs text-muted-foreground mt-2">Next minimum bid: {formatCurrency(nextMinimumBid)}</p>
+
+                  <Progress
+                    value={(listing.highestBid / listing.basePrice) * 100}
+                    className="h-2 bg-gray-100 dark:bg-neutral-800"
+                  />
+
+                  <p className="text-xs text-gray-500 mt-2">
+                    Next minimum bid: {formatCurrency(nextMinimumBid)}
+                  </p>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-primary/20">
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-neutral-800">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Time Left</p>
-                  <p className={cn("font-semibold flex items-center gap-1", isLive ? "text-green-600" : isEndingSoon ? "text-orange-600" : "text-foreground")}>
+                  <p className="text-xs text-gray-500 mb-1">Time Left</p>
+                  <p
+                    className={cn(
+                      "font-semibold flex items-center gap-1",
+                      isLive
+                        ? "text-green-600"
+                        : isEndingSoon
+                          ? "text-orange-500"
+                          : "text-gray-900 dark:text-white",
+                    )}
+                  >
                     <Clock className="h-4 w-4" />
                     {formatTimeLeft(timeLeft)}
                   </p>
                 </div>
+
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Total Bids</p>
-                  <p className="font-semibold flex items-center gap-1">
+                  <p className="text-xs text-gray-500 mb-1">Total Bids</p>
+                  <p className="font-semibold flex items-center gap-1 text-gray-900 dark:text-white">
                     <Users className="h-4 w-4" />
                     {bidCount} {bidCount === 1 ? "bid" : "bids"}
                   </p>
@@ -775,11 +1038,38 @@ export function ListingDetail({ listing }: ListingDetailProps) {
             </motion.div>
 
             {/* Key Features */}
-            <div className="grid grid-cols-2 gap-3">
-              <InfoBadge icon={Ruler} label="Land Size" value={`${listing.land.size} acres`} />
-              <InfoBadge icon={Leaf} label="Land Type" value={listing.land.landType.toLowerCase()} />
-              <InfoBadge icon={Calendar} label="Lease Duration" value={`${listing.minimumLeaseDuration} - ${listing.maximumLeaseDuration} months`} />
-              <InfoBadge icon={Heart} label="Saved" value={savedCount} />
+            <div className="grid grid-cols-2 gap-4">
+              <InfoBadge
+                icon={Ruler}
+                label="Land Size"
+                value={`${listing.land.size} acres`}
+                className="bg-white border-gray-200 dark:border-neutral-800 rounded-xl p-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                iconClassName="text-gray-600"
+              />
+
+              <InfoBadge
+                icon={Leaf}
+                label="Land Type"
+                value={listing.land.landType.toLowerCase()}
+                className="bg-white border-gray-200 dark:border-neutral-800 rounded-xl p-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                iconClassName="text-green-600"
+              />
+
+              <InfoBadge
+                icon={Calendar}
+                label="Lease Duration"
+                value={`${listing.minimumLeaseDuration} - ${listing.maximumLeaseDuration} months`}
+                className="bg-white border-gray-200 dark:border-neutral-800 rounded-xl p-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                iconClassName="text-blue-500"
+              />
+
+              <InfoBadge
+                icon={Heart}
+                label="Saved"
+                value={savedCount}
+                className="bg-white border-gray-200 dark:border-neutral-800 rounded-xl p-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                iconClassName="text-pink-500"
+              />
             </div>
 
             {/* Analytics Card */}
@@ -788,20 +1078,33 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 whileHover={hoverScale}
-                className={cn("p-4 rounded-lg border", demandConfig.bg, "border-blue-200 dark:border-blue-800")}
+                className={cn(
+                  "p-4 rounded-lg border",
+                  demandConfig.bg,
+                  "border-blue-200 dark:border-blue-800",
+                )}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ delay: 0.5, duration: 0.5 }}>
+                    <motion.div
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ delay: 0.5, duration: 0.5 }}
+                    >
                       <TrendingUp className="h-4 w-4 text-blue-600" />
                     </motion.div>
                     <p className="text-sm font-medium">Market Demand</p>
                   </div>
-                  <Badge variant="outline" className={cn("border-0", demandConfig.color)}>
+                  <Badge
+                    variant="outline"
+                    className={cn("border-0", demandConfig.color)}
+                  >
                     {demandConfig.label}
                   </Badge>
                 </div>
-                <Progress value={listing.analytics.demandScore} className="h-1.5" />
+                <Progress
+                  value={listing.analytics.demandScore}
+                  className="h-1.5"
+                />
                 <div className="flex justify-between mt-2 text-xs text-muted-foreground">
                   <span>{Math.round(listing.analytics.demandScore)}/100</span>
                   <span className="flex items-center gap-1">
@@ -816,79 +1119,188 @@ export function ListingDetail({ listing }: ListingDetailProps) {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              whileHover={hoverScale}
-              className="flex items-center justify-between p-4 rounded-xl border bg-card"
+              whileHover={{ scale: 1.02 }}
+              className="
+    flex items-center justify-between 
+    px-5 py-3
+    rounded-full
+    bg-white
+    border border-gray-200
+    shadow-[0_8px_20px_rgba(0,0,0,0.06),_0_2px_6px_rgba(0,0,0,0.04)]
+    hover:shadow-[0_16px_40px_rgba(0,0,0,0.10),_0_4px_12px_rgba(0,0,0,0.06)]
+    transition-all duration-300
+  "
             >
               <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12 ring-2 ring-primary/20">
+                <Avatar className="h-12 w-12 ring-2 ring-gray-200 shadow-sm">
                   <AvatarImage src={listing.owner.imageUrl || ""} />
-                  <AvatarFallback className="bg-primary/10 text-primary">{getInitials(listing.owner.name)}</AvatarFallback>
+                  <AvatarFallback className="bg-gray-100 text-gray-800">
+                    {getInitials(listing.owner.name)}
+                  </AvatarFallback>
                 </Avatar>
+
                 <div>
-                  <p className="font-semibold flex items-center gap-1">
+                  <p className="font-semibold flex items-center gap-1 text-gray-900">
                     {listing.owner.name}
-                    {listing.owner.landownerProfile?.isVerified && <VerifiedBadge size="sm" />}
+                    {listing.owner.landownerProfile?.isVerified && (
+                      <VerifiedBadge size="sm" />
+                    )}
                   </p>
-                  <p className="text-xs text-muted-foreground">Verified Landowner</p>
+                  <p className="text-xs text-gray-500">Verified Landowner</p>
                 </div>
               </div>
-              <Button variant="ghost" size="sm" asChild className="group">
+
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="
+      text-gray-700
+      hover:bg-gray-100
+      rounded-full px-3
+      transition-all
+    "
+              >
                 <Link href={`/profile/${listing.owner.id}`}>
                   View Profile
                   <ExternalLink className="h-3 w-3 ml-1 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </Button>
             </motion.div>
-
             {/* Action Button */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               whileHover={hoverScale}
               whileTap={tapScale}
+              className="flex justify-center"
             >
               {isLive ? (
-                <Button asChild size="lg" className="w-full h-12 text-base shadow-lg hover:shadow-xl transition-all">
+                <Button
+                  asChild
+                  size="lg"
+                  className="
+        inline-flex items-center gap-3
+        px-5 h-12
+        rounded-full
+        bg-green-600 hover:bg-green-700
+        text-white
+        shadow-[0_8px_20px_rgba(34,197,94,0.3)]
+        hover:shadow-[0_12px_30px_rgba(34,197,94,0.4)]
+        transition-all duration-300
+        hover:-translate-y-0.5
+      "
+                >
                   <Link href={`/marketplace/listings/${listing.id}/auction`}>
-                    Join Live Auction
-                    <Zap className="h-4 w-4 ml-2" />
+                    <span
+                      className="
+            flex items-center justify-center
+            h-8 w-8
+            rounded-full
+            bg-white/20
+          "
+                    >
+                      <Zap className="h-4 w-4" />
+                    </span>
+
+                    <span className="font-medium">Join Live Auction</span>
                   </Link>
                 </Button>
               ) : listing.auctionStatus === "UPCOMING" ? (
-                <Button size="lg" className="w-full h-12 text-base" disabled>
-                  <Clock className="h-4 w-4 mr-2" />
-                  Auction Starting Soon
+                <Button
+                  size="lg"
+                  disabled
+                  className="
+        inline-flex items-center gap-3
+        px-5 h-12
+        rounded-full
+        bg-gray-100 text-gray-500
+        cursor-not-allowed
+      "
+                >
+                  <span className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-200">
+                    <Clock className="h-4 w-4" />
+                  </span>
+
+                  <span className="font-medium">Auction Starting Soon</span>
                 </Button>
               ) : (
-                <Button size="lg" className="w-full h-12 text-base" variant="outline" disabled>
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  Auction Ended
+                <Button
+                  size="lg"
+                  disabled
+                  className="
+        inline-flex items-center gap-3
+        px-5 h-12
+        rounded-full
+        bg-gray-100 text-gray-500
+        cursor-not-allowed
+      "
+                >
+                  <span className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-200">
+                    <AlertCircle className="h-4 w-4" />
+                  </span>
+
+                  <span className="font-medium">Auction Ended</span>
                 </Button>
               )}
             </motion.div>
           </div>
         </div>
-
         {/* Tabs Section */}
-        <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="mt-12">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full justify-start gap-2 bg-transparent border-b rounded-none h-auto p-0">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-12 flex justify-start"
+        >
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            {/* Bigger Capsule Container */}
+            <TabsList
+              className="
+        inline-flex items-center gap-3
+        p-3
+        bg-white
+        rounded-full
+        border border-gray-200
+        shadow-[0_6px_20px_rgba(0,0,0,0.06)]
+      "
+            >
               {["description", "details", "documents", "bids"].map((tab) => (
                 <TabsTrigger
                   key={`tab-trigger-${tab}`}
                   value={tab}
-                  className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none bg-transparent px-4 py-2 capitalize"
+                  className="
+            px-7 py-3
+            rounded-full
+            text-base font-semibold capitalize
+            text-zyn-900
+            transition-all duration-300
+            data-[state=active]:bg-[#A3C47D]
+            data-[state=active]:text-black
+            data-[state=active]:shadow-md
+            hover:bg-gray-200
+          "
                 >
                   {tab === "bids" ? "Recent Bids" : tab}
                 </TabsTrigger>
               ))}
             </TabsList>
 
-            <div className="p-6 mt-6">
+            {/* Content */}
+            <div
+              className="
+        p-8 mt-6
+        bg-white
+        rounded-2xl
+        border border-gray-100
+        shadow-[0_10px_30px_rgba(0,0,0,0.08)]
+      "
+            >
               <AnimatePresence mode="wait">
-                <div key={`tab-content-${activeTab}`}>
-                  {renderTabContent()}
-                </div>
+                <div key={`tab-content-${activeTab}`}>{renderTabContent()}</div>
               </AnimatePresence>
             </div>
           </Tabs>
