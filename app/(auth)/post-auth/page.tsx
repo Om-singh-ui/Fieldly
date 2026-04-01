@@ -4,74 +4,61 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
+// CRITICAL: prevents caching + ensures fresh execution
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 
 export default async function PostAuthPage() {
   const { userId } = await auth();
 
-  if (!userId) {
-    redirect("/sign-in");
+  // redirect immediately (no async before)
+  if (!userId) redirect("/sign-in");
+
+  // run both in parallel (reduces delay → less URL exposure)
+  const [clerkUser, user] = await Promise.all([
+    currentUser(),
+    prisma.user.findUnique({
+      where: { clerkUserId: userId },
+      select: { role: true, isOnboarded: true },
+    }),
+  ]);
+
+  let dbUser = user;
+
+  // only upsert if user doesn't exist (BIG performance win)
+  if (!dbUser) {
+    dbUser = await prisma.user.create({
+      data: {
+        clerkUserId: userId,
+        email:
+          clerkUser?.emailAddresses?.[0]?.emailAddress ??
+          `${userId}@temp.fieldly`,
+        name:
+          `${clerkUser?.firstName ?? ""} ${clerkUser?.lastName ?? ""}`.trim() ||
+          "User",
+        role: null,
+        isOnboarded: false,
+      },
+      select: { role: true, isOnboarded: true },
+    });
   }
 
-  /**
-   * Get Clerk user (needed for first DB sync)
-   */
-  const clerkUser = await currentUser();
-
-  /**
-   * RACE-SAFE UPSERT
-   * - Prevent duplicate users
-   * - Ensure email/name always synced
-   */
-  const user = await prisma.user.upsert({
-    where: { clerkUserId: userId },
-    update: {
-      email:
-        clerkUser?.emailAddresses?.[0]?.emailAddress ?? undefined,
-      name:
-        `${clerkUser?.firstName ?? ""} ${
-          clerkUser?.lastName ?? ""
-        }`.trim() || undefined,
-    },
-    create: {
-      clerkUserId: userId,
-      email:
-        clerkUser?.emailAddresses?.[0]?.emailAddress ??
-        `${userId}@temp.fieldly`,
-      name:
-        `${clerkUser?.firstName ?? ""} ${
-          clerkUser?.lastName ?? ""
-        }`.trim() || "User",
-      role: null,
-      isOnboarded: false,
-    },
-    select: {
-      role: true,
-      isOnboarded: true,
-    },
-  });
-
-  /**
-   * DETERMINISTIC ROUTING
-   */
-
-  // 1️⃣ No role selected
-  if (!user.role) {
+  // routing (FAST, no extra work)
+  if (!dbUser.role) {
     redirect("/onboarding/role");
   }
 
-  // 2️⃣ Role selected but onboarding incomplete
-  if (!user.isOnboarded) {
+  if (!dbUser.isOnboarded) {
     redirect(
-      user.role === "FARMER"
+      dbUser.role === "FARMER"
         ? "/onboarding/farmer"
         : "/onboarding/landowner"
     );
   }
 
-  // 3️⃣ Fully onboarded
   redirect(
-    user.role === "FARMER"
+    dbUser.role === "FARMER"
       ? "/farmer/dashboard"
       : "/landowner/dashboard"
   );
