@@ -1,3 +1,4 @@
+// components/MainHeader.tsx
 "use client";
 
 import {
@@ -23,7 +24,9 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useHeaderVisibility } from "./HeaderVisibility";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignedOut, SignedIn, UserButton } from "@clerk/nextjs";
+import { DashboardButton } from "@/components/DashboardButton";
+import { MobileAuthSection } from "@/components/MobileAuthSection";
 
 /* ================= TYPES & DATA ================= */
 
@@ -167,44 +170,9 @@ const NAV_DATA: Record<NavKey, NavSection> = {
 
 // ================= DESKTOP AUTH CTA =================
 function AuthCTA() {
-  const [isChecking, setIsChecking] = useState(false);
-
-  const handleDashboardRedirect = () => {
-    setIsChecking(true);
-    window.location.href = "/post-auth"; // full redirect (prod-safe auth flow)
-  };
-
   return (
     <div className="flex items-center gap-4">
-      <button
-        onClick={handleDashboardRedirect}
-        disabled={isChecking}
-        aria-busy={isChecking}
-        className="
-          flex items-center justify-center
-          rounded-full
-          bg-[#b7cf8a]
-          px-6 py-2.5
-          text-sm font-medium
-          min-w-[44px]
-          hover:bg-[#a8c07a]
-          transition-colors
-          disabled:opacity-50 disabled:cursor-not-allowed
-        "
-      >
-        {isChecking ? (
-          <span className="inline-block size-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-        ) : (
-          <Image
-            src="/icons/dashb.png"
-            alt="Dashboard"
-            width={18}
-            height={18}
-            className="object-contain"
-          />
-        )}
-      </button>
-
+      <DashboardButton />
       <UserButton
         appearance={{
           elements: {
@@ -213,64 +181,6 @@ function AuthCTA() {
           },
         }}
       />
-    </div>
-  );
-}
-
-// ================= MOBILE AUTH CTA =================
-function MobileAuthSection({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="mt-6">
-      <SignedOut>
-        <Link
-          href="/sign-in"
-          prefetch={false}
-          onClick={onClose}
-          className="
-            flex w-full items-center justify-center gap-2
-            rounded-full
-            bg-[#b7cf8a]
-            py-3
-            text-sm font-medium text-black
-            hover:bg-[#a8c07a]
-            transition-colors
-          "
-        >
-          Sign In
-          <ArrowUpRight className="h-4 w-4" />
-        </Link>
-      </SignedOut>
-
-      <SignedIn>
-        <div className="flex items-center gap-4">
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "h-10 w-10",
-                userButtonAvatarBox: "h-10 w-10",
-              },
-            }}
-          />
-
-          <Link
-            href="/post-auth"
-            prefetch={false}
-            onClick={onClose}
-            className="
-              flex-1 flex items-center justify-center gap-2
-              rounded-full
-              bg-[#b7cf8a]
-              py-3
-              text-sm font-medium text-black
-              hover:bg-[#a8c07a]
-              transition-colors
-            "
-          >
-            Go to Dashboard
-            <ArrowUpRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </SignedIn>
     </div>
   );
 }
@@ -288,7 +198,6 @@ export default function MainHeader() {
   const desktopDropdownRef = useRef<HTMLDivElement>(null);
   const desktopLanguageRef = useRef<HTMLDivElement>(null);
 
-  // No loading state - production headers don't fake load
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => {
