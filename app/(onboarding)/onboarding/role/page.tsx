@@ -8,7 +8,7 @@ import { motion, Variants } from "framer-motion";
 import { CheckCircle, ArrowRight, Star, Calendar, Users, ArrowUpRight } from "lucide-react";
 import HeroSection from "./_components/hero";
 import FAQSection from "./_components/FAQSection";
-import HowItWorks from "./_components/HowItWorks";
+import FieldlyBentoSection from "./_components/FieldlyBentoSection";
 
 type RoleType = "FARMER" | "LANDOWNER";
 type RoleColor = "emerald" | "blue";
@@ -709,7 +709,7 @@ export default function RoleSelectionPage() {
               </motion.div>
             </section>
             <section className="mt-12">
-              <HowItWorks />
+              <FieldlyBentoSection />
             </section>
             <section className="py-24">
               <div className="mx-auto max-w-[1300px] px-6">
