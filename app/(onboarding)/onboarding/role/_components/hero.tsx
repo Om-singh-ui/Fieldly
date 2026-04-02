@@ -13,17 +13,12 @@ export default function HeroSection() {
           className="
   relative mt-24 sm:mt-12 lg:mt-16 
   w-full max-w-[1240px] self-start
-  
   rounded-[28px]
   bg-gradient-to-br from-white via-white/95 to-white
-
   px-6 sm:px-8 md:px-10 lg:px-12
   py-6 sm:py-7 md:py-8
-
   border border-gray-200
-
   shadow-[0_25px_70px_rgba(0,0,0,0.12)]
-
   transition-all duration-300
 "
         >
@@ -102,23 +97,9 @@ export default function HeroSection() {
             />
 
             {/* Overlay */}
-            <div
-              className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent 
-p-4 sm:p-5 md:p-6 lg:p-6 text-white z-10 
-opacity-0 group-hover:opacity-100 transition-all duration-300"
-            >
-              <div
-                className="
-    bg-black/40 backdrop-blur-lg border border-white/25 rounded-2xl
-    
-    p-4 sm:p-5 md:p-6 lg:p-6
-    
-    transform translate-y-3 sm:translate-y-4 md:translate-y-6 lg:translate-y-6
-    group-hover:translate-y-0
-    
-    transition-all duration-300
-  "
-              >
+         {/* OVERLAY (RESTORED) */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent p-4 sm:p-5 md:p-6 text-white z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300">
+              <div className="relative bg-black/40 border border-white/20 rounded-2xl p-4 sm:p-5 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.2)] transform translate-y-2 sm:translate-y-6 sm:group-hover:translate-y-0 transition-all duration-400">
                 {/* Live Indicator */}
                 <div className="flex items-center gap-2 text-xs sm:text-sm font-medium mb-2 sm:mb-3">
                   <div className="relative h-3 w-3 sm:h-4 sm:w-4">

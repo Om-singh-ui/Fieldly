@@ -92,10 +92,10 @@ export default function HeroSection() {
               className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
             />
 
-            {/* OVERLAY (RESTORED) */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent p-4 sm:p-5 md:p-6 text-white z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300">
-              <div className="relative bg-black/40 border border-white/20 rounded-2xl p-4 sm:p-5 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.2)] transform translate-y-2 sm:translate-y-6 sm:group-hover:translate-y-0 transition-all duration-400">
-                <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold mb-3 tracking-wide">
+              {/* OVERLAY (RESTORED) */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent p-4 sm:p-5 md:p-6 text-white z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300">
+                <div className="relative bg-black/40 border border-white/20 rounded-2xl p-4 sm:p-5 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.2)] transform translate-y-2 sm:translate-y-6 sm:group-hover:translate-y-0 transition-all duration-400">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold mb-3 tracking-wide">
                   <div className="relative h-4 w-4">
                     <motion.div
                       className="absolute inset-0 rounded-full bg-white"
