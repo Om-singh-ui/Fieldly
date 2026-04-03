@@ -119,7 +119,7 @@ const NAV_DATA: Record<NavKey, NavSection> = {
         icon: BookOpen,
         href: "/resources/news",
       },
-      {
+      { 
         label: "MRV Technology",
         icon: Satellite,
         href: "/resources/mrv",
@@ -134,7 +134,7 @@ const NAV_DATA: Record<NavKey, NavSection> = {
       title: "Resources",
       desc: "Insights, research and knowledge from the Fieldly ecosystem.",
       button: "Insights From Fieldly",
-      href: "/resources/insights",
+      href: "company/insights",
     },
   },
   more: {
