@@ -345,15 +345,37 @@ export default function RoleSelectionPage() {
           className="relative z-10 w-full max-w-6xl"
         >
           {/* Header Section */}
-          <div className="text-center mb-12">
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Select your primary role to unlock personalized features tailored
-              for modern agriculture.
-            </p>
+          <div className="flex justify-center px-4">
+            <div className="relative inline-block">
+              {/* Soft Glow */}
+              <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-white/40 via-white/20 to-white/40 blur-xl opacity-60"></div>
+
+              {/* Capsule Container */}
+              <div
+                className="relative backdrop-blur-xl bg-white/70 border border-white/40 
+                    rounded-full px-10 py-5 shadow-lg flex flex-col items-center text-center max-w-2xl"
+              >
+                {/* Capsule Tag */}
+                <span className="mb-2 px-4 py-1 text-xs font-medium rounded-full bg-white/80 border border-white/50 shadow-sm">
+                  Get Started
+                </span>
+
+                {/* Title */}
+                <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900">
+                  Choose Your Role
+                </h2>
+
+                {/* Description */}
+                <p className="mt-2 text-sm md:text-base text-gray-600 max-w-md leading-relaxed">
+                  Select your primary role to unlock personalized features
+                  tailored for modern agriculture.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Cards Grid */}
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-8 mt-12">
             {roles.map((role) => {
               const colorClass = colorClasses[role.color];
 
