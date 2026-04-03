@@ -51,7 +51,7 @@ export default function FAQSection() {
   const handleRedirect = () => {
     if (redirecting) return;
     setRedirecting(true);
-    window.location.href = "/insights";
+    window.location.href = "/insights/dashboard";
   };
 
   if (isLoading) {

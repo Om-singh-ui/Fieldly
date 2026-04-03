@@ -15,7 +15,7 @@ export default function WhatWeDoSection() {
     setIsRouting(true);
 
     setTimeout(() => {
-      router.push("/insights");
+      router.push("/insights/dashboard");
     }, 600);
   };
 
