@@ -132,7 +132,7 @@ const NAV_DATA: Record<NavKey, NavSection> = {
       title: "Resources",
       desc: "Insights, research and knowledge from the Fieldly ecosystem.",
       button: "Insights From Fieldly",
-      href: "company/insights",
+      href: "/company/insights",
     },
   },
   more: {
