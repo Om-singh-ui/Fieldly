@@ -1,26 +1,18 @@
-"use client";
+import { InsightsHeroHeader } from "./_components/InsightsHeroHeader";
+import { currentUser } from "@clerk/nextjs/server";
 
-export default function InsightsDashboard() {
+export default async function InsightsDashboard() {
+  const user = await currentUser();
+
+  const fullName =
+    `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "User";
+
   return (
-    <div className="flex w-full">
-      <div className="flex-1 flex flex-col">
-        <main className="p-6 space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* RIGHT: FUTURE WIDGETS */}
-            <div className="space-y-6">
-              <div className="bg-white rounded-2xl p-5 shadow-sm">
-                <h3 className="font-semibold mb-2">Trending Topics</h3>
-                <p className="text-sm text-gray-500">(Coming soon)</p>
-              </div>
+    <div className="w-full min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 ">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        <InsightsHeroHeader name={fullName} />
 
-              <div className="bg-white rounded-2xl p-5 shadow-sm">
-                <h3 className="font-semibold mb-2">Market Signals</h3>
-                <p className="text-sm text-gray-500">(Coming soon)</p>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
+      </main>
     </div>
   );
 }
