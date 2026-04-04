@@ -1246,61 +1246,139 @@ export function ListingDetail({ listing }: ListingDetailProps) {
             </motion.div>
           </div>
         </div>
-        {/* Tabs Section */}
+        
+        {/* Tabs Section - FIXED RESPONSIVE VERSION */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-12 flex justify-start"
+          className="mt-12"
         >
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
             className="w-full"
           >
-            {/* Bigger Capsule Container */}
-            <TabsList
-              className="
-        inline-flex items-center gap-3
-        p-3
-        bg-white
-        rounded-full
-        border border-gray-200
-        shadow-[0_6px_20px_rgba(0,0,0,0.06)]
-      "
-            >
-              {["description", "details", "documents", "bids"].map((tab) => (
+            {/* Responsive Tabs Container */}
+            <div className="relative w-full overflow-x-auto overflow-y-hidden pb-2 scrollbar-thin scrollbar-thumb-gray-300">
+              <TabsList
+                className="
+                  inline-flex 
+                  items-center 
+                  justify-start
+                  gap-2 sm:gap-3
+                  p-2 sm:p-3
+                  bg-white
+                  rounded-full
+                  border border-gray-200
+                  shadow-[0_6px_20px_rgba(0,0,0,0.06)]
+                  w-auto
+                  min-w-max
+                "
+              >
                 <TabsTrigger
-                  key={`tab-trigger-${tab}`}
-                  value={tab}
+                  value="description"
                   className="
-            px-7 py-3
-            rounded-full
-            text-base font-semibold capitalize
-            text-zyn-900
-            transition-all duration-300
-            data-[state=active]:bg-[#A3C47D]
-            data-[state=active]:text-black
-            data-[state=active]:shadow-md
-            hover:bg-gray-200
-          "
+                    px-4 sm:px-7 
+                    py-2 sm:py-3
+                    rounded-full
+                    text-sm sm:text-base 
+                    font-semibold 
+                    capitalize
+                    text-gray-700
+                    transition-all 
+                    duration-300
+                    whitespace-nowrap
+                    data-[state=active]:bg-[#A3C47D]
+                    data-[state=active]:text-black
+                    data-[state=active]:shadow-md
+                    hover:bg-gray-100
+                  "
                 >
-                  {tab === "bids" ? "Recent Bids" : tab}
+                  Description
                 </TabsTrigger>
-              ))}
-            </TabsList>
+                
+                <TabsTrigger
+                  value="details"
+                  className="
+                    px-4 sm:px-7 
+                    py-2 sm:py-3
+                    rounded-full
+                    text-sm sm:text-base 
+                    font-semibold 
+                    capitalize
+                    text-gray-700
+                    transition-all 
+                    duration-300
+                    whitespace-nowrap
+                    data-[state=active]:bg-[#A3C47D]
+                    data-[state=active]:text-black
+                    data-[state=active]:shadow-md
+                    hover:bg-gray-100
+                  "
+                >
+                  Details
+                </TabsTrigger>
+                
+                <TabsTrigger
+                  value="documents"
+                  className="
+                    px-4 sm:px-7 
+                    py-2 sm:py-3
+                    rounded-full
+                    text-sm sm:text-base 
+                    font-semibold 
+                    capitalize
+                    text-gray-700
+                    transition-all 
+                    duration-300
+                    whitespace-nowrap
+                    data-[state=active]:bg-[#A3C47D]
+                    data-[state=active]:text-black
+                    data-[state=active]:shadow-md
+                    hover:bg-gray-100
+                  "
+                >
+                  Documents
+                </TabsTrigger>
+                
+                <TabsTrigger
+                  value="bids"
+                  className="
+                    px-4 sm:px-7 
+                    py-2 sm:py-3
+                    rounded-full
+                    text-sm sm:text-base 
+                    font-semibold 
+                    text-gray-700
+                    transition-all 
+                    duration-300
+                    whitespace-nowrap
+                    data-[state=active]:bg-[#A3C47D]
+                    data-[state=active]:text-black
+                    data-[state=active]:shadow-md
+                    hover:bg-gray-100
+                  "
+                >
+                  Recent Bids
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            {/* Content */}
+            {/* Content Container - Responsive Padding */}
             <div
               className="
-        p-8 mt-6
-        bg-white
-        rounded-2xl
-        border border-gray-100
-        shadow-[0_10px_30px_rgba(0,0,0,0.08)]
-      "
+                p-4 sm:p-6 md:p-8 
+                mt-4 sm:mt-6
+                bg-white
+                rounded-xl sm:rounded-2xl
+                border border-gray-100
+                shadow-[0_10px_30px_rgba(0,0,0,0.08)]
+              "
             >
               <AnimatePresence mode="wait">
-                <div key={`tab-content-${activeTab}`}>{renderTabContent()}</div>
+                <div key={`tab-content-${activeTab}`}>
+                  {renderTabContent()}
+                </div>
               </AnimatePresence>
             </div>
           </Tabs>
