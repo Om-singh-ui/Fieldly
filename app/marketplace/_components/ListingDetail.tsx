@@ -1386,4 +1386,4 @@ export function ListingDetail({ listing }: ListingDetailProps) {
       </div>
     </motion.div>
   );
-}
+} 
