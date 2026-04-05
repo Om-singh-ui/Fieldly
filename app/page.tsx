@@ -153,13 +153,12 @@ export default function Home() {
         <MultiModalMonitoring />
       </section>
 
-      {/* What We Do Section */}
-      <section className="mt-16 sm:mt-20 md:mt-24 lg:mt-28 px-4 sm:px-6 md:px-0">
+      <section className="mt-16 sm:mt-20 md:mt-24 lg:mt-28 px-0">
         <WhatWeDoSection />
       </section>
       {/* app - Find Land Hero */}
       <section className="mt-16 sm:mt-20 md:mt-24 lg:mt-28 px-4 sm:px-6 md:px-0">
-      <FindLandHero />
+        <FindLandHero />
       </section>
       {/* Mission Section with Background Image */}
       <section className="relative w-full overflow-hidden py-16 mt-16 sm:mt-20 md:mt-24 lg:mt-28">
@@ -425,7 +424,8 @@ export default function Home() {
             </motion.div>
           )}
         </div>
-      </section><section className="relative z-10 mt-16 sm:mt-20 md:mt-24 lg:mt-28">
+      </section>
+      <section className="relative z-10 mt-16 sm:mt-20 md:mt-24 lg:mt-28">
         <CTA />
       </section>
     </main>
