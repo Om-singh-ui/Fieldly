@@ -94,8 +94,8 @@ export default function WhatWeDoSection() {
                 visible: { opacity: 1, y: 0 },
               }}
             >
-              Fieldly Insights brings together data from across the ecosystem —
-              including land usage, leasing behavior, and farmer activity — to
+              Fieldly Insights brings together data from across the ecosystem
+              including land usage, leasing behavior, and farmer activity to
               deliver meaningful analysis that helps stakeholders make smarter,
               more informed decisions.
             </motion.p>
