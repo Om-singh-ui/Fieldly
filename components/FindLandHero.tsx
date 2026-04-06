@@ -112,7 +112,7 @@ export default function FindLandHero() {
             />
           </div>
 
-          {/* Overlapping phone mockup */}
+          {/* Overlapp      ing phone mockup */}
           <div className="absolute w-[220px] sm:w-[300px] lg:w-[420px] h-[460px] sm:h-[580px] lg:h-[760px] -top-16 sm:-top-20 lg:-top-28 z-10">
             <Image
               src="/map.png"

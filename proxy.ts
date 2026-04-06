@@ -1,6 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -10,84 +9,41 @@ const isPublicRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
-  const pathname = req.nextUrl.pathname;
+  const { pathname } = req.nextUrl;
 
   ////////////////////////////////////////
-  // CRITICAL FIX: BYPASS API ROUTES
+  // 1. BYPASS STATIC + API
   ////////////////////////////////////////
-
-  if (pathname.startsWith("/api")) {
+  if (
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.includes(".")
+  ) {
     return NextResponse.next();
   }
 
   ////////////////////////////////////////
-  // NOT SIGNED IN (ONLY FOR PAGES)
+  // 2. NOT SIGNED IN
   ////////////////////////////////////////
-
-  if (!userId && !isPublicRoute(req)) {
-    const signInUrl = new URL("/sign-in", req.url);
-    signInUrl.searchParams.set("redirect_url", pathname);
-    return NextResponse.redirect(signInUrl);
-  }
-
-  ////////////////////////////////////////
-  // SIGNED IN
-  ////////////////////////////////////////
-
-  if (userId) {
-    try {
-      const user = await prisma.user.findUnique({
-        where: { clerkUserId: userId },
-        select: {
-          role: true,
-          isOnboarded: true,
-        },
-      });
-
-      // USER NOT IN DB
-      if (!user && !pathname.startsWith("/post-auth")) {
-        return NextResponse.redirect(new URL("/post-auth", req.url));
-      }
-
-      // ROLE NOT CHOSEN
-      if (user && !user.role) {
-        if (!pathname.startsWith("/onboarding/role")) {
-          return NextResponse.redirect(
-            new URL("/onboarding/role", req.url)
-          );
-        }
-      }
-
-      // ONBOARDING NOT COMPLETE
-      if (user?.role && !user.isOnboarded) {
-        const onboardingPath =
-          user.role === "FARMER"
-            ? "/onboarding/farmer"
-            : "/onboarding/landowner";
-
-        if (!pathname.startsWith(onboardingPath)) {
-          return NextResponse.redirect(
-            new URL(onboardingPath, req.url)
-          );
-        }
-      }
-
-      // FULLY ONBOARDED
-      if (user?.role && user.isOnboarded) {
-        const dashboard =
-          user.role === "FARMER"
-            ? "/farmer/dashboard"
-            : "/landowner/dashboard";
-
-        if (pathname.startsWith("/onboarding")) {
-          return NextResponse.redirect(new URL(dashboard, req.url));
-        }
-      }
-    } catch (e) {
-      console.error("Middleware DB error:", e);
+  if (!userId) {
+    if (!isPublicRoute(req)) {
+      const signInUrl = new URL("/sign-in", req.url);
+      signInUrl.searchParams.set("redirect_url", pathname);
+      return NextResponse.redirect(signInUrl);
     }
+    return NextResponse.next();
   }
 
+  ////////////////////////////////////////
+  // 3. SIGNED IN (NO DB HERE )
+  ////////////////////////////////////////
+
+  // Prevent accessing auth pages again
+  if (pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up")) {
+    return NextResponse.redirect(new URL("/post-auth", req.url));
+  }
+
+  // Let onboarding + post-auth + dashboards handle logic via layouts
   return NextResponse.next();
 });
 

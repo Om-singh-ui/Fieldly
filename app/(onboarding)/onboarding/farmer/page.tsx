@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react"; // ✅ added useEffect
 import { useRouter } from "next/navigation";
 import { useForm, type FieldPath } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,7 +15,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-import { completeFarmerOnboarding } from "@/actions/onboarding.actions";
+import {
+  completeFarmerOnboarding,
+  finalizeOnboarding,
+} from "@/actions/onboarding.actions";
 
 import { ProgressStepper } from "./_components/ProgressStepper";
 import { BasicInfoForm } from "./_components/BasicInfoForm";
@@ -26,6 +29,40 @@ import { SuccessScreen } from "./_components/SuccessScreen";
 
 import type { FarmerOnboardingInput } from "./types";
 import { toast } from "sonner";
+
+/* ============================================================
+   SUCCESS AUTO REDIRECT COMPONENT 🔥
+============================================================ */
+
+function SuccessAutoRedirect({ role }: { role: "farmer" | "landowner" }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        await finalizeOnboarding(); // ✅ finalize state
+
+        setTimeout(() => {
+          router.replace(
+            role === "farmer"
+              ? "/farmer/dashboard"
+              : "/landowner/dashboard"
+          );
+        }, 2500); // ⏱️ delay for UX
+      } catch (err) {
+        console.error("Finalize error:", err);
+      }
+    };
+
+    run();
+  }, [router, role]);
+
+  return <SuccessScreen />;
+}
+
+/* ============================================================
+   STEPS
+============================================================ */
 
 const STEPS = [
   {
@@ -56,8 +93,6 @@ const STEPS = [
 ];
 
 export default function FarmerOnboardingPage() {
-  const router = useRouter();
-
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,20 +151,15 @@ export default function FarmerOnboardingPage() {
     setError(null);
 
     try {
-      // Data is already validated and typed correctly by Zod
-      // No need to convert anything - data already has numbers
       const result = await completeFarmerOnboarding(data);
 
       if (result.success) {
-        setCurrentStep(4);
+        setCurrentStep(4); // ✅ show success
+
         toast.success("🎉 Onboarding Complete!", {
           description: "Your farmer profile has been created successfully.",
           duration: 5000,
         });
-
-        setTimeout(() => {
-          router.push(result.redirectTo || "/dashboard/farmer");
-        }, 2500);
       } else {
         setError(result.error || "Failed to complete onboarding");
         toast.error("Onboarding Failed", {
@@ -160,8 +190,10 @@ export default function FarmerOnboardingPage() {
         return <LandRequirementsForm form={form} />;
       case 3:
         return <InfrastructureForm form={form} />;
+
       case 4:
-        return <SuccessScreen onContinue={() => router.replace("/farmer/dashboard")} />;
+        return <SuccessAutoRedirect role="farmer" />; // 🔥 FINAL FIX
+
       default:
         return null;
     }
@@ -219,36 +251,25 @@ export default function FarmerOnboardingPage() {
         {/* Navigation */}
         {currentStep < 4 && (
           <div className="flex justify-between items-center pt-6">
-            {/* Back Button */}
             <button
               type="button"
               onClick={handlePrevStep}
               disabled={currentStep === 0}
-              className={`
-        px-5 py-2.5 rounded-lg font-medium flex items-center gap-2
-        transition-colors duration-200
-        ${
-          currentStep === 0
-            ? "opacity-0 pointer-events-none"
-            : "text-gray-700 hover:bg-gray-100"
-        }
-      `}
+              className={`px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 ${
+                currentStep === 0
+                  ? "opacity-0 pointer-events-none"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
             >
               <ChevronRight className="rotate-180 h-4 w-4" />
               Back
             </button>
 
-            {/* Primary Action */}
             {currentStep < 3 ? (
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="
-          px-6 py-2.5 rounded-lg font-medium flex items-center gap-2
-          bg-[#b7cf8a] text-[#2f3d1c]
-          hover:bg-[#a9c57a]
-          transition-colors duration-200
-        "
+                className="px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 bg-[#b7cf8a] text-[#2f3d1c] hover:bg-[#a9c57a]"
               >
                 Continue
                 <ChevronRight className="h-4 w-4" />
@@ -258,13 +279,7 @@ export default function FarmerOnboardingPage() {
                 type="button"
                 onClick={form.handleSubmit(handleSubmitForm)}
                 disabled={isSubmitting}
-                className="
-          px-6 py-2.5 rounded-lg font-medium flex items-center gap-2
-          bg-[#b7cf8a] text-[#2f3d1c]
-          hover:bg-[#a9c57a]
-          transition-colors duration-200
-          disabled:opacity-50 disabled:cursor-not-allowed
-        "
+                className="px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 bg-[#b7cf8a] text-[#2f3d1c] disabled:opacity-50"
               >
                 {isSubmitting ? "Creating Profile..." : "Complete Profile"}
                 <CheckCircle className="h-4 w-4" />
