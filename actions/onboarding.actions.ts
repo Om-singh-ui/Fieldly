@@ -169,7 +169,7 @@ export async function completeFarmerOnboarding(
       });
     });
 
-    // 🔥 ACTIVITY (FIX)
+    // ACTIVITY (FIX)
     await Promise.allSettled([
       prisma.notification.create({
         data: {
@@ -249,7 +249,7 @@ export async function completeLandownerOnboarding(
       });
     });
 
-    // 🔥 ACTIVITY (FIX)
+    // ACTIVITY (FIX)
     await Promise.allSettled([
       prisma.notification.create({
         data: {
@@ -296,7 +296,7 @@ export async function finalizeOnboarding(): Promise<OnboardingResult> {
       },
     });
 
-    // 🔥 FINAL ACTIVITY
+    // FINAL ACTIVITY
     await Promise.allSettled([
       prisma.notification.create({
         data: {
