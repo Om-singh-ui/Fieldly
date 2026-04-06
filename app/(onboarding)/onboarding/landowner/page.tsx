@@ -35,7 +35,7 @@ import { ReviewForm } from "./_components/ReviewForm";
 import { SuccessScreen } from "./_components/SuccessScreen";
 
 /* ============================================================
-   SUCCESS AUTO REDIRECT COMPONENT 🔥 (FINAL)
+   SUCCESS AUTO REDIRECT COMPONENT  (FINAL)
 ============================================================ */
 
 function SuccessAutoRedirect({ role }: { role: "landowner" | "farmer" }) {

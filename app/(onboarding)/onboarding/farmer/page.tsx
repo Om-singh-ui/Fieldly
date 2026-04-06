@@ -31,7 +31,7 @@ import type { FarmerOnboardingInput } from "./types";
 import { toast } from "sonner";
 
 /* ============================================================
-   SUCCESS AUTO REDIRECT COMPONENT 🔥
+   SUCCESS AUTO REDIRECT COMPONENT 
 ============================================================ */
 
 function SuccessAutoRedirect({ role }: { role: "farmer" | "landowner" }) {
@@ -40,7 +40,7 @@ function SuccessAutoRedirect({ role }: { role: "farmer" | "landowner" }) {
   useEffect(() => {
     const run = async () => {
       try {
-        await finalizeOnboarding(); // ✅ finalize state
+        await finalizeOnboarding(); 
 
         setTimeout(() => {
           router.replace(
@@ -48,7 +48,7 @@ function SuccessAutoRedirect({ role }: { role: "farmer" | "landowner" }) {
               ? "/farmer/dashboard"
               : "/landowner/dashboard"
           );
-        }, 2500); // ⏱️ delay for UX
+        }, 2500); // delay for UX
       } catch (err) {
         console.error("Finalize error:", err);
       }
@@ -154,7 +154,7 @@ export default function FarmerOnboardingPage() {
       const result = await completeFarmerOnboarding(data);
 
       if (result.success) {
-        setCurrentStep(4); // ✅ show success
+        setCurrentStep(4); 
 
         toast.success("🎉 Onboarding Complete!", {
           description: "Your farmer profile has been created successfully.",
@@ -192,7 +192,7 @@ export default function FarmerOnboardingPage() {
         return <InfrastructureForm form={form} />;
 
       case 4:
-        return <SuccessAutoRedirect role="farmer" />; // 🔥 FINAL FIX
+        return <SuccessAutoRedirect role="farmer" />; 
 
       default:
         return null;
