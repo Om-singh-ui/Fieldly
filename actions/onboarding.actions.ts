@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import type { LandownerOnboardingInput } from "@/lib/validations/onboarding";
 
-
 /* ============================================================
    TYPES
 ============================================================ */
@@ -26,7 +25,6 @@ export interface FarmerFormData {
 
 export interface OnboardingResult {
   success: boolean;
-  redirectTo?: string;
   error?: string;
 }
 
@@ -34,49 +32,45 @@ export interface OnboardingResult {
    HELPERS
 ============================================================ */
 
-function sanitizeString(value?: string | null): string | null {
+function sanitizeString(value?: string | null) {
   if (!value) return null;
   return value.trim().slice(0, 500);
 }
 
-function toBoolean(value?: boolean | string | null): boolean {
+function toBoolean(value?: boolean | string | null) {
   if (typeof value === "boolean") return value;
   if (typeof value === "string") return value === "true";
   return false;
 }
 
-function toNumber(value?: number | string | null): number {
-  if (value === undefined || value === null) return 0;
+function toNumber(value?: number | string | null) {
+  if (value == null) return 0;
   if (typeof value === "number") return value;
   const parsed = Number(value);
   return isNaN(parsed) ? 0 : parsed;
 }
 
 /* ============================================================
-   GET OR CREATE USER (PRODUCTION-GRADE)
+   GET OR CREATE USER (OPTIMIZED)
 ============================================================ */
 
-/**
- * Gets or creates a user in the database
- * This is the ONLY function that should be used to get the current user
- * It ensures the user exists in the database and returns the DB user object
- * 
- * @throws {Error} If not authenticated
- * @returns {Promise<Object>} The database user object
- */
 export async function getOrCreateUser() {
   const { userId } = await auth();
   if (!userId) throw new Error("Not authenticated");
 
+  const existing = await prisma.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (existing) return existing;
+
   const clerkUser = await currentUser();
 
-  return prisma.user.upsert({
-    where: { clerkUserId: userId },
-    update: {},
-    create: {
+  return prisma.user.create({
+    data: {
       clerkUserId: userId,
       email:
-        clerkUser?.emailAddresses[0]?.emailAddress ??
+        clerkUser?.emailAddresses?.[0]?.emailAddress ??
         `${userId}@temp.com`,
       name:
         `${clerkUser?.firstName ?? ""} ${
@@ -84,43 +78,38 @@ export async function getOrCreateUser() {
         }`.trim() || "User",
       role: null,
       isOnboarded: false,
+      onboardingStep: 0,
     },
   });
 }
 
 /* ============================================================
-   SET USER ROLE
+   SET ROLE
 ============================================================ */
 
 export async function setUserRole(
   role: "FARMER" | "LANDOWNER"
 ): Promise<OnboardingResult> {
   try {
-    // Use getOrCreateUser to ensure user exists and get DB user
     const user = await getOrCreateUser();
 
-    // Update the user's role using DB id
+    if (user.role) {
+      return { success: false, error: "Role already selected" };
+    }
+
     await prisma.user.update({
       where: { id: user.id },
-      data: { role },
+      data: {
+        role,
+        onboardingStep: 1,
+      },
     });
 
-    // Revalidate only auth flow page
-    revalidatePath("/post-auth");
-
-    return {
-      success: true,
-      redirectTo: `/onboarding/${role.toLowerCase()}`,
-    };
+    return { success: true };
   } catch (error) {
-    console.error("setUserRole error:", error);
-
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to set role",
+      error: error instanceof Error ? error.message : "Failed to set role",
     };
   }
 }
@@ -133,16 +122,17 @@ export async function completeFarmerOnboarding(
   formData: FarmerFormData
 ): Promise<OnboardingResult> {
   try {
-    // Use getOrCreateUser to ensure user exists and get DB user
     const user = await getOrCreateUser();
 
-    // Check role using DB user object
+    if (user.isOnboarded) {
+      return { success: false, error: "Already onboarded" };
+    }
+
     if (user.role !== "FARMER") {
       return { success: false, error: "Invalid role" };
     }
 
     await prisma.$transaction(async (tx) => {
-      // Update user using DB id
       await tx.user.update({
         where: { id: user.id },
         data: {
@@ -150,56 +140,36 @@ export async function completeFarmerOnboarding(
           district: formData.district,
           state: formData.state,
           bio: sanitizeString(formData.bio),
-          isOnboarded: true,
+          onboardingStep: 3,
+          isOnboarded: false,
         },
       });
 
-      // Create farmer profile using DB user.id
       await tx.farmerProfile.upsert({
         where: { userId: user.id },
         update: {
           primaryCrops: formData.primaryCrops,
-          farmingExperience: toNumber(
-            formData.farmingExperience
-          ),
+          farmingExperience: toNumber(formData.farmingExperience),
           farmingType: formData.farmingType,
-          requiredLandSize: toNumber(
-            formData.requiredLandSize
-          ),
-          leaseDuration: toNumber(
-            formData.leaseDuration
-          ),
-          irrigationNeeded: toBoolean(
-            formData.irrigationNeeded
-          ),
-          equipmentAccess: toBoolean(
-            formData.equipmentAccess
-          ),
+          requiredLandSize: toNumber(formData.requiredLandSize),
+          leaseDuration: toNumber(formData.leaseDuration),
+          irrigationNeeded: toBoolean(formData.irrigationNeeded),
+          equipmentAccess: toBoolean(formData.equipmentAccess),
         },
         create: {
           userId: user.id,
           primaryCrops: formData.primaryCrops,
-          farmingExperience: toNumber(
-            formData.farmingExperience
-          ),
+          farmingExperience: toNumber(formData.farmingExperience),
           farmingType: formData.farmingType,
-          requiredLandSize: toNumber(
-            formData.requiredLandSize
-          ),
-          leaseDuration: toNumber(
-            formData.leaseDuration
-          ),
-          irrigationNeeded: toBoolean(
-            formData.irrigationNeeded
-          ),
-          equipmentAccess: toBoolean(
-            formData.equipmentAccess
-          ),
+          requiredLandSize: toNumber(formData.requiredLandSize),
+          leaseDuration: toNumber(formData.leaseDuration),
+          irrigationNeeded: toBoolean(formData.irrigationNeeded),
+          equipmentAccess: toBoolean(formData.equipmentAccess),
         },
       });
     });
 
-    // Create notifications using DB user.id
+    // 🔥 ACTIVITY (FIX)
     await Promise.allSettled([
       prisma.notification.create({
         data: {
@@ -209,33 +179,19 @@ export async function completeFarmerOnboarding(
           message: "Your farmer profile is complete.",
         },
       }),
-
       prisma.auditLog.create({
         data: {
           userId: user.id,
           action: "FARMER_ONBOARDING_COMPLETED",
-          metadata: {
-            timestamp: new Date().toISOString(),
-          },
         },
       }),
     ]);
 
-    revalidatePath("/farmer/dashboard");
-
-    return {
-      success: true,
-      redirectTo: "/farmer/dashboard",
-    };
+    return { success: true };
   } catch (error) {
-    console.error("Farmer onboarding error:", error);
-
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Onboarding failed",
+      error: error instanceof Error ? error.message : "Onboarding failed",
     };
   }
 }
@@ -248,16 +204,17 @@ export async function completeLandownerOnboarding(
   formData: LandownerOnboardingInput
 ): Promise<OnboardingResult> {
   try {
-    // Use getOrCreateUser to ensure user exists and get DB user
     const user = await getOrCreateUser();
 
-    // Check role using DB user object
+    if (user.isOnboarded) {
+      return { success: false, error: "Already onboarded" };
+    }
+
     if (user.role !== "LANDOWNER") {
       return { success: false, error: "Invalid role" };
     }
 
     await prisma.$transaction(async (tx) => {
-      // Update user using DB id
       await tx.user.update({
         where: { id: user.id },
         data: {
@@ -265,11 +222,11 @@ export async function completeLandownerOnboarding(
           district: formData.district,
           state: formData.state,
           bio: sanitizeString(formData.bio),
-          isOnboarded: true,
+          onboardingStep: 3,
+          isOnboarded: false,
         },
       });
 
-      // Create landowner profile using DB user.id
       await tx.landownerProfile.upsert({
         where: { userId: user.id },
         update: {
@@ -292,104 +249,78 @@ export async function completeLandownerOnboarding(
       });
     });
 
-    //Create notifications using DB user.id
+    // 🔥 ACTIVITY (FIX)
     await Promise.allSettled([
       prisma.notification.create({
         data: {
           userId: user.id,
           type: "SYSTEM",
           title: "Welcome to Fieldly! 🎉",
-          message:
-            "Your landowner profile is complete.",
+          message: "Your landowner profile is complete.",
         },
       }),
-
       prisma.auditLog.create({
         data: {
           userId: user.id,
-          action:
-            "LANDOWNER_ONBOARDING_COMPLETED",
-          metadata: {
-            timestamp: new Date().toISOString(),
-          },
+          action: "LANDOWNER_ONBOARDING_COMPLETED",
         },
       }),
     ]);
 
-    revalidatePath("/landowner/dashboard");
-
-    return {
-      success: true,
-      redirectTo: "/landowner/dashboard",
-    };
+    return { success: true };
   } catch (error) {
-    console.error(
-      "Landowner onboarding error:",
-      error
-    );
-
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Onboarding failed",
+      error: error instanceof Error ? error.message : "Onboarding failed",
     };
   }
 }
 
 /* ============================================================
-   HELPER FUNCTIONS FOR API ROUTES
+   FINALIZE ONBOARDING
 ============================================================ */
 
-/**
- * Gets the current user with their role
- * Useful for API routes that need user data
- * Returns null if not authenticated
- */
-export async function getCurrentUser() {
+export async function finalizeOnboarding(): Promise<OnboardingResult> {
   try {
     const user = await getOrCreateUser();
-    return user;
-  } catch {
-    return null;
-  }
-}
 
-/**
- * Gets the current user and verifies they have a specific role
- * @throws {Error} If not authenticated or role mismatch
- */
-export async function getCurrentUserWithRole(role: "FARMER" | "LANDOWNER") {
-  const user = await getOrCreateUser();
-  
-  if (user.role !== role) {
-    throw new Error(`User must be a ${role.toLowerCase()}`);
-  }
-  
-  return user;
-}
+    if (user.onboardingStep !== 3) {
+      return { success: false, error: "Invalid onboarding state" };
+    }
 
-/**
- * Checks if the current user is onboarded
- */
-export async function isUserOnboarded() {
-  try {
-    const user = await getOrCreateUser();
-    return user.isOnboarded;
-  } catch {
-    return false;
-  }
-}
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        onboardingStep: 4,
+        isOnboarded: true,
+      },
+    });
 
-/**
- * Gets the current user's role
- */
-export async function getUserRole() {
-  try {
-    const user = await getOrCreateUser();
-    return user.role;
-  } catch {
-    return null;
+    // 🔥 FINAL ACTIVITY
+    await Promise.allSettled([
+      prisma.notification.create({
+        data: {
+          userId: user.id,
+          type: "SYSTEM",
+          title: "Onboarding Completed 🎉",
+          message: `Your ${user.role?.toLowerCase()} profile is now live.`,
+        },
+      }),
+      prisma.auditLog.create({
+        data: {
+          userId: user.id,
+          action: "ONBOARDING_FINALIZED",
+        },
+      }),
+    ]);
+
+    revalidatePath("/");
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to finalize",
+    };
   }
 }

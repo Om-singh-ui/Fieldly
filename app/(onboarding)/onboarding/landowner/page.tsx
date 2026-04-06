@@ -1,14 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Loader2, Phone, User, Bell, CheckCircle, ChevronRight, AlertCircle, Award } from "lucide-react";
+import {
+  Loader2,
+  Phone,
+  User,
+  Bell,
+  CheckCircle,
+  ChevronRight,
+  AlertCircle,
+  Award,
+} from "lucide-react";
 
-import { completeLandownerOnboarding } from "@/actions/onboarding.actions";
+import {
+  completeLandownerOnboarding,
+    finalizeOnboarding,
+} from "@/actions/onboarding.actions";
+
 import {
   landownerOnboardingSchema,
   type LandownerOnboardingInput,
@@ -21,15 +34,79 @@ import { PreferencesForm } from "./_components/PreferencesForm";
 import { ReviewForm } from "./_components/ReviewForm";
 import { SuccessScreen } from "./_components/SuccessScreen";
 
+/* ============================================================
+   SUCCESS AUTO REDIRECT COMPONENT 🔥 (FINAL)
+============================================================ */
+
+function SuccessAutoRedirect({ role }: { role: "landowner" | "farmer" }) {
+  const router = useRouter();
+  const [hasRun, setHasRun] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  useEffect(() => {
+    if (hasRun) return;
+
+    let timeout: NodeJS.Timeout;
+
+    const run = async () => {
+      try {
+        setHasRun(true);
+        setIsRedirecting(true);
+
+        await finalizeOnboarding();
+
+        timeout = setTimeout(() => {
+          router.replace(
+            role === "landowner"
+              ? "/landowner/dashboard"
+              : "/farmer/dashboard"
+          );
+        }, 2500);
+      } catch (err) {
+        console.error("Finalize error:", err);
+        setIsRedirecting(false);
+      }
+    };
+
+    run();
+
+    return () => {
+      if (timeout) clearTimeout(timeout); // ✅ cleanup
+    };
+  }, [hasRun, router, role]);
+
+  return (
+    <>
+      <SuccessScreen role={role} />
+      {isRedirecting && (
+        <p className="text-center text-sm text-gray-400 mt-4">
+          Redirecting to your dashboard...
+        </p>
+      )}
+    </>
+  );
+}
+
+/* ============================================================
+   STEPS
+============================================================ */
+
 const STEPS = [
   { title: "Contact", icon: Phone, image: "/onboarding/contact.png" },
-  { title: "Profile", icon: User, image: "/onboarding/user-man-account-person.png" },
+  {
+    title: "Profile",
+    icon: User,
+    image: "/onboarding/user-man-account-person.png",
+  },
   { title: "Preferences", icon: Bell, image: "/onboarding/preference.png" },
   { title: "Review", icon: CheckCircle, image: "/onboarding/review.png" },
   { title: "Complete", icon: Award, image: "/onboarding/5290058.png" },
 ];
 
-const STEP_FIELDS: Record<number, readonly FieldPath<LandownerOnboardingInput>[]> = {
+const STEP_FIELDS: Record<
+  number,
+  readonly FieldPath<LandownerOnboardingInput>[]
+> = {
   0: ["phone", "state", "district"],
   1: ["bio", "ownershipType"],
   2: [
@@ -41,8 +118,11 @@ const STEP_FIELDS: Record<number, readonly FieldPath<LandownerOnboardingInput>[]
   3: ["termsAccepted", "privacyPolicyAccepted"],
 };
 
+/* ============================================================
+   MAIN COMPONENT
+============================================================ */
+
 export default function LandownerOnboardingPage() {
-  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,12 +177,9 @@ export default function LandownerOnboardingPage() {
       toast.success("🎉 Onboarding Complete!", {
         description: "Your landowner profile has been created successfully.",
       });
-
-      setTimeout(() => {
-        router.replace(result.redirectTo || "/landowner/dashboard");
-      }, 2000);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Something went wrong";
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
       setError(message);
       toast.error(message);
     } finally {
@@ -121,12 +198,7 @@ export default function LandownerOnboardingPage() {
       case 3:
         return <ReviewForm form={form} />;
       case 4:
-        return (
-          <SuccessScreen
-            role="landowner"
-            onContinue={() => router.replace("/landowner/dashboard")}
-          />
-        );
+        return <SuccessAutoRedirect role="landowner" />;
       default:
         return null;
     }
@@ -135,13 +207,17 @@ export default function LandownerOnboardingPage() {
   return (
     <div className="min-h-screen py-10 px-4 mt-18">
       <div className="max-w-4xl mx-auto">
-
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-10"
+        >
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
             Complete Your Landowner Profile
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Set up your profile to start listing land and connecting with verified farmers
+            Set up your profile to start listing land and connecting with
+            verified farmers
           </p>
         </motion.div>
 
@@ -165,7 +241,11 @@ export default function LandownerOnboardingPage() {
         </AnimatePresence>
 
         {error && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl"
+          >
             <div className="flex items-center gap-3">
               <AlertCircle className="h-5 w-5 text-red-600" />
               <span className="text-red-600 font-medium">{error}</span>
