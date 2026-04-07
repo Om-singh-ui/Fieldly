@@ -73,9 +73,7 @@ export function ListingsGrid({ listings }: Props) {
     if (diff <= 0) return "Ended";
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor(
-      (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-    );
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
     if (days > 0) return `${days}d ${hours}h left`;
     if (hours > 0) return `${hours}h left`;
@@ -96,29 +94,29 @@ export function ListingsGrid({ listings }: Props) {
   };
 
   const sortOptions = [
-    { 
-      value: "latest", 
-      label: "Latest", 
+    {
+      value: "latest",
+      label: "Latest",
       icon: ChevronRight,
     },
-    { 
-      value: "price_asc", 
-      label: "Price: Low to High", 
+    {
+      value: "price_asc",
+      label: "Price: Low to High",
       icon: ArrowUpDown,
     },
-    { 
-      value: "price_desc", 
-      label: "Price: High to Low", 
+    {
+      value: "price_desc",
+      label: "Price: High to Low",
       icon: IndianRupee,
     },
-    { 
-      value: "most_bids", 
-      label: "Most Bids", 
+    {
+      value: "most_bids",
+      label: "Most Bids",
       icon: Flame,
     },
-    { 
-      value: "ending_soon", 
-      label: "Ending Soon", 
+    {
+      value: "ending_soon",
+      label: "Ending Soon",
       icon: Timer,
     },
   ];
@@ -136,10 +134,9 @@ export function ListingsGrid({ listings }: Props) {
               </h2>
             </div>
             <p className="text-sm text-muted-foreground">
-              {listings.length === 0 
-                ? "No listings available at the moment" 
-                : `${listings.length} ${listings.length === 1 ? "listing" : "listings"} waiting for bids`
-              }
+              {listings.length === 0
+                ? "No listings available at the moment"
+                : `${listings.length} ${listings.length === 1 ? "listing" : "listings"} waiting for bids`}
             </p>
           </div>
         </div>
@@ -150,7 +147,7 @@ export function ListingsGrid({ listings }: Props) {
             {sortOptions.map((option) => {
               const Icon = option.icon;
               const isActive = sortBy === option.value;
-              
+
               return (
                 <motion.button
                   key={option.value}
@@ -161,17 +158,19 @@ export function ListingsGrid({ listings }: Props) {
                     "group relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-md"
-                      : "bg-card border hover:bg-accent/50 hover:border-primary/20"
+                      : "bg-card border hover:bg-accent/50 hover:border-primary/20",
                   )}
                 >
                   <div className="relative flex items-center gap-2">
-                    <Icon className={cn(
-                      "w-4 h-4 transition-all duration-200",
-                      isActive 
-                        ? "text-primary-foreground" 
-                        : "text-muted-foreground group-hover:text-primary",
-                      !isActive && "group-hover:scale-110"
-                    )} />
+                    <Icon
+                      className={cn(
+                        "w-4 h-4 transition-all duration-200",
+                        isActive
+                          ? "text-primary-foreground"
+                          : "text-muted-foreground group-hover:text-primary",
+                        !isActive && "group-hover:scale-110",
+                      )}
+                    />
                     <span>{option.label}</span>
                   </div>
                 </motion.button>
@@ -222,6 +221,7 @@ export function ListingsGrid({ listings }: Props) {
                           alt={listing.title}
                           fill
                           className="object-cover group-hover:scale-110 transition-transform duration-700"
+                          unoptimized={process.env.NODE_ENV === "development"}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
@@ -273,22 +273,29 @@ export function ListingsGrid({ listings }: Props) {
                         <div className="flex items-center gap-1.5 text-muted-foreground">
                           <Gavel className="w-3.5 h-3.5" />
                           <span className="text-xs font-medium">
-                            {listing.totalBids} {listing.totalBids === 1 ? "bid" : "bids"}
+                            {listing.totalBids}{" "}
+                            {listing.totalBids === 1 ? "bid" : "bids"}
                           </span>
                         </div>
                       </div>
 
                       {listing.land?.size && (
                         <div className="text-xs text-muted-foreground flex items-center gap-2">
-                          <span className="font-medium">{listing.land.size} acres</span>
+                          <span className="font-medium">
+                            {listing.land.size} acres
+                          </span>
                           <span className="text-border">•</span>
-                          <span className="capitalize">{listing.land.landType?.toLowerCase()}</span>
+                          <span className="capitalize">
+                            {listing.land.landType?.toLowerCase()}
+                          </span>
                         </div>
                       )}
 
                       <div className="flex items-center justify-between pt-3 border-t">
                         <div>
-                          <p className="text-xs text-muted-foreground mb-0.5">Base Price</p>
+                          <p className="text-xs text-muted-foreground mb-0.5">
+                            Base Price
+                          </p>
                           <p className="text-xl font-bold text-primary">
                             {formatINR(listing.basePrice)}
                             <span className="text-xs font-normal text-muted-foreground ml-1">
@@ -318,7 +325,7 @@ export function ListingsGrid({ listings }: Props) {
                               animate={{
                                 width: `${Math.min(
                                   (listing.totalBids / listing.maxBids) * 100,
-                                  100
+                                  100,
                                 )}%`,
                               }}
                               className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full"
