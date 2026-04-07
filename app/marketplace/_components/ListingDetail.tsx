@@ -898,6 +898,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                       fill
                       className="object-cover"
                       sizes="80px"
+                      unoptimized={process.env.NODE_ENV === "development"}
                     />
                   </motion.button>
                 ))}
