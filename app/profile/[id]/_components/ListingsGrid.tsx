@@ -226,7 +226,7 @@ export function ListingsGrid({ listings }: Props) {
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Package className="w-16 h-16 text-muted-foreground/20" />
-                        </div>
+                        </div> 
                       )}
 
                       {/* Overlay gradient */}
