@@ -71,7 +71,7 @@ function SuccessAutoRedirect({ role }: { role: "landowner" | "farmer" }) {
     run();
 
     return () => {
-      if (timeout) clearTimeout(timeout); // ✅ cleanup
+      if (timeout) clearTimeout(timeout); 
     };
   }, [hasRun, router, role]);
 
