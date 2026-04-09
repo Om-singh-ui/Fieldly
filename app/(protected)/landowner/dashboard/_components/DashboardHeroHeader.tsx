@@ -29,7 +29,7 @@ export function DashboardHeroHeader({ name }: Props) {
 
   if (isLoading) {
     return (
-      <section className="relative mb-12 mt-16">
+      <section className="relative mb-12 mt-16" style={{ zIndex: 1 }}>
         <div
           className="
             relative
@@ -69,7 +69,7 @@ export function DashboardHeroHeader({ name }: Props) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
       className="relative mb-12 mt-16"
-      style={{ zIndex: 50 }}
+      style={{ zIndex: 1 }} // 🔧 Lower than main header (which is typically z-40 or z-50)
     >
       <motion.div
         whileHover={{ y: -3, scale: 1.01 }}
@@ -104,8 +104,8 @@ export function DashboardHeroHeader({ name }: Props) {
         </div>
 
         {/* RIGHT - Notification Bell with proper positioning */}
-        <div className="relative z-50 flex items-center gap-3">
-          {/* Notification Bell - Positioned relative for dropdown */}
+        <div className="relative flex items-center gap-3" style={{ zIndex: 20 }}>
+          {/* Notification Bell - Dropdown needs high z-index but container should not overlap header */}
           <div className="relative">
             <LandownerNotificationBell />
           </div>
