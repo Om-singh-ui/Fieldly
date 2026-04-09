@@ -1,7 +1,8 @@
 // components/shared/notifications/NotificationBell.tsx
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Bell, BellRing } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotifications } from '@/hooks/notifications/useNotifications';
@@ -28,14 +29,20 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   userRole,
   userId,
   showBadge = true,
-  size = 'sm',
+  size = 'md',
   onNotificationClick,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
   const bellRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  const [mounted, setMounted] = useState(false);
+  useLayoutEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   const { 
     notifications, 
@@ -44,22 +51,81 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     hasNextPage,
     markAsRead,
     markAllAsRead,
-    refetch // Add refetch
+    refetch
   } = useNotifications({ 
     userId,
-    enabled: isOpen // Only fetch when open
+    enabled: isOpen
   });
 
   const { unreadCount, refetch: refetchCount } = useNotificationCount(userId);
 
-  // Force refetch when opening
+  const updatePosition = useCallback(() => {
+    if (bellRef.current) {
+      const rect = bellRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(updatePosition);
+    }
+  }, [isOpen, updatePosition]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePositionUpdate = () => {
+      requestAnimationFrame(updatePosition);
+    };
+
+    window.addEventListener('resize', handlePositionUpdate);
+    window.addEventListener('scroll', handlePositionUpdate, { passive: true });
+
+    return () => {
+      window.removeEventListener('resize', handlePositionUpdate);
+      window.removeEventListener('scroll', handlePositionUpdate);
+    };
+  }, [isOpen, updatePosition]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      if (bellRef.current && bellRef.current.contains(target)) {
+        return;
+      }
+      
+      const portalContent = document.querySelector('[data-notification-portal]');
+      if (portalContent && portalContent.contains(target)) {
+        return;
+      }
+      
+      setIsOpen(false);
+      setShowPreferences(false);
+    };
+
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
   const handleBellClick = useCallback(() => {
     const newIsOpen = !isOpen;
     setIsOpen(newIsOpen);
     setShowPreferences(false);
     
     if (newIsOpen) {
-      // Force refetch both count and notifications when opening
       refetchCount();
       refetch();
     }
@@ -83,7 +149,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   const handleMarkAllRead = useCallback(async () => {
     await markAllAsRead();
     refetchCount();
-    refetch(); // Refetch notifications after marking all as read
+    refetch();
   }, [markAllAsRead, refetchCount, refetch]);
 
   const handlePreferencesClick = useCallback(() => {
@@ -91,90 +157,95 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   }, [showPreferences]);
 
   const sizeClasses = {
-    sm: 'h-9 w-9',
+    sm: 'h-8 w-8',
     md: 'h-10 w-10',
-    lg: 'h-11 w-11',
+    lg: 'h-12 w-12',
   };
 
   const iconSizes = {
-    sm: 18,
+    sm: 16,
     md: 20,
-    lg: 22,
+    lg: 24,
   };
 
-  return (
-    <div ref={bellRef} className={cn('relative', className)}>
-      <Button
-        variant="ghost"
-        size="icon"
-        className={cn(
-          'relative rounded-full transition-all duration-200',
-          sizeClasses[size],
-          isOpen && 'bg-accent'
-        )}
-        onClick={handleBellClick}
-      >
-        <AnimatePresence mode="wait">
-          {unreadCount > 0 ? (
-            <motion.div
-              key="ringing"
-              initial={{ rotate: -10, scale: 0.9 }}
-              animate={{ rotate: 0, scale: 1 }}
-              exit={{ rotate: 10, scale: 0.9 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            >
-              <BellRing className="text-primary" size={iconSizes[size]} />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="static"
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-            >
-              <Bell size={iconSizes[size]} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        {showBadge && unreadCount > 0 && (
-          <NotificationBadge count={unreadCount} />
-        )}
-      </Button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            ref={dropdownRef}
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="absolute right-0 top-full z-50 mt-2 w-[380px] max-w-[95vw]"
-          >
-            {showPreferences ? (
-              <NotificationPreferences
-                userId={userId}
-                userRole={userRole}
-                onClose={() => setShowPreferences(false)}
-              />
-            ) : (
-              <NotificationDropdown
-                notifications={notifications}
-                isLoading={isLoading}
-                hasNextPage={hasNextPage}
-                unreadCount={unreadCount}
-                userRole={userRole}
-                onNotificationClick={handleNotificationClick}
-                onMarkAllRead={handleMarkAllRead}
-                onLoadMore={fetchNextPage}
-                onPreferencesClick={handlePreferencesClick}
-                onClose={() => setIsOpen(false)}
-              />
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+  const dropdownContent = isOpen && (
+    <div
+      data-notification-portal="true"
+      style={{
+        position: 'fixed',
+        top: dropdownPosition.top,
+        right: dropdownPosition.right,
+        zIndex: 99999,
+        pointerEvents: 'auto',
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {showPreferences ? (
+        <NotificationPreferences
+          userId={userId}
+          userRole={userRole}
+          onClose={() => setShowPreferences(false)}
+        />
+      ) : (
+        <NotificationDropdown
+          notifications={notifications}
+          isLoading={isLoading}
+          hasNextPage={hasNextPage}
+          unreadCount={unreadCount}
+          userRole={userRole}
+          onNotificationClick={handleNotificationClick}
+          onMarkAllRead={handleMarkAllRead}
+          onLoadMore={fetchNextPage}
+          onPreferencesClick={handlePreferencesClick}
+          onClose={() => setIsOpen(false)}
+        />
+      )}
     </div>
+  );
+
+  return (
+    <>
+      <div ref={bellRef} className={cn('relative', className)}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            'relative rounded-full transition-all duration-200',
+            sizeClasses[size],
+            isOpen && 'bg-[#b7cf8a]/20'
+          )}
+          onClick={handleBellClick}
+        >
+          <AnimatePresence mode="wait">
+            {unreadCount > 0 ? (
+              <motion.div
+                key="ringing"
+                initial={{ rotate: -10, scale: 0.9 }}
+                animate={{ rotate: 0, scale: 1 }}
+                exit={{ rotate: 10, scale: 0.9 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              >
+                <BellRing className="text-[#b7cf8a]" size={iconSizes[size]} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="static"
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.9 }}
+              >
+                <Bell size={iconSizes[size]} className="text-gray-600 dark:text-gray-400" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          {showBadge && unreadCount > 0 && (
+            <NotificationBadge count={unreadCount} />
+          )}
+        </Button>
+      </div>
+
+      {mounted && createPortal(dropdownContent, document.body)}
+    </>
   );
 };

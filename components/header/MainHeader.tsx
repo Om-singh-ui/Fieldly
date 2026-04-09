@@ -274,7 +274,8 @@ export default function MainHeader() {
           hidden: { y: -64, opacity: 0 },
         }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="fixed top-0 inset-x-0 z-40"
+        className="fixed top-0 inset-x-0 z-[100]"
+        style={{ pointerEvents: "auto" }}
       >
         {/* ================= EDGE-TO-EDGE HEADER STRAP ================= */}
         <div className="pointer-events-auto flex items-center justify-between h-14 md:h-16 border-b border-black/10 bg-white/95 px-4 md:px-8 shadow-[0_1px_3px_rgba(0,0,0,0.08)] backdrop-blur-md">
@@ -328,7 +329,7 @@ export default function MainHeader() {
                       transition={{ duration: 0.2 }}
                       onMouseEnter={() => setActiveDesktopDropdown(key)}
                       onMouseLeave={handleDesktopDropdownLeave}
-                      className="desktop-dropdown-content absolute left-1/2 top-full mt-7 -translate-x-1/2 w-[640px] rounded-2xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-gray-100/50 p-5 z-50"
+                      className="desktop-dropdown-content absolute left-1/2 top-full mt-7 -translate-x-1/2 w-[640px] rounded-2xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-gray-100/50 p-5 z-[150]"
                     >
                       <div className="grid grid-cols-2 gap-5">
                         {/* Left Column - Navigation Links */}
@@ -413,7 +414,7 @@ export default function MainHeader() {
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute right-0 left-0.5 top-full mt-2 w-48 rounded-xl bg-white shadow-lg border border-gray-100 overflow-hidden z-50"
+                    className="absolute right-0 left-0.5 top-full mt-2 w-48 rounded-xl bg-white shadow-lg border border-gray-100 overflow-hidden z-[150]"
                   >
                     <button
                       onClick={() => setDesktopLanguageOpen(false)}
@@ -435,19 +436,7 @@ export default function MainHeader() {
 
               <Link
                 href="/marketplace"
-                className="
-  hidden lg:flex items-center gap-2
-  h-11 px-6 rounded-full
-  backdrop-blur-xl
-  bg-white/40
-  border border-white/30
-  text-black font-semibold text-sm
-  shadow-[0_8px_24px_rgba(0,0,0,0.08)]
-  hover:bg-white/60
-  hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)]
-  transition-all duration-300
-  group
-  "
+                className="hidden lg:flex items-center gap-2 h-11 px-6 rounded-full backdrop-blur-xl bg-white/40 border border-white/30 text-black font-semibold text-sm shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:bg-white/60 hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)] transition-all duration-300 group"
               >
                 Marketplace
                 <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
@@ -459,28 +448,10 @@ export default function MainHeader() {
                   <Link
                     href="/sign-in"
                     prefetch={false}
-                    className="
-      group flex items-center gap-2
-      rounded-full
-      bg-[#b7cf8a]
-      px-4 py-1
-      text-sm font-semibold text-black
-      transition-all duration-300
-      hover:bg-[#a9c27b]
-      whitespace-nowrap
-    "
+                    className="group flex items-center gap-2 rounded-full bg-[#b7cf8a] px-4 py-1 text-sm font-semibold text-black transition-all duration-300 hover:bg-[#a9c27b] whitespace-nowrap"
                   >
                     <span>Sign In</span>
-
-                    <span
-                      className="
-        flex items-center justify-center
-        h-7 w-7 rounded-full
-        bg-black text-white
-        transition-all duration-300
-        group-hover:bg-[#2a2f1f]
-      "
-                    >
+                    <span className="flex items-center justify-center h-7 w-7 rounded-full bg-black text-white transition-all duration-300 group-hover:bg-[#2a2f1f]">
                       <ArrowUpRight className="h-4 w-4" />
                     </span>
                   </Link>
@@ -497,28 +468,10 @@ export default function MainHeader() {
                 <Link
                   href="/sign-in"
                   prefetch={false}
-                  className="
-                     group flex items-center gap-2
-                     rounded-full
-                     bg-[#b7cf8a]
-                     px-4 py-1
-                     text-sm font-semibold text-black
-                     transition-all duration-300
-                     hover:bg-[#a9c27b]
-                     whitespace-nowrap
-                   "
+                  className="group flex items-center gap-2 rounded-full bg-[#b7cf8a] px-4 py-1 text-sm font-semibold text-black transition-all duration-300 hover:bg-[#a9c27b] whitespace-nowrap"
                 >
                   <span>Sign In</span>
-
-                  <span
-                    className="
-                       flex items-center justify-center
-                       h-7 w-7 rounded-full
-                       bg-black text-white
-                       transition-all duration-300
-                       group-hover:bg-[#2a2f1f]
-                     "
-                  >
+                  <span className="flex items-center justify-center h-7 w-7 rounded-full bg-black text-white transition-all duration-300 group-hover:bg-[#2a2f1f]">
                     <ArrowUpRight className="h-4 w-4" />
                   </span>
                 </Link>
@@ -553,7 +506,7 @@ export default function MainHeader() {
       {mobileOpen && (
         <>
           <div
-            className="fixed inset-0 z-30 bg-black/30 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-[90] bg-black/30 backdrop-blur-sm md:hidden"
             onClick={() => setMobileOpen(false)}
           />
 
@@ -561,7 +514,7 @@ export default function MainHeader() {
             initial={{ y: -16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="fixed top-24 left-4 right-4 z-40 rounded-2xl bg-white p-6 shadow-[0_30px_80px_rgba(0,0,0,0.18)] md:hidden max-h-[80vh] overflow-y-auto"
+            className="fixed top-24 left-4 right-4 z-[200] rounded-2xl bg-white p-6 shadow-[0_30px_80px_rgba(0,0,0,0.18)] md:hidden max-h-[80vh] overflow-y-auto"
           >
             {/* Navigation Dropdowns with Enhanced UI */}
             <div className="space-y-2">
@@ -700,32 +653,10 @@ export default function MainHeader() {
               <Link
                 href="/marketplace"
                 prefetch={false}
-                className="
-                  group flex items-center justify-between
-                  w-full
-                  h-11 px-5
-                  rounded-full
-                  backdrop-blur-2xl
-                  bg-gradient-to-b from-white/60 to-white/30
-                  border border-white/40
-                  text-black text-sm font-semibold
-                  shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_8px_20px_rgba(0,0,0,0.08)]
-                  active:scale-[0.97]
-                  transition-all duration-200
-                "
+                className="group flex items-center justify-between w-full h-11 px-5 rounded-full backdrop-blur-2xl bg-gradient-to-b from-white/60 to-white/30 border border-white/40 text-black text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_8px_20px_rgba(0,0,0,0.08)] active:scale-[0.97] transition-all duration-200"
               >
                 <span>Explore Marketplace</span>
-
-                <span
-                  className="
-                  flex items-center justify-center
-                  h-7 w-7 rounded-full
-                  bg-white/60
-                  border border-white/50
-                  transition-transform duration-200
-                  group-active:translate-x-1 group-active:-translate-y-1
-                "
-                >
+                <span className="flex items-center justify-center h-7 w-7 rounded-full bg-white/60 border border-white/50 transition-transform duration-200 group-active:translate-x-1 group-active:-translate-y-1">
                   <ArrowUpRight className="h-4 w-4 opacity-80" />
                 </span>
               </Link>

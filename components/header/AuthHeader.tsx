@@ -163,7 +163,7 @@ const NAV_DATA: Record<NavKey, NavSection> = {
     ],
     feature: {
       title: "Company",
-      desc: "Explore Fieldly’s mission to modernize agricultural land leasing with a trusted digital ecosystem for farmers, landowners, and rural communities.",
+      desc: "Explore Fieldly's mission to modernize agricultural land leasing with a trusted digital ecosystem for farmers, landowners, and rural communities.",
       button: "About Fieldly",
       href: "/company/about",
     },
@@ -292,7 +292,8 @@ export default function AuthHeader() {
           hidden: { y: -80, opacity: 0 },
         }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="fixed top-4 inset-x-0 z-50"
+        className="fixed top-4 inset-x-0 z-[100]"
+        style={{ pointerEvents: "auto" }}
       >
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 md:px-8">
           {/* ========== MOBILE ========== */}
@@ -371,7 +372,7 @@ export default function AuthHeader() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="dropdown-content absolute left-1/2 top-full mt-6 -translate-x-1/2 w-[680px] rounded-3xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-gray-100/50 p-6 z-50"
+                        className="dropdown-content absolute left-1/2 top-full mt-6 -translate-x-1/2 w-[680px] rounded-3xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-gray-100/50 p-6 z-[150]"
                         onMouseEnter={() => setActiveDropdown(key)}
                         onMouseLeave={handleMouseLeave}
                         role="menu"
@@ -462,7 +463,7 @@ export default function AuthHeader() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute left-0 top-full mt-6 w-48 rounded-xl bg-white shadow-lg border border-gray-100 overflow-hidden z-50"
+                    className="absolute left-0 top-full mt-6 w-48 rounded-xl bg-white shadow-lg border border-gray-100 overflow-hidden z-[150]"
                   >
                     <button
                       onClick={() => setLanguageOpen(false)}
@@ -482,19 +483,7 @@ export default function AuthHeader() {
 
               <Link
                 href="/marketplace"
-                className="
-      hidden lg:flex items-center gap-2
-      h-11 px-6 rounded-full
-      backdrop-blur-xl
-      bg-white/40
-      border border-white/30
-      text-black font-semibold text-sm
-      shadow-[0_8px_24px_rgba(0,0,0,0.08)]
-      hover:bg-white/60
-      hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)]
-      transition-all duration-300
-      group
-      "
+                className="hidden lg:flex items-center gap-2 h-11 px-6 rounded-full backdrop-blur-xl bg-white/40 border border-white/30 text-black font-semibold text-sm shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:bg-white/60 hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)] transition-all duration-300 group"
               >
                 Marketplace
                 <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
@@ -506,28 +495,10 @@ export default function AuthHeader() {
                   <Link
                     href="/sign-in"
                     prefetch={false}
-                    className="
-          group flex items-center gap-2
-          rounded-full
-          bg-[#b7cf8a]
-          px-4 py-1
-          text-sm font-semibold text-black
-          transition-all duration-300
-          hover:bg-[#a9c27b]
-          whitespace-nowrap
-        "
+                    className="group flex items-center gap-2 rounded-full bg-[#b7cf8a] px-4 py-1 text-sm font-semibold text-black transition-all duration-300 hover:bg-[#a9c27b] whitespace-nowrap"
                   >
                     <span>Sign In</span>
-
-                    <span
-                      className="
-            flex items-center justify-center
-            h-7 w-7 rounded-full
-            bg-black text-white
-            transition-all duration-300
-            group-hover:bg-[#2a2f1f]
-          "
-                    >
+                    <span className="flex items-center justify-center h-7 w-7 rounded-full bg-black text-white transition-all duration-300 group-hover:bg-[#2a2f1f]">
                       <ArrowUpRight className="h-4 w-4" />
                     </span>
                   </Link>
@@ -545,7 +516,7 @@ export default function AuthHeader() {
       {mobileOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-[90] bg-black/30 backdrop-blur-sm md:hidden"
             onClick={handleMobileMenuClose}
           />
 
@@ -553,7 +524,7 @@ export default function AuthHeader() {
             initial={{ y: -16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="fixed top-24 left-4 right-4 z-50 rounded-2xl bg-white p-6 shadow-[0_30px_80px_rgba(0,0,0,0.18)] md:hidden max-h-[80vh] overflow-y-auto"
+            className="fixed top-24 left-4 right-4 z-[200] rounded-2xl bg-white p-6 shadow-[0_30px_80px_rgba(0,0,0,0.18)] md:hidden max-h-[80vh] overflow-y-auto"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile navigation menu"
@@ -693,32 +664,10 @@ export default function AuthHeader() {
                 href="/marketplace"
                 prefetch={false}
                 onClick={handleMobileMenuClose}
-                className="
-          group flex items-center justify-between
-          w-full
-          h-11 px-5
-          rounded-full
-          backdrop-blur-2xl
-          bg-gradient-to-b from-white/60 to-white/30
-          border border-white/40
-          text-black text-sm font-semibold
-          shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_8px_20px_rgba(0,0,0,0.08)]
-          active:scale-[0.97]
-          transition-all duration-200
-        "
+                className="group flex items-center justify-between w-full h-11 px-5 rounded-full backdrop-blur-2xl bg-gradient-to-b from-white/60 to-white/30 border border-white/40 text-black text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_8px_20px_rgba(0,0,0,0.08)] active:scale-[0.97] transition-all duration-200"
               >
                 <span>Explore Marketplace</span>
-
-                <span
-                  className="
-          flex items-center justify-center
-          h-7 w-7 rounded-full
-          bg-white/60
-          border border-white/50
-          transition-transform duration-200
-          group-active:translate-x-1 group-active:-translate-y-1
-        "
-                >
+                <span className="flex items-center justify-center h-7 w-7 rounded-full bg-white/60 border border-white/50 transition-transform duration-200 group-active:translate-x-1 group-active:-translate-y-1">
                   <ArrowUpRight className="h-4 w-4 opacity-80" />
                 </span>
               </Link>
