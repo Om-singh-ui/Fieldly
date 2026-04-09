@@ -29,7 +29,7 @@ export function DashboardHeroHeader({ name }: Props) {
 
   if (isLoading) {
     return (
-      <section className="relative mb-12 mt-16">
+      <section className="relative" style={{ zIndex: 50 }}>
         <div
           className="
             relative
@@ -43,9 +43,9 @@ export function DashboardHeroHeader({ name }: Props) {
             border border-gray-200/80
             shadow-[0_8px_24px_rgba(0,0,0,0.06)]
             backdrop-blur-md
-            overflow-hidden
             animate-pulse
           "
+          style={{ overflow: "visible" }}
         >
           <div className="flex-1 space-y-3">
             <div className="h-9 bg-gray-200 rounded w-72" />
@@ -53,7 +53,7 @@ export function DashboardHeroHeader({ name }: Props) {
             <div className="h-4 bg-gray-200 rounded w-64" />
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3" style={{ overflow: "visible" }}>
             <div className="h-10 w-10 bg-gray-200 rounded-full" />
             <div className="h-10 w-24 bg-gray-200 rounded-full" />
             <div className="h-10 w-28 bg-gray-200 rounded-full" />
@@ -68,7 +68,8 @@ export function DashboardHeroHeader({ name }: Props) {
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="relative mb-12 mt-16"
+      className="relative"
+      style={{ zIndex: 50 }}
     >
       <motion.div
         whileHover={{ y: -3, scale: 1.01 }}
@@ -87,8 +88,8 @@ export function DashboardHeroHeader({ name }: Props) {
           hover:shadow-[0_18px_48px_rgba(0,0,0,0.10)]
           backdrop-blur-md
           transition-shadow
-          overflow-hidden
         "
+        style={{ overflow: "visible" }}
       >
         {/* LEFT */}
         <div className="relative z-10">
@@ -101,10 +102,15 @@ export function DashboardHeroHeader({ name }: Props) {
           </p>
         </div>
 
-        {/* RIGHT - Added Notification Bell */}
-        <div className="relative z-10 flex items-center gap-3">
+        {/* RIGHT - Notification Bell with proper positioning */}
+        <div 
+          className="relative flex items-center gap-3"
+          style={{ zIndex: 100, overflow: "visible" }}
+        >
           {/* Notification Bell */}
-          <FarmerNotificationBell />
+          <div className="relative" style={{ zIndex: 100, overflow: "visible" }}>
+            <FarmerNotificationBell />
+          </div>
 
           <motion.div
             whileHover={{ y: -1 }}
@@ -149,4 +155,4 @@ export function DashboardHeroHeader({ name }: Props) {
       </motion.div>
     </motion.section>
   );
-} 
+}

@@ -37,15 +37,14 @@ export default async function FarmerDashboardPage() {
 
   return (
     <div className="min-h-screen bg-white mt-14 dark:bg-black">
-      {/* HERO */}
-      <section className="pt-20 pb-6">
-        <div className="max-w-7xl mx-auto px-6">
-          <DashboardHeroHeader name={dashboard.user.name} />
-        </div>
-      </section>
-
       {/* MAIN */}
       <main className="max-w-7xl mx-auto px-6 pb-20 space-y-10">
+        {/* HERO */}
+        <section className="pt-20 pb-6">
+          <div className="max-w-7xl mx-auto px-6">
+            <DashboardHeroHeader name={dashboard.user.name} />
+          </div>
+        </section>
         {/* STATS */}
         <section>
           <FarmerStatsGrid stats={stats} />
