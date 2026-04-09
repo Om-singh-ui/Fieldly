@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
-// Simpler version without metadata
+// 🔧 FIX: Make actionUrl accept relative paths
 const createNotificationSchema = z.object({
   userId: z.string(),
   type: z.enum([
@@ -15,12 +15,11 @@ const createNotificationSchema = z.object({
   ] as const),
   title: z.string().min(1).max(100),
   message: z.string().min(1).max(500),
-  actionUrl: z.string().url().optional().nullable(),
+  // 🔧 FIX: Use string() instead of url() to allow relative paths
+  actionUrl: z.string().optional().nullable(),
   entityType: z.string().optional().nullable(),
   entityId: z.string().optional().nullable(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH'] as const).default('MEDIUM'),
-  // Use z.object().passthrough() for flexible JSON or remove entirely
-  // metadata: z.any().optional(), // Not recommended due to 'any'
 });
 
 type CreateNotificationInput = z.infer<typeof createNotificationSchema>;

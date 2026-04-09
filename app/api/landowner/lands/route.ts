@@ -1,3 +1,4 @@
+// app/api/landowner/lands/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getAuth } from "@clerk/nextjs/server"; 
 import { prisma } from "@/lib/prisma";
@@ -10,12 +11,15 @@ import {
   ListingStatus,
 } from "@prisma/client";
 
+// Import notification trigger
+import { notifyMatchingFarmersAboutListing } from "@/services/notifications/notificationTrigger.service";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    // ---------------- AUTH (FIXED) ----------------
+    // ---------------- AUTH ----------------
     const { userId: clerkId } = getAuth(req);
 
     if (!clerkId) {
@@ -90,6 +94,8 @@ export async function POST(req: NextRequest) {
           size: Number(formData.get("size")),
           landType: formData.get("landType") as LandType,
           village: formData.get("village") as string,
+          district: (formData.get("district") as string) || null,
+          state: (formData.get("state") as string) || null,
           soilType: (formData.get("soilType") as string) || null,
           latitude: num(formData.get("latitude")),
           longitude: num(formData.get("longitude")),
@@ -192,6 +198,15 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+
+    // NOTIFY MATCHING FARMERS (Fire and forget - don't block response)
+    notifyMatchingFarmersAboutListing(result.land.id, result.listing.id)
+      .then((notificationResult) => {
+        console.log(`✅ Notified ${notificationResult.notified} farmers about new listing`);
+      })
+      .catch((error) => {
+        console.error('Failed to notify farmers:', error);
+      });
 
     // ---------------- SUCCESS ----------------
     return NextResponse.json(
