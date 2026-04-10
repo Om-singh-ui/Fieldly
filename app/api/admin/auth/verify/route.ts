@@ -1,83 +1,74 @@
 // app/api/admin/auth/verify/route.ts
+
 import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/server/admin-guard";
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
-import { validateAdminSession } from "@/lib/server/session-manager";
-import { validateIP } from "@/lib/server/ip-validator";
-import { headers } from "next/headers";
 
 export async function GET() {
   try {
+    // Debug: Check Clerk auth directly
     const { userId } = await auth();
-    const headersList = await headers();
-    const ipAddress = headersList.get("x-forwarded-for") || "unknown";
-
+    console.log("[Admin Verify] Clerk userId:", userId);
+    
     if (!userId) {
+      console.log("[Admin Verify] No userId - returning 401");
       return NextResponse.json(
-        { authenticated: false, error: "No session" },
+        { isAdmin: false, error: "Not authenticated" },
         { status: 401 }
       );
     }
-
-    const user = await prisma.user.findUnique({
-      where: { clerkUserId: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        imageUrl: true,
-      },
+    
+    // Get user from database
+    const user = await getCurrentUser();
+    console.log("[Admin Verify] DB user:", { 
+      email: user?.email, 
+      role: user?.role,
+      found: !!user 
     });
-
+    
     if (!user) {
+      console.log("[Admin Verify] User not found in DB");
       return NextResponse.json(
-        { authenticated: false, error: "User not found" },
+        { isAdmin: false, error: "User not found in database" },
         { status: 404 }
       );
     }
-
-    // Check admin role
-    if (!["ADMIN", "SUPER_ADMIN"].includes(user.role || "")) {
+    
+    const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
+    console.log("[Admin Verify] isAdmin:", isAdmin, "role:", user.role);
+    
+    if (!isAdmin) {
+      console.log("[Admin Verify] Not admin - returning 403");
       return NextResponse.json(
-        { authenticated: false, error: "Not an admin" },
+        { isAdmin: false, role: user.role, error: "Not an admin" },
         { status: 403 }
       );
     }
-
-    // Check IP whitelist
-    const isIPAllowed = await validateIP(ipAddress);
-    if (!isIPAllowed) {
-      return NextResponse.json(
-        { authenticated: false, error: "IP not whitelisted" },
-        { status: 403 }
-      );
-    }
-
-    // Validate admin session
-    const hasValidSession = await validateAdminSession(user.id);
-    if (!hasValidSession) {
-      return NextResponse.json(
-        { authenticated: false, error: "Invalid admin session" },
-        { status: 401 }
-      );
-    }
-
+    
+    console.log("[Admin Verify] ✅ Admin verified");
     return NextResponse.json({
-      authenticated: true,
-      admin: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        imageUrl: user.imageUrl,
-      },
+      isAdmin: true,
+      role: user.role,
+      email: user.email,
+      id: user.id,
     });
   } catch (error) {
-    console.error("Admin verify error:", error);
+    console.error("[Admin Verify] Error:", error);
     return NextResponse.json(
-      { authenticated: false, error: "Verification failed" },
+      { isAdmin: false, error: error instanceof Error ? error.message : "Verification failed" },
       { status: 500 }
     );
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Allow: "GET, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Max-Age": "86400",
+    },
+  });
 }
