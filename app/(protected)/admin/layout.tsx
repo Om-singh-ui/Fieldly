@@ -1,31 +1,29 @@
 // app/(protected)/admin/layout.tsx
+
 import { requireAdmin } from "@/lib/server/admin-guard";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "./_components/AdminSidebar";
 import { AdminHeader } from "./_components/AdminHeader";
 import { AdminGuard } from "./_components/AdminGuard";
 
+async function verifyAdminAccess() {
+  try {
+    const admin = await requireAdmin();
+    console.log("[AdminLayout] ✅ Admin verified:", admin.email, admin.role);
+    return admin;
+  } catch (error) {
+    console.error("[AdminLayout] ❌ Admin verification failed:", error);
+    redirect("/");
+  }
+}
+
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Move admin verification outside of JSX construction
-  let admin;
-  
-  try {
-    admin = await requireAdmin();
-  } catch {
-    // If admin verification fails, redirect immediately
-    redirect("/");
-  }
+  const admin = await verifyAdminAccess();
 
-  // If we get here, admin is verified
-  if (!admin) {
-    redirect("/");
-  }
-
-  // JSX is constructed outside of try/catch
   return (
     <AdminGuard>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
