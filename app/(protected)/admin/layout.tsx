@@ -1,38 +1,44 @@
-"use client";
-
-import { useAuth } from "@clerk/nextjs";
+// app/(protected)/admin/layout.tsx
+import { requireAdmin } from "@/lib/server/admin-guard";
 import { redirect } from "next/navigation";
-import { ReactNode } from "react";
+import { AdminSidebar } from "./_components/AdminSidebar";
+import { AdminHeader } from "./_components/AdminHeader";
+import { AdminGuard } from "./_components/AdminGuard";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
-  const { userId, isLoaded } = useAuth();
-
-  // If not loaded yet, show loading
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
-    );
+  // Move admin verification outside of JSX construction
+  let admin;
+  
+  try {
+    admin = await requireAdmin();
+  } catch {
+    // If admin verification fails, redirect immediately
+    redirect("/");
   }
 
-  // If not authenticated, redirect to sign-in
-  if (!userId) {
-    redirect("/sign-in");
+  // If we get here, admin is verified
+  if (!admin) {
+    redirect("/");
   }
 
-  // TODO: Check if user is admin
-
+  // JSX is constructed outside of try/catch
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Admin header/navigation could go here */}
-      <main className="py-8 px-4 sm:px-6 lg:px-8">
-        {children}
-      </main>
-    </div>
+    <AdminGuard>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+        <AdminHeader admin={admin} />
+        <div className="flex">
+          <AdminSidebar adminRole={admin.role} />
+          <main className="flex-1 lg:pl-64">
+            <div className="p-4 lg:p-8 pt-20">
+              {children}
+            </div>
+          </main>
+        </div>
+      </div>
+    </AdminGuard>
   );
 }

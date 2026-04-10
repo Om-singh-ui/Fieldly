@@ -1,3 +1,4 @@
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,21 +8,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================
+// CORE USER MODELS (UPDATED WITH ALL RELATIONS)
+// ============================================
+
 model User {
-  id                  String               @id @default(cuid())
-  clerkUserId         String               @unique
-  email               String               @unique
-  name                String
-  imageUrl            String?
-  role                UserRole?
-  isOnboarded         Boolean              @default(false)
-  onboardingStep      Int                  @default(0)
-  phone               String?
-  state               String?
-  district            String?
-  bio                 String?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  id             String    @id @default(cuid())
+  clerkUserId    String    @unique
+  email          String    @unique
+  name           String
+  imageUrl       String?
+  role           UserRole?
+  isOnboarded    Boolean   @default(false)
+  onboardingStep Int       @default(0)
+  phone          String?
+  state          String?
+  district       String?
+  bio            String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Core Relations
   applications        Application[]
   auditLogs           AuditLog[]
   bids                Bid[]
@@ -41,10 +48,200 @@ model User {
   savedListings       SavedListing[]
   subscription        Subscription?
 
+  // Admin Relations - ADD THESE
+  adminSessions      AdminSession[]
+  adminActions       AdminAction[]
+  generatedReports   Report[]
+  platformSettings   PlatformSetting[]
+  disputeResolutions DisputeResolution[]
+  adminConfigUpdates AdminConfig[]       @relation("AdminConfigUpdatedBy")
+  filedDisputes      Dispute[]           @relation("DisputeFiledBy")
+  assignedDisputes   Dispute[]           @relation("AssignedDisputes")
+  securityEvents     SecurityEvent[]
+
   @@index([clerkUserId])
   @@index([email])
   @@index([role])
 }
+
+// ============================================
+// ADMIN & SECURITY MODELS (FIXED RELATIONS)
+// ============================================
+
+// Admin Configuration
+model AdminConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  description String?
+  category    String   @default("GENERAL")
+  isEncrypted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+  admin       User?    @relation("AdminConfigUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@index([key])
+  @@index([category])
+}
+
+// Admin Sessions
+model AdminSession {
+  id         String    @id @default(cuid())
+  adminId    String
+  token      String    @unique
+  ipAddress  String
+  userAgent  String?
+  location   String?
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  lastActive DateTime  @default(now())
+  isRevoked  Boolean   @default(false)
+  revokedAt  DateTime?
+  revokedBy  String?
+  admin      User      @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([token])
+  @@index([expiresAt])
+  @@index([isRevoked])
+}
+
+// Admin Actions
+model AdminAction {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String
+  entity    String
+  entityId  String?
+  changes   Json?
+  metadata  Json?
+  ipAddress String
+  userAgent String?
+  createdAt DateTime @default(now())
+  admin     User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([action])
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+// Platform Settings
+model PlatformSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  category    String
+  description String?
+  isPublic    Boolean  @default(false)
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  admin       User?    @relation(fields: [updatedBy], references: [id])
+
+  @@index([key])
+  @@index([category])
+}
+
+// Reports
+model Report {
+  id          String    @id @default(cuid())
+  type        String
+  title       String
+  description String?
+  filters     Json?
+  data        Json
+  format      String    @default("JSON")
+  fileUrl     String?
+  generatedBy String
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime?
+  admin       User      @relation(fields: [generatedBy], references: [id])
+
+  @@index([type])
+  @@index([generatedBy])
+  @@index([createdAt])
+}
+
+// Disputes
+model Dispute {
+  id          String              @id @default(cuid())
+  type        String
+  entityId    String
+  filedById   String
+  filedByRole UserRole
+  reason      String
+  description String?
+  status      DisputeStatus       @default(PENDING)
+  priority    DisputePriority     @default(MEDIUM)
+  assignedTo  String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  resolvedAt  DateTime?
+  resolution  String?
+  filedBy     User                @relation("DisputeFiledBy", fields: [filedById], references: [id])
+  assigned    User?               @relation("AssignedDisputes", fields: [assignedTo], references: [id])
+  resolutions DisputeResolution[]
+
+  @@index([filedById])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedTo])
+  @@index([createdAt])
+}
+
+// Dispute Resolution
+model DisputeResolution {
+  id        String   @id @default(cuid())
+  disputeId String
+  adminId   String
+  action    String
+  notes     String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  dispute   Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  admin     User     @relation(fields: [adminId], references: [id])
+
+  @@index([disputeId])
+  @@index([adminId])
+}
+
+// Rate Limit Tracking
+model RateLimit {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  endpoint  String
+  count     Int      @default(0)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+  @@index([resetAt])
+}
+
+// Security Events
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  type      String
+  severity  String
+  userId    String?
+  ipAddress String
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([type])
+  @@index([severity])
+  @@index([ipAddress])
+  @@index([createdAt])
+}
+
+// ============================================
+// REST OF YOUR EXISTING MODELS (UNCHANGED)
+// ============================================
 
 model FarmerProfile {
   id                String      @id @default(cuid())
@@ -200,6 +397,23 @@ model ListingTerms {
   listing                 LandListing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
 }
 
+model ListingImage {
+  id        String       @id @default(cuid())
+  listingId String?
+  url       String
+  caption   String?
+  isPrimary Boolean      @default(false)
+  createdAt DateTime     @default(now())
+  sortOrder Int          @default(0)
+  landId    String?
+  land      Land?        @relation(fields: [landId], references: [id], onDelete: Cascade)
+  listing   LandListing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+  @@index([landId])
+  @@index([isPrimary])
+}
+
 model Bid {
   id        String         @id @default(cuid())
   listingId String
@@ -238,28 +452,6 @@ model AuctionEvent {
 
   @@index([listingId])
   @@index([createdAt])
-}
-
-model ListingAnalytics {
-  listingId       String      @id
-  demandScore     Float?
-  bidVelocity     Float?
-  conversionScore Float?
-  avgBidGap       Float?
-  watchers        Int         @default(0)
-  lastActivityAt  DateTime?
-  listing         LandListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-}
-
-model MarketSubscription {
-  id        String   @id @default(cuid())
-  userId    String
-  filters   Json
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
 }
 
 model Application {
@@ -358,19 +550,6 @@ model Payment {
   @@index([razorpayPaymentId])
 }
 
-model Subscription {
-  id          String             @id @default(cuid())
-  userId      String             @unique
-  plan        String
-  status      SubscriptionStatus @default(ACTIVE)
-  startedAt   DateTime           @default(now())
-  endsAt      DateTime?
-  autoRenew   Boolean            @default(true)
-  lastBilling DateTime?
-  nextBilling DateTime?
-  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
 model Review {
   id         String   @id @default(cuid())
   leaseId    String   @unique
@@ -439,21 +618,39 @@ model SavedListing {
   @@index([createdAt])
 }
 
-model ListingImage {
-  id        String       @id @default(cuid())
-  listingId String?
-  url       String
-  caption   String?
-  isPrimary Boolean      @default(false)
-  createdAt DateTime     @default(now())
-  sortOrder Int          @default(0)
-  landId    String?
-  land      Land?        @relation(fields: [landId], references: [id], onDelete: Cascade)
-  listing   LandListing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+model ListingAnalytics {
+  listingId       String      @id
+  demandScore     Float?
+  bidVelocity     Float?
+  conversionScore Float?
+  avgBidGap       Float?
+  watchers        Int         @default(0)
+  lastActivityAt  DateTime?
+  listing         LandListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
 
-  @@index([listingId])
-  @@index([landId])
-  @@index([isPrimary])
+model MarketSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  filters   Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Subscription {
+  id          String             @id @default(cuid())
+  userId      String             @unique
+  plan        String
+  status      SubscriptionStatus @default(ACTIVE)
+  startedAt   DateTime           @default(now())
+  endsAt      DateTime?
+  autoRenew   Boolean            @default(true)
+  lastBilling DateTime?
+  nextBilling DateTime?
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SoilReport {
@@ -506,6 +703,10 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([createdAt])
 }
+
+// ============================================
+// ENUMS
+// ============================================
 
 enum UserRole {
   FARMER
@@ -633,4 +834,19 @@ enum LeaseSource {
   AUCTION
   DIRECT
   NEGOTIATION
+}
+
+enum DisputeStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED
+  ESCALATED
+  DISMISSED
+}
+
+enum DisputePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
