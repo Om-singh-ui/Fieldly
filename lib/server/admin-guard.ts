@@ -1,49 +1,42 @@
 // lib/server/admin-guard.ts
+
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { headers } from "next/headers";
-import { checkRateLimit } from "./rate-limiter";
+import { redirect } from "next/navigation";
 
-export const ADMIN_ROLES = ["ADMIN", "SUPER_ADMIN"];
-export const SUPER_ADMIN_ONLY = ["SUPER_ADMIN"];
-
-interface AdminGuardOptions {
-  allowedRoles?: string[];
-  requireIPWhitelist?: boolean;
-  require2FA?: boolean;
-  rateLimit?: number;
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  role: "ADMIN" | "SUPER_ADMIN" | "FARMER" | "LANDOWNER" | null;
+  clerkUserId: string;
 }
 
-export async function requireAdmin(options: AdminGuardOptions = {}) {
-  const {
-    allowedRoles = ADMIN_ROLES,
-    requireIPWhitelist = false,  // DISABLED for development
-    require2FA = false,           // DISABLED for development
-    rateLimit = 1000,             // INCREASED for development
-  } = options;
+export interface RequireAdminOptions {
+  allowedRoles?: Array<"ADMIN" | "SUPER_ADMIN">;
+  redirectTo?: string;
+}
 
+/**
+ * Require admin authentication for API routes
+ * Throws an error if user is not authenticated or not an admin
+ */
+export async function requireAdmin(
+  options: RequireAdminOptions = {}
+): Promise<AdminUser> {
+  const { allowedRoles = ["ADMIN", "SUPER_ADMIN"], redirectTo } = options;
+
+  // Get session from Clerk
   const { userId } = await auth();
-  const headersList = await headers();
-  const ipAddress = headersList.get("x-forwarded-for") || "unknown";
 
-  // 1. Authentication check
   if (!userId) {
-    console.log('❌ Admin guard: No userId');
-    throw new Error("Unauthorized");
+    if (redirectTo) {
+      redirect(redirectTo);
+    }
+    throw new Error("Unauthorized: No session found");
   }
 
-  // 2. Rate limiting (more lenient for dev)
-  const rateLimitKey = `admin:${userId}`;
-  const isRateLimited = await checkRateLimit(rateLimitKey, rateLimit);
-  if (isRateLimited) {
-    console.log('❌ Admin guard: Rate limited');
-    throw new Error("Rate limit exceeded");
-  }
-
-  // 3. IP Whitelist check (DISABLED)
-  // if (requireIPWhitelist) { ... }
-
-  // 4. Database user verification
+  // Get user from database with role
   const user = await prisma.user.findUnique({
     where: { clerkUserId: userId },
     select: {
@@ -51,87 +44,94 @@ export async function requireAdmin(options: AdminGuardOptions = {}) {
       email: true,
       name: true,
       role: true,
+      clerkUserId: true,
     },
   });
 
   if (!user) {
-    console.log('❌ Admin guard: User not found for Clerk ID:', userId);
-    throw new Error("User not found");
+    if (redirectTo) {
+      redirect(redirectTo);
+    }
+    throw new Error("Unauthorized: User not found in database");
   }
 
-  console.log('✅ Admin guard: User found -', user.email, 'Role:', user.role);
+  // Check if user has admin role
+  const userRole = user.role;
 
-  // 5. Role check
-  if (!allowedRoles.includes(user.role || "")) {
-    console.log('❌ Admin guard: Insufficient permissions. User role:', user.role);
-    throw new Error("Insufficient permissions");
+  if (!userRole) {
+    if (redirectTo) {
+      redirect("/unauthorized");
+    }
+    throw new Error("Forbidden: No role assigned");
   }
 
-  // 6. Session validation - AUTO-CREATE SESSION IF MISSING
-  const activeSession = await validateOrCreateAdminSession(user.id, ipAddress);
-  if (!activeSession && require2FA) {
-    console.log('❌ Admin guard: No active session');
-    throw new Error("Invalid admin session");
+  // Check if user's role is allowed
+  if (!allowedRoles.includes(userRole as "ADMIN" | "SUPER_ADMIN")) {
+    if (redirectTo) {
+      redirect("/unauthorized");
+    }
+    throw new Error(`Forbidden: Requires ${allowedRoles.join(" or ")} role`);
   }
 
-  // 7. Log successful access
-  await prisma.adminAction.create({
-    data: {
-      adminId: user.id,
-      action: "ACCESS",
-      entity: "ADMIN",
-      ipAddress,
-      userAgent: headersList.get("user-agent") || undefined,
-    },
-  });
-
-  console.log('✅ Admin guard: Access GRANTED for', user.email);
-  return user;
+  return user as AdminUser;
 }
 
-export async function requireSuperAdmin() {
-  return requireAdmin({ allowedRoles: SUPER_ADMIN_ONLY });
-}
-
-async function validateOrCreateAdminSession(adminId: string, ipAddress: string): Promise<boolean> {
-  // Check for existing session
-  const session = await prisma.adminSession.findFirst({
-    where: {
-      adminId,
-      isRevoked: false,
-      expiresAt: { gt: new Date() },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  if (session) {
-    await prisma.adminSession.update({
-      where: { id: session.id },
-      data: { lastActive: new Date() },
-    });
-    console.log('✅ Existing session found and updated');
-    return true;
-  }
-
-  // AUTO-CREATE SESSION FOR DEVELOPMENT
-  console.log('📝 No session found - creating new session...');
-  
+/**
+ * Check if current user is admin
+ */
+export async function isAdmin(): Promise<boolean> {
   try {
-    const newSession = await prisma.adminSession.create({
-      data: {
-        adminId,
-        token: `dev-session-${Date.now()}-${Math.random().toString(36)}`,
-        ipAddress,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-        lastActive: new Date(),
-        isRevoked: false,
-      },
-    });
-    
-    console.log('✅ New session created:', newSession.id);
+    await requireAdmin();
     return true;
-  } catch (error) {
-    console.error('❌ Failed to create session:', error);
+  } catch {
     return false;
   }
+}
+
+/**
+ * Check if current user is super admin
+ */
+export async function isSuperAdmin(): Promise<boolean> {
+  try {
+    const user = await requireAdmin();
+    return user.role === "SUPER_ADMIN";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get current user (any role)
+ */
+export async function getCurrentUser(): Promise<AdminUser | null> {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return null;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { clerkUserId: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        clerkUserId: true,
+      },
+    });
+
+    return user as AdminUser | null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get current user ID (convenience function)
+ */
+export async function getCurrentUserId(): Promise<string | null> {
+  const user = await getCurrentUser();
+  return user?.id || null;
 }
