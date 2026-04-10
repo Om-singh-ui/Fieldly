@@ -1,28 +1,36 @@
 // app/(protected)/admin/layout.tsx
 
+// Force dynamic rendering to avoid static generation errors
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { requireAdmin } from "@/lib/server/admin-guard";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "./_components/AdminSidebar";
 import { AdminHeader } from "./_components/AdminHeader";
 import { AdminGuard } from "./_components/AdminGuard";
 
-async function verifyAdminAccess() {
-  try {
-    const admin = await requireAdmin();
-    console.log("[AdminLayout] ✅ Admin verified:", admin.email, admin.role);
-    return admin;
-  } catch (error) {
-    console.error("[AdminLayout] ❌ Admin verification failed:", error);
-    redirect("/");
-  }
-}
-
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const admin = await verifyAdminAccess();
+  console.log("[AdminLayout] Starting admin verification...");
+  
+  let admin;
+  
+  try {
+    admin = await requireAdmin();
+    console.log("[AdminLayout] ✅ Admin verified:", admin.email, admin.role);
+  } catch (error) {
+    console.error("[AdminLayout] ❌ Admin verification failed:", error);
+    redirect("/");
+  }
+
+  if (!admin) {
+    console.error("[AdminLayout] ❌ Admin is null after verification");
+    redirect("/");
+  }
 
   return (
     <AdminGuard>
