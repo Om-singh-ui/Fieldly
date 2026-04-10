@@ -1,124 +1,99 @@
-// lib/server/admin-guard.ts
+// app/(protected)/admin/_components/AdminGuard.tsx
+"use client";
 
-import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
+import { Loader2 } from "lucide-react";
 
-export interface AdminUser {
-  id: string;
-  email: string;
-  name: string;
-  role: "ADMIN" | "SUPER_ADMIN" | "FARMER" | "LANDOWNER" | null;
-  clerkUserId: string;
+interface AdminGuardProps {
+  children: React.ReactNode;
+  requiredRole?: "ADMIN" | "SUPER_ADMIN";
 }
 
-export interface RequireAdminOptions {
-  allowedRoles?: Array<"ADMIN" | "SUPER_ADMIN">;
-  redirectTo?: string;
-}
+export function AdminGuard({ children, requiredRole }: AdminGuardProps) {
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-/**
- * Require admin authentication for API routes and server components
- */
-export async function requireAdmin(
-  options: RequireAdminOptions = {}
-): Promise<AdminUser> {
-  const { allowedRoles = ["ADMIN", "SUPER_ADMIN"], redirectTo } = options;
+  const checkAccess = useCallback(async () => {
+    if (!isLoaded) return;
 
-  // Get session from Clerk - this is safe for static/dynamic rendering
-  const { userId } = await auth();
-
-  if (!userId) {
-    if (redirectTo) {
-      redirect(redirectTo);
-    }
-    throw new Error("Unauthorized: No session found");
-  }
-
-  // Get user from database with role
-  const user = await prisma.user.findUnique({
-    where: { clerkUserId: userId },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      role: true,
-      clerkUserId: true,
-    },
-  });
-
-  if (!user) {
-    if (redirectTo) {
-      redirect(redirectTo);
-    }
-    throw new Error("Unauthorized: User not found in database");
-  }
-
-  // Check if user has admin role
-  const userRole = user.role;
-
-  if (!userRole) {
-    if (redirectTo) {
-      redirect("/unauthorized");
-    }
-    throw new Error("Forbidden: No role assigned");
-  }
-
-  // Check if user's role is allowed
-  if (!allowedRoles.includes(userRole as "ADMIN" | "SUPER_ADMIN")) {
-    if (redirectTo) {
-      redirect("/unauthorized");
-    }
-    throw new Error(`Forbidden: Requires ${allowedRoles.join(" or ")} role`);
-  }
-
-  return user as AdminUser;
-}
-
-export async function isAdmin(): Promise<boolean> {
-  try {
-    await requireAdmin();
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export async function isSuperAdmin(): Promise<boolean> {
-  try {
-    const user = await requireAdmin();
-    return user.role === "SUPER_ADMIN";
-  } catch {
-    return false;
-  }
-}
-
-export async function getCurrentUser(): Promise<AdminUser | null> {
-  try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return null;
+    if (!user) {
+      console.log("[AdminGuard] No user found, redirecting to sign-in");
+      router.replace("/sign-in");
+      return;
     }
 
-    const user = await prisma.user.findUnique({
-      where: { clerkUserId: userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        clerkUserId: true,
-      },
-    });
+    try {
+      console.log("[AdminGuard] Checking admin access...");
+      const res = await fetch("/api/admin/auth/verify");
+      const data = await res.json();
 
-    return user as AdminUser | null;
-  } catch {
+      console.log("[AdminGuard] Verify response:", {
+        status: res.status,
+        isAdmin: data.isAdmin,
+        role: data.role,
+      });
+
+      if (res.ok && data.isAdmin) {
+        // Check required role if specified
+        if (
+          requiredRole &&
+          data.role !== requiredRole &&
+          data.role !== "SUPER_ADMIN"
+        ) {
+          console.log("[AdminGuard] Insufficient role, redirecting to /admin");
+          router.replace("/admin");
+        } else {
+          console.log("[AdminGuard] ✅ Access granted");
+          setIsAuthorized(true);
+        }
+      } else {
+        console.log("[AdminGuard] ❌ Not authorized, redirecting to /");
+        router.replace("/");
+      }
+    } catch (err) {
+      console.error("[AdminGuard] Error checking access:", err);
+      setError("Failed to verify access");
+      router.replace("/");
+    } finally {
+      setIsChecking(false);
+    }
+  }, [isLoaded, user, router, requiredRole]);
+
+  useEffect(() => {
+    checkAccess();
+  }, [checkAccess]);
+
+  if (isChecking) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-[#b7cf8a]" />
+        <p className="text-sm text-gray-500">Verifying access...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <p className="text-red-500">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-sm text-blue-500 hover:underline"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
     return null;
   }
-}
 
-export async function getCurrentUserId(): Promise<string | null> {
-  const user = await getCurrentUser();
-  return user?.id || null;
+  return <>{children}</>;
 }
