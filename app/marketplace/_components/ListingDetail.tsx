@@ -35,6 +35,8 @@ import {
   Navigation,
   Heart,
   Eye,
+  Ban,
+  Hourglass,
 } from "lucide-react";
 import { formatCurrency, formatTimeLeft, getInitials, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -131,9 +133,10 @@ export interface ListingDetailProps {
     highestBid: number | null;
     endDate: string;
     startDate: string;
-    auctionStatus: string;
     minimumLeaseDuration: number;
     maximumLeaseDuration: number;
+    status: string;
+    listingType: string;
     land: LandWithGeo;
     owner: {
       id: string;
@@ -270,65 +273,23 @@ const MapButtons = ({ onDirections, onMap }: MapButtonsProps) => (
     animate={{ opacity: 1 }}
     className="flex items-center gap-3 mb-4"
   >
-    {/* Directions */}
     <button
       onClick={onDirections}
-      className="
-      flex items-center gap-3
-      px-4 py-2
-      rounded-full
-
-      bg-white
-      border border-gray-200
-
-      shadow-sm hover:shadow-md
-      transition-all duration-300
-      hover:-translate-y-0.5
-    "
+      className="flex items-center gap-3 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
     >
-      <span
-        className="
-        flex items-center justify-center
-        h-8 w-8
-        rounded-full
-        bg-gray-100
-        shadow-inner
-      "
-      >
+      <span className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 shadow-inner">
         <Navigation className="h-4 w-4 text-gray-700" />
       </span>
-
       <span className="text-sm font-medium text-gray-800">Directions</span>
     </button>
 
-    {/* View on Map */}
     <button
       onClick={onMap}
-      className="
-      flex items-center gap-3
-      px-4 py-2
-      rounded-full
-
-      bg-white
-      border border-gray-200
-
-      shadow-sm hover:shadow-md
-      transition-all duration-300
-      hover:-translate-y-0.5
-    "
+      className="flex items-center gap-3 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
     >
-      <span
-        className="
-        flex items-center justify-center
-        h-8 w-8
-        rounded-full
-        bg-gray-100
-        shadow-inner
-      "
-      >
+      <span className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 shadow-inner">
         <MapPin className="h-4 w-4 text-gray-700" />
       </span>
-
       <span className="text-sm font-medium text-gray-800 flex items-center gap-1">
         View on Map
         <ExternalLink className="h-3.5 w-3.5 opacity-70" />
@@ -561,7 +522,20 @@ export function ListingDetail({ listing }: ListingDetailProps) {
     [allImages, currentImageIndex],
   );
 
-  const isLive = listing.auctionStatus === "LIVE" && timeLeft > 0;
+  // Calculate dates and statuses
+  const startDate = useMemo(() => new Date(listing.startDate), [listing.startDate]);
+  const endDate = useMemo(() => new Date(listing.endDate), [listing.endDate]);
+  
+  const isLive = useMemo(() => {
+    const currentTime = new Date();
+    return currentTime >= startDate && currentTime <= endDate;
+  }, [startDate, endDate]);
+
+  // Bidding availability checks
+  const isApproved = listing.status === "ACTIVE";
+  const isBiddingEnabled = listing.listingType === "OPEN_BIDDING";
+  const canBid = isApproved && isBiddingEnabled && isLive;
+
   const isEndingSoon = timeLeft > 0 && timeLeft < 24 * 60 * 60 * 1000;
   const bidCount = listing._count?.bids || 0;
   const savedCount = listing._count?.savedBy || 0;
@@ -748,6 +722,84 @@ export function ListingDetail({ listing }: ListingDetailProps) {
     }
   };
 
+  // Render action button based on listing status
+  const renderActionButton = () => {
+    if (canBid) {
+      return (
+        <Button
+          asChild
+          size="lg"
+          className="inline-flex items-center gap-3 px-5 h-12 rounded-full bg-green-600 hover:bg-green-700 text-white shadow-[0_8px_20px_rgba(34,197,94,0.3)] hover:shadow-[0_12px_30px_rgba(34,197,94,0.4)] transition-all duration-300 hover:-translate-y-0.5"
+        >
+          <Link href={`/marketplace/listings/${listing.id}/auction`}>
+            <span className="flex items-center justify-center h-8 w-8 rounded-full bg-white/20">
+              <Zap className="h-4 w-4" />
+            </span>
+            <span className="font-medium">Join Live Auction</span>
+          </Link>
+        </Button>
+      );
+    }
+
+    if (!isApproved) {
+      return (
+        <Button
+          size="lg"
+          disabled
+          className="inline-flex items-center gap-3 px-5 h-12 rounded-full bg-yellow-100 text-yellow-700 cursor-not-allowed border border-yellow-200"
+        >
+          <span className="flex items-center justify-center h-8 w-8 rounded-full bg-yellow-200">
+            <Hourglass className="h-4 w-4" />
+          </span>
+          <span className="font-medium">Pending Admin Approval</span>
+        </Button>
+      );
+    }
+
+    if (!isBiddingEnabled) {
+      return (
+        <Button
+          size="lg"
+          disabled
+          className="inline-flex items-center gap-3 px-5 h-12 rounded-full bg-gray-100 text-gray-500 cursor-not-allowed"
+        >
+          <span className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-200">
+            <Ban className="h-4 w-4" />
+          </span>
+          <span className="font-medium">Not Available for Bidding</span>
+        </Button>
+      );
+    }
+
+    if (new Date() < startDate) {
+      return (
+        <Button
+          size="lg"
+          disabled
+          className="inline-flex items-center gap-3 px-5 h-12 rounded-full bg-blue-100 text-blue-700 cursor-not-allowed border border-blue-200"
+        >
+          <span className="flex items-center justify-center h-8 w-8 rounded-full bg-blue-200">
+            <Clock className="h-4 w-4" />
+          </span>
+          <span className="font-medium">Auction Starting Soon</span>
+        </Button>
+      );
+    }
+
+    return (
+      <Button
+        size="lg"
+        disabled
+        className="inline-flex items-center gap-3 px-5 h-12 rounded-full bg-gray-100 text-gray-500 cursor-not-allowed"
+      >
+        <span className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-200">
+          <AlertCircle className="h-4 w-4" />
+        </span>
+        <span className="font-medium">Auction Ended</span>
+      </Button>
+    );
+  };
+
   return (
     <motion.div
       initial="hidden"
@@ -845,7 +897,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
               )}
 
               <div className="absolute top-4 left-4 flex gap-2 z-20">
-                {isLive && (
+                {canBid && (
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -856,7 +908,18 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                     </Badge>
                   </motion.div>
                 )}
-                {isEndingSoon && !isLive && (
+                {!isApproved && isBiddingEnabled && (
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                  >
+                    <Badge className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-0 shadow-lg px-3 py-1.5">
+                      <Clock className="h-3.5 w-3.5 mr-1" />
+                      PENDING APPROVAL
+                    </Badge>
+                  </motion.div>
+                )}
+                {isEndingSoon && isApproved && !canBid && (
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -955,15 +1018,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               whileHover={hoverScale}
-              className="
-    bg-white 
-    dark:bg-neutral-900
-    rounded-2xl p-6 
-    border border-gray-200 dark:border-neutral-800
-    shadow-[0_10px_30px_rgba(0,0,0,0.06)]
-    hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)]
-    transition-all duration-300
-  "
+              className="bg-white dark:bg-neutral-900 rounded-2xl p-6 border border-gray-200 dark:border-neutral-800 shadow-[0_10px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-all duration-300"
             >
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -1121,16 +1176,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ scale: 1.02 }}
-              className="
-    flex items-center justify-between 
-    px-5 py-3
-    rounded-full
-    bg-white
-    border border-gray-200
-    shadow-[0_8px_20px_rgba(0,0,0,0.06),_0_2px_6px_rgba(0,0,0,0.04)]
-    hover:shadow-[0_16px_40px_rgba(0,0,0,0.10),_0_4px_12px_rgba(0,0,0,0.06)]
-    transition-all duration-300
-  "
+              className="flex items-center justify-between px-5 py-3 rounded-full bg-white border border-gray-200 shadow-[0_8px_20px_rgba(0,0,0,0.06),_0_2px_6px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.10),_0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-300"
             >
               <div className="flex items-center gap-3">
                 <Avatar className="h-12 w-12 ring-2 ring-gray-200 shadow-sm">
@@ -1155,12 +1201,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                 variant="ghost"
                 size="sm"
                 asChild
-                className="
-      text-gray-700
-      hover:bg-gray-100
-      rounded-full px-3
-      transition-all
-    "
+                className="text-gray-700 hover:bg-gray-100 rounded-full px-3 transition-all"
               >
                 <Link href={`/profile/${listing.owner.id}`}>
                   View Profile
@@ -1168,87 +1209,21 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                 </Link>
               </Button>
             </motion.div>
+
             {/* Action Button */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              whileHover={hoverScale}
-              whileTap={tapScale}
+              whileHover={canBid ? hoverScale : undefined}
+              whileTap={canBid ? tapScale : undefined}
               className="flex justify-center"
             >
-              {isLive ? (
-                <Button
-                  asChild
-                  size="lg"
-                  className="
-        inline-flex items-center gap-3
-        px-5 h-12
-        rounded-full
-        bg-green-600 hover:bg-green-700
-        text-white
-        shadow-[0_8px_20px_rgba(34,197,94,0.3)]
-        hover:shadow-[0_12px_30px_rgba(34,197,94,0.4)]
-        transition-all duration-300
-        hover:-translate-y-0.5
-      "
-                >
-                  <Link href={`/marketplace/listings/${listing.id}/auction`}>
-                    <span
-                      className="
-            flex items-center justify-center
-            h-8 w-8
-            rounded-full
-            bg-white/20
-          "
-                    >
-                      <Zap className="h-4 w-4" />
-                    </span>
-
-                    <span className="font-medium">Join Live Auction</span>
-                  </Link>
-                </Button>
-              ) : listing.auctionStatus === "UPCOMING" ? (
-                <Button
-                  size="lg"
-                  disabled
-                  className="
-        inline-flex items-center gap-3
-        px-5 h-12
-        rounded-full
-        bg-gray-100 text-gray-500
-        cursor-not-allowed
-      "
-                >
-                  <span className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-200">
-                    <Clock className="h-4 w-4" />
-                  </span>
-
-                  <span className="font-medium">Auction Starting Soon</span>
-                </Button>
-              ) : (
-                <Button
-                  size="lg"
-                  disabled
-                  className="
-        inline-flex items-center gap-3
-        px-5 h-12
-        rounded-full
-        bg-gray-100 text-gray-500
-        cursor-not-allowed
-      "
-                >
-                  <span className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-200">
-                    <AlertCircle className="h-4 w-4" />
-                  </span>
-
-                  <span className="font-medium">Auction Ended</span>
-                </Button>
-              )}
+              {renderActionButton()}
             </motion.div>
           </div>
         </div>
         
-        {/* Tabs Section - FIXED RESPONSIVE VERSION */}
+        {/* Tabs Section */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1259,122 +1234,42 @@ export function ListingDetail({ listing }: ListingDetailProps) {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            {/* Responsive Tabs Container */}
             <div className="relative w-full overflow-x-auto overflow-y-hidden pb-2 scrollbar-thin scrollbar-thumb-gray-300">
               <TabsList
-                className="
-                  inline-flex 
-                  items-center 
-                  justify-start
-                  gap-2 sm:gap-3
-                  p-2 sm:p-3
-                  bg-white
-                  rounded-full
-                  border border-gray-200
-                  shadow-[0_6px_20px_rgba(0,0,0,0.06)]
-                  w-auto
-                  min-w-max
-                "
+                className="inline-flex items-center justify-start gap-2 sm:gap-3 p-2 sm:p-3 bg-white rounded-full border border-gray-200 shadow-[0_6px_20px_rgba(0,0,0,0.06)] w-auto min-w-max"
               >
                 <TabsTrigger
                   value="description"
-                  className="
-                    px-4 sm:px-7 
-                    py-2 sm:py-3
-                    rounded-full
-                    text-sm sm:text-base 
-                    font-semibold 
-                    capitalize
-                    text-gray-700
-                    transition-all 
-                    duration-300
-                    whitespace-nowrap
-                    data-[state=active]:bg-[#A3C47D]
-                    data-[state=active]:text-black
-                    data-[state=active]:shadow-md
-                    hover:bg-gray-100
-                  "
+                  className="px-4 sm:px-7 py-2 sm:py-3 rounded-full text-sm sm:text-base font-semibold capitalize text-gray-700 transition-all duration-300 whitespace-nowrap data-[state=active]:bg-[#A3C47D] data-[state=active]:text-black data-[state=active]:shadow-md hover:bg-gray-100"
                 >
                   Description
                 </TabsTrigger>
                 
                 <TabsTrigger
                   value="details"
-                  className="
-                    px-4 sm:px-7 
-                    py-2 sm:py-3
-                    rounded-full
-                    text-sm sm:text-base 
-                    font-semibold 
-                    capitalize
-                    text-gray-700
-                    transition-all 
-                    duration-300
-                    whitespace-nowrap
-                    data-[state=active]:bg-[#A3C47D]
-                    data-[state=active]:text-black
-                    data-[state=active]:shadow-md
-                    hover:bg-gray-100
-                  "
+                  className="px-4 sm:px-7 py-2 sm:py-3 rounded-full text-sm sm:text-base font-semibold capitalize text-gray-700 transition-all duration-300 whitespace-nowrap data-[state=active]:bg-[#A3C47D] data-[state=active]:text-black data-[state=active]:shadow-md hover:bg-gray-100"
                 >
                   Details
                 </TabsTrigger>
                 
                 <TabsTrigger
                   value="documents"
-                  className="
-                    px-4 sm:px-7 
-                    py-2 sm:py-3
-                    rounded-full
-                    text-sm sm:text-base 
-                    font-semibold 
-                    capitalize
-                    text-gray-700
-                    transition-all 
-                    duration-300
-                    whitespace-nowrap
-                    data-[state=active]:bg-[#A3C47D]
-                    data-[state=active]:text-black
-                    data-[state=active]:shadow-md
-                    hover:bg-gray-100
-                  "
+                  className="px-4 sm:px-7 py-2 sm:py-3 rounded-full text-sm sm:text-base font-semibold capitalize text-gray-700 transition-all duration-300 whitespace-nowrap data-[state=active]:bg-[#A3C47D] data-[state=active]:text-black data-[state=active]:shadow-md hover:bg-gray-100"
                 >
                   Documents
                 </TabsTrigger>
                 
                 <TabsTrigger
                   value="bids"
-                  className="
-                    px-4 sm:px-7 
-                    py-2 sm:py-3
-                    rounded-full
-                    text-sm sm:text-base 
-                    font-semibold 
-                    text-gray-700
-                    transition-all 
-                    duration-300
-                    whitespace-nowrap
-                    data-[state=active]:bg-[#A3C47D]
-                    data-[state=active]:text-black
-                    data-[state=active]:shadow-md
-                    hover:bg-gray-100
-                  "
+                  className="px-4 sm:px-7 py-2 sm:py-3 rounded-full text-sm sm:text-base font-semibold text-gray-700 transition-all duration-300 whitespace-nowrap data-[state=active]:bg-[#A3C47D] data-[state=active]:text-black data-[state=active]:shadow-md hover:bg-gray-100"
                 >
                   Recent Bids
                 </TabsTrigger>
               </TabsList>
             </div>
 
-            {/* Content Container - Responsive Padding */}
             <div
-              className="
-                p-4 sm:p-6 md:p-8 
-                mt-4 sm:mt-6
-                bg-white
-                rounded-xl sm:rounded-2xl
-                border border-gray-100
-                shadow-[0_10px_30px_rgba(0,0,0,0.08)]
-              "
+              className="p-4 sm:p-6 md:p-8 mt-4 sm:mt-6 bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
             >
               <AnimatePresence mode="wait">
                 <div key={`tab-content-${activeTab}`}>
@@ -1387,4 +1282,4 @@ export function ListingDetail({ listing }: ListingDetailProps) {
       </div>
     </motion.div>
   );
-} 
+}

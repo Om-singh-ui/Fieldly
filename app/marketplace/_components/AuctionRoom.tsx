@@ -34,7 +34,6 @@ export interface Bid {
   }
 }
 
-// EXPORT this interface
 export interface AuctionRoomProps {
   listingId: string
   initialData: {
@@ -44,12 +43,13 @@ export interface AuctionRoomProps {
     basePrice: number
     reservePrice?: number | null
     bidIncrement?: number | null
+    startDate: string
     endDate: string
-    auctionStatus: string
     autoExtendMinutes?: number | null
     winningBidId?: string | null
     currentLeaderId?: string | null
     highestBid?: number | null
+    calculatedStatus?: string
     winningBid?: {
       id: string
       amount: number
@@ -81,8 +81,8 @@ export function AuctionRoom({ listingId, initialData }: AuctionRoomProps) {
 
   // Use initial data or real-time data
   const currentAuction = auction || initialData
-  const currentBids = bids.length > 0 ? bids : (currentAuction?.bids || [])
-  const highestBid = currentBids[0]?.amount || currentAuction?.basePrice || 0
+  const currentBids = bids.length > 0 ? bids : (initialData?.bids || [])
+  const highestBid = currentBids[0]?.amount || currentAuction?.highestBid || currentAuction?.basePrice || 0
   const minNextBid = highestBid + (currentAuction?.bidIncrement || 1000)
 
   const handleRefresh = () => {
@@ -91,6 +91,30 @@ export function AuctionRoom({ listingId, initialData }: AuctionRoomProps) {
       title: 'Refreshed',
       description: 'Auction data has been refreshed',
     })
+  }
+
+  // Format date consistently to avoid hydration mismatch
+  const formatDate = (dateInput: string | Date): string => {
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput)
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
+  }
+
+  // Helper to safely get date string for display
+  const getStartDate = (): string => {
+    if (!currentAuction) return ''
+    return formatDate(currentAuction.startDate)
+  }
+
+  const getEndDate = (): string => {
+    if (!currentAuction) return ''
+    return formatDate(currentAuction.endDate)
   }
 
   if (!currentAuction) {
@@ -151,9 +175,9 @@ export function AuctionRoom({ listingId, initialData }: AuctionRoomProps) {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Your Bid</p>
+                <p className="text-sm text-muted-foreground">Min Next Bid</p>
                 <p className="text-2xl font-bold">
-                  {formatCurrency(0)}
+                  {formatCurrency(minNextBid)}
                 </p>
               </div>
               <div>
@@ -182,7 +206,12 @@ export function AuctionRoom({ listingId, initialData }: AuctionRoomProps) {
           </Card>
 
           {/* Bid History */}
-          <BidHistory bids={currentBids} />
+          <BidHistory 
+            bids={currentBids.map(bid => ({
+              ...bid,
+              createdAt: bid.createdAt instanceof Date ? bid.createdAt.toISOString() : bid.createdAt
+            }))} 
+          />
         </div>
 
         {/* Right Column - Auction Info */}
@@ -206,9 +235,15 @@ export function AuctionRoom({ listingId, initialData }: AuctionRoomProps) {
                 <dd className="font-medium">{formatCurrency(currentAuction.bidIncrement || 1000)}</dd>
               </div>
               <div className="flex justify-between">
+                <dt className="text-muted-foreground">Starts At</dt>
+                <dd className="font-medium">
+                  {getStartDate()}
+                </dd>
+              </div>
+              <div className="flex justify-between">
                 <dt className="text-muted-foreground">Ends At</dt>
                 <dd className="font-medium">
-                  {new Date(currentAuction.endDate).toLocaleString()}
+                  {getEndDate()}
                 </dd>
               </div>
               {currentAuction.autoExtendMinutes && (
