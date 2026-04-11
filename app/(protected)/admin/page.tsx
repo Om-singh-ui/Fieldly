@@ -122,7 +122,7 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="space-y-6 mt-14">
+    <div className="space-y-6 mt-22">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
