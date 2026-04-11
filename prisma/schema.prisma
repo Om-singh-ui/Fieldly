@@ -9,7 +9,7 @@ datasource db {
 }
 
 // ============================================
-// CORE USER MODELS (UPDATED WITH ALL RELATIONS)
+// CORE USER MODELS
 // ============================================
 
 model User {
@@ -48,7 +48,7 @@ model User {
   savedListings       SavedListing[]
   subscription        Subscription?
 
-  // Admin Relations - ADD THESE
+  // Admin Relations
   adminSessions      AdminSession[]
   adminActions       AdminAction[]
   generatedReports   Report[]
@@ -65,10 +65,9 @@ model User {
 }
 
 // ============================================
-// ADMIN & SECURITY MODELS (FIXED RELATIONS)
+// ADMIN & SECURITY MODELS
 // ============================================
 
-// Admin Configuration
 model AdminConfig {
   id          String   @id @default(cuid())
   key         String   @unique
@@ -85,7 +84,6 @@ model AdminConfig {
   @@index([category])
 }
 
-// Admin Sessions
 model AdminSession {
   id         String    @id @default(cuid())
   adminId    String
@@ -107,7 +105,6 @@ model AdminSession {
   @@index([isRevoked])
 }
 
-// Admin Actions
 model AdminAction {
   id        String   @id @default(cuid())
   adminId   String
@@ -127,7 +124,6 @@ model AdminAction {
   @@index([createdAt])
 }
 
-// Platform Settings
 model PlatformSetting {
   id          String   @id @default(cuid())
   key         String   @unique
@@ -144,7 +140,6 @@ model PlatformSetting {
   @@index([category])
 }
 
-// Reports
 model Report {
   id          String    @id @default(cuid())
   type        String
@@ -164,7 +159,6 @@ model Report {
   @@index([createdAt])
 }
 
-// Disputes
 model Dispute {
   id          String              @id @default(cuid())
   type        String
@@ -191,7 +185,6 @@ model Dispute {
   @@index([createdAt])
 }
 
-// Dispute Resolution
 model DisputeResolution {
   id        String   @id @default(cuid())
   disputeId String
@@ -207,7 +200,6 @@ model DisputeResolution {
   @@index([adminId])
 }
 
-// Rate Limit Tracking
 model RateLimit {
   id        String   @id @default(cuid())
   key       String   @unique
@@ -221,7 +213,6 @@ model RateLimit {
   @@index([resetAt])
 }
 
-// Security Events
 model SecurityEvent {
   id        String   @id @default(cuid())
   type      String
@@ -240,7 +231,7 @@ model SecurityEvent {
 }
 
 // ============================================
-// REST OF YOUR EXISTING MODELS (UNCHANGED)
+// FARMER & LANDOWNER PROFILES
 // ============================================
 
 model FarmerProfile {
@@ -272,6 +263,10 @@ model LandownerProfile {
   lands                     Land[]
   user                      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+// ============================================
+// LAND & LISTING MODELS
+// ============================================
 
 model Land {
   id                               String            @id @default(cuid())
@@ -354,7 +349,7 @@ model LandListing {
   viewCount            Int               @default(0)
   auctionStatus        AuctionStatus     @default(UPCOMING)
   autoExtendMinutes    Int?              @default(5)
-  bidIncrement         Float?
+  bidIncrement         Float?            @default(1000)
   currentLeaderId      String?
   engagementScore      Float?
   hotnessScore         Float?
@@ -414,6 +409,10 @@ model ListingImage {
   @@index([isPrimary])
 }
 
+// ============================================
+// BIDDING & AUCTION MODELS
+// ============================================
+
 model Bid {
   id        String         @id @default(cuid())
   listingId String
@@ -453,6 +452,10 @@ model AuctionEvent {
   @@index([listingId])
   @@index([createdAt])
 }
+
+// ============================================
+// APPLICATION & LEASE MODELS
+// ============================================
 
 model Application {
   id           String            @id @default(cuid())
@@ -519,6 +522,10 @@ model Lease {
   @@index([riskScore])
 }
 
+// ============================================
+// PAYMENT MODELS
+// ============================================
+
 model Payment {
   id                String        @id @default(cuid())
   userId            String
@@ -549,6 +556,10 @@ model Payment {
   @@index([razorpayOrderId])
   @@index([razorpayPaymentId])
 }
+
+// ============================================
+// REVIEW & MESSAGING MODELS
+// ============================================
 
 model Review {
   id         String   @id @default(cuid())
@@ -604,6 +615,10 @@ model Notification {
   @@index([createdAt])
   @@index([entityType, entityId])
 }
+
+// ============================================
+// MISC MODELS
+// ============================================
 
 model SavedListing {
   id        String      @id @default(cuid())

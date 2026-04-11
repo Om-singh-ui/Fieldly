@@ -1,104 +1,100 @@
 // hooks/useAuction.ts
-import { useState, useEffect, useCallback } from 'react'
-import { useUser } from '@clerk/nextjs'
-import { usePusher, NewBidEvent, AuctionExtendedEvent } from './usePusher'
-import { AuctionRoomData, Bid } from '@/types/marketplace'
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { usePusher, NewBidEvent, AuctionExtendedEvent } from './usePusher';
+import { AuctionRoomData, Bid } from '@/types/marketplace';
 
 interface UseAuctionReturn {
-  auction: AuctionRoomData | null
-  bids: Bid[]
-  loading: boolean
-  error: string | null
-  placeBid: (amount: number, isAutoBid?: boolean) => Promise<void>
-  timeRemaining: number
-  isLive: boolean
+  auction: AuctionRoomData | null;
+  bids: Bid[];
+  loading: boolean;
+  error: string | null;
+  placeBid: (amount: number, isAutoBid?: boolean) => Promise<void>;
+  timeRemaining: number;
+  isLive: boolean;
+  canBid: boolean;
+  validationMessage: string | null;
 }
 
 export function useAuction(listingId: string): UseAuctionReturn {
-  const { user: clerkUser, isLoaded: isClerkLoaded } = useUser()
-  const [auction, setAuction] = useState<AuctionRoomData | null>(null)
-  const [bids, setBids] = useState<Bid[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [timeRemaining, setTimeRemaining] = useState<number>(0)
-  const [farmerId, setFarmerId] = useState<string | null>(null)
-  const [isFarmer, setIsFarmer] = useState(false)
+  const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
+  const [auction, setAuction] = useState<AuctionRoomData | null>(null);
+  const [bids, setBids] = useState<Bid[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [farmerId, setFarmerId] = useState<string | null>(null);
+  const [isFarmer, setIsFarmer] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   // ============================================
-  // STEP 1: Get the database user ID from Clerk
+  // Get database user ID from Clerk
   // ============================================
   useEffect(() => {
     async function getFarmerId() {
       if (!isClerkLoaded || !clerkUser) {
-        setFarmerId(null)
-        setIsFarmer(false)
-        return
+        setFarmerId(null);
+        setIsFarmer(false);
+        setUserRole(null);
+        return;
       }
 
       try {
-        // Get the database user ID using the Clerk ID
-        const res = await fetch(`/api/user/by-clerk/${clerkUser.id}`)
-        const data = await res.json()
+        const res = await fetch(`/api/user/by-clerk/${clerkUser.id}`);
+        const data = await res.json();
 
         if (data.user?.id) {
-          setFarmerId(data.user.id)
-          setIsFarmer(data.user.role === 'FARMER')
-          
-          if (data.user.role !== 'FARMER') {
-            console.warn('User is not a farmer. Role:', data.user.role)
-          }
+          setFarmerId(data.user.id);
+          setIsFarmer(data.user.role === 'FARMER');
+          setUserRole(data.user.role);
         } else {
-          console.error('User not found in database')
-          setFarmerId(null)
-          setIsFarmer(false)
+          console.error('User not found in database');
+          setFarmerId(null);
+          setIsFarmer(false);
+          setUserRole(null);
         }
       } catch (err) {
-        console.error('Failed to get farmer ID:', err)
-        setFarmerId(null)
-        setIsFarmer(false)
+        console.error('Failed to get farmer ID:', err);
+        setFarmerId(null);
+        setIsFarmer(false);
+        setUserRole(null);
       }
     }
 
-    getFarmerId()
-  }, [clerkUser, isClerkLoaded])
+    getFarmerId();
+  }, [clerkUser, isClerkLoaded]);
 
   // ============================================
-  // STEP 2: Fetch auction data
+  // Fetch auction data
   // ============================================
+  const fetchAuctionData = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/marketplace/${listingId}`);
+      if (!response.ok) throw new Error('Failed to fetch auction');
+
+      const data = await response.json();
+      const listing = data.listing;
+      
+      setAuction(listing);
+      setBids(listing.bids || []);
+      
+      const endTime = new Date(listing.endDate).getTime();
+      setTimeRemaining(Math.max(0, endTime - Date.now()));
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Auction fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [listingId]);
+
   useEffect(() => {
-    const fetchAuction = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch(`/api/marketplace/${listingId}`)
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch auction')
-        }
-
-        const data = await response.json()
-        const listing = data.listing
-        
-        setAuction(listing)
-        setBids(listing.bids || [])
-        
-        // Calculate time remaining
-        const endTime = new Date(listing.endDate).getTime()
-        const now = Date.now()
-        setTimeRemaining(Math.max(0, endTime - now))
-        setError(null)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred')
-        console.error('Auction fetch error:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchAuction()
-  }, [listingId])
+    fetchAuctionData();
+  }, [fetchAuctionData]);
 
   // ============================================
-  // STEP 3: Real-time Pusher updates
+  // Real-time Pusher updates
   // ============================================
   usePusher(`auction-${listingId}`, {
     onNewBid: (data: NewBidEvent) => {
@@ -106,149 +102,154 @@ export function useAuction(listingId: string): UseAuctionReturn {
         id: data.bid.id,
         amount: data.bid.amount,
         farmerId: data.bid.farmerId,
-        createdAt: data.bid.createdAt instanceof Date 
-          ? data.bid.createdAt.toISOString() 
-          : data.bid.createdAt,
-      }
-      setBids(prev => [newBid, ...prev])
-      
-      // Update auction with new highest bid
-      setAuction(prev => prev ? {
-        ...prev,
-        highestBid: data.bid.amount,
-        _count: { ...prev._count, bids: (prev._count?.bids || 0) + 1 }
-      } : null)
+        createdAt: data.bid.createdAt instanceof Date ? data.bid.createdAt.toISOString() : data.bid.createdAt,
+      };
+      setBids(prev => [newBid, ...prev]);
+      setAuction(prev => prev ? { ...prev, highestBid: data.bid.amount, _count: { ...prev._count, bids: (prev._count?.bids || 0) + 1 } } : null);
     },
     onAuctionExtended: (data: AuctionExtendedEvent) => {
-      console.log('Auction extended:', data.message)
-      fetchAuctionData()
+      console.log('Auction extended:', data.message);
+      fetchAuctionData();
     },
-  })
+  });
 
   // ============================================
-  // STEP 4: Refetch auction data
-  // ============================================
-  const fetchAuctionData = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/marketplace/${listingId}`)
-      if (response.ok) {
-        const data = await response.json()
-        const listing = data.listing
-        
-        setAuction(listing)
-        setBids(listing.bids || [])
-        
-        const endTime = new Date(listing.endDate).getTime()
-        const now = Date.now()
-        setTimeRemaining(Math.max(0, endTime - now))
-      }
-    } catch (err) {
-      console.error('Error refetching auction:', err)
-    }
-  }, [listingId])
-
-  // ============================================
-  // STEP 5: Countdown timer
+  // Countdown timer
   // ============================================
   useEffect(() => {
-    if (!auction) return
+    if (!auction) return;
     
-    const now = Date.now()
-    const startTime = new Date(auction.startDate).getTime()
-    const endTime = new Date(auction.endDate).getTime()
-    const isAuctionLive = now >= startTime && now <= endTime
+    const now = Date.now();
+    const startTime = new Date(auction.startDate).getTime();
+    const endTime = new Date(auction.endDate).getTime();
+    const isAuctionLive = now >= startTime && now <= endTime;
     
-    if (!isAuctionLive) return
+    if (!isAuctionLive) return;
 
     const timer = setInterval(() => {
-      setTimeRemaining(prev => Math.max(0, prev - 1000))
-    }, 1000)
+      setTimeRemaining(prev => Math.max(0, prev - 1000));
+    }, 1000);
 
-    return () => clearInterval(timer)
-  }, [auction])
+    return () => clearInterval(timer);
+  }, [auction]);
 
   // ============================================
-  // STEP 6: Place bid (FIXED - uses real farmerId)
+  // Comprehensive validation for bidding
+  // ============================================
+  const { canBid, validationMessage } = useMemo(() => {
+    if (!auction) {
+      return { canBid: false, validationMessage: 'Loading auction data...' };
+    }
+
+    // Check user authentication
+    if (!clerkUser) {
+      return { canBid: false, validationMessage: 'You must be signed in to place a bid' };
+    }
+
+    // Check user role
+    if (!isFarmer) {
+      return { canBid: false, validationMessage: `Only farmers can place bids (your role: ${userRole || 'unknown'})` };
+    }
+
+    // Check farmer ID
+    if (!farmerId) {
+      return { canBid: false, validationMessage: 'User profile not found. Please complete your profile.' };
+    }
+
+    // Check listing status
+    if (auction.status !== 'ACTIVE') {
+      return { canBid: false, validationMessage: 'This listing is not active' };
+    }
+
+    // Check listing type
+    if (auction.listingType !== 'OPEN_BIDDING') {
+      return { canBid: false, validationMessage: 'This is not an auction listing' };
+    }
+
+    // Check auction status
+    if (auction.auctionStatus !== 'LIVE') {
+      return { canBid: false, validationMessage: `Auction is ${auction.auctionStatus?.toLowerCase() || 'not live'}` };
+    }
+
+    // Check date range
+    const now = Date.now();
+    const startTime = new Date(auction.startDate).getTime();
+    const endTime = new Date(auction.endDate).getTime();
+
+    if (now < startTime) {
+      const daysUntil = Math.ceil((startTime - now) / (1000 * 60 * 60 * 24));
+      return { canBid: false, validationMessage: `Auction starts ${daysUntil === 0 ? 'today' : `in ${daysUntil} ${daysUntil === 1 ? 'day' : 'days'}`}` };
+    }
+
+    if (now > endTime) {
+      return { canBid: false, validationMessage: 'Auction has ended' };
+    }
+
+    return { canBid: true, validationMessage: null };
+  }, [auction, clerkUser, isFarmer, farmerId, userRole]);
+
+  // ============================================
+  // Calculate isLive status
+  // ============================================
+  const isLive = useMemo(() => {
+    if (!auction) return false;
+    const now = Date.now();
+    const startTime = new Date(auction.startDate).getTime();
+    const endTime = new Date(auction.endDate).getTime();
+    return now >= startTime && now <= endTime && auction.auctionStatus === 'LIVE' && auction.status === 'ACTIVE';
+  }, [auction]);
+
+  // ============================================
+  // Place bid with full validation
   // ============================================
   const placeBid = useCallback(async (amount: number, isAutoBid: boolean = false) => {
-    // Validate user is authenticated and is a farmer
-    if (!clerkUser) {
-      throw new Error('You must be signed in to place a bid')
-    }
-    
-    if (!farmerId) {
-      throw new Error('User profile not found. Please complete your profile.')
-    }
-    
-    if (!isFarmer) {
-      throw new Error('Only farmers can place bids')
+    // Run all validations
+    if (!canBid) {
+      throw new Error(validationMessage || 'Cannot place bid');
     }
 
-    // Validate auction is live
     if (!auction) {
-      throw new Error('Auction data not available')
+      throw new Error('Auction data not available');
     }
-    
-    const now = Date.now()
-    const startTime = new Date(auction.startDate).getTime()
-    const endTime = new Date(auction.endDate).getTime()
-    
-    if (now < startTime) {
-      throw new Error('Auction has not started yet')
-    }
-    if (now > endTime) {
-      throw new Error('Auction has ended')
+
+    if (!farmerId) {
+      throw new Error('User profile not found');
     }
 
     // Validate bid amount
-    const highestBid = bids[0]?.amount || auction.basePrice
-    const minBid = highestBid + (auction.bidIncrement || 1000)
+    const highestBid = bids[0]?.amount || auction.basePrice;
+    const minBid = highestBid + (auction.bidIncrement || 1000);
     
     if (amount < minBid) {
-      throw new Error(`Bid must be at least ₹${minBid.toLocaleString()}`)
+      throw new Error(`Bid must be at least ₹${minBid.toLocaleString()}`);
+    }
+
+    // Prevent bidding on own listing
+    if (auction.ownerId === farmerId) {
+      throw new Error('You cannot bid on your own listing');
     }
 
     try {
       const response = await fetch(`/api/marketplace/${listingId}/bid`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          farmerId, // ✅ Now using the actual database user ID
-          amount,
-          isAutoBid,
-        }),
-      })
+        body: JSON.stringify({ farmerId, amount, isAutoBid }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to place bid')
+        throw new Error(data.error || 'Failed to place bid');
       }
 
-      // Refetch auction data after successful bid
-      await fetchAuctionData()
-      
-      // Clear any previous errors
-      setError(null)
+      await fetchAuctionData();
+      setError(null);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to place bid'
-      setError(errorMessage)
-      throw err
+      const errorMessage = err instanceof Error ? err.message : 'Failed to place bid';
+      setError(errorMessage);
+      throw err;
     }
-  }, [listingId, farmerId, isFarmer, clerkUser, auction, bids, fetchAuctionData])
-
-  // ============================================
-  // STEP 7: Calculate isLive status
-  // ============================================
-  const isLive = (() => {
-    if (!auction) return false
-    
-    const now = Date.now()
-    const startTime = new Date(auction.startDate).getTime()
-    const endTime = new Date(auction.endDate).getTime()
-    
-    return now >= startTime && now <= endTime
-  })()
+  }, [listingId, farmerId, canBid, validationMessage, auction, bids, fetchAuctionData]);
 
   return {
     auction,
@@ -258,5 +259,7 @@ export function useAuction(listingId: string): UseAuctionReturn {
     placeBid,
     timeRemaining,
     isLive,
-  }
+    canBid,
+    validationMessage,
+  };
 }
