@@ -119,7 +119,7 @@ export default function UserDetailsPage() {
   const roleBadge = getRoleBadge(user.role);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-22">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
