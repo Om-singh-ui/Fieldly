@@ -1,8 +1,9 @@
+// app/(protected)/saved/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Heart, Loader2 } from "lucide-react";
+import { Bookmark, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { ListingCard } from "@/app/marketplace/_components/ListingCard";
 import { MarketplaceFeedItem } from "@/types/marketplace";
@@ -16,15 +17,12 @@ interface SavedListingItem {
 export default function SavedListingsPage() {
   const { user, isLoaded } = useUser();
 
-  const [mounted] = useState(false);
+  const [mounted] = useState(() => typeof window !== "undefined");
   const [savedListings, setSavedListings] = useState<SavedListingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
- 
   useEffect(() => {
-    if (!mounted) return;
-
     if (!isLoaded || !user) {
       setLoading(false);
       return;
@@ -48,9 +46,9 @@ export default function SavedListingsPage() {
     }
 
     fetchSavedListings();
-  }, [user, isLoaded, mounted]);
+  }, [user, isLoaded]);
 
-  // 1. Prevent hydration mismatch (FIRST CHECK)
+  // 1. Prevent hydration mismatch - show loader during SSR
   if (!mounted) {
     return (
       <div className="flex items-center justify-center min-h-[400px] mt-18">
@@ -72,7 +70,7 @@ export default function SavedListingsPage() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] mt-18">
-        <Heart className="h-16 w-16 text-gray-300 mb-4" />
+        <Bookmark className="h-16 w-16 text-gray-300 mb-4" />
         <h2 className="text-2xl font-semibold mb-2">
           Sign in to view saved listings
         </h2>
@@ -119,7 +117,7 @@ export default function SavedListingsPage() {
   if (savedListings.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] mt-18">
-        <Heart className="h-16 w-16 text-gray-300 mb-4" />
+        <Bookmark className="h-16 w-16 text-gray-300 mb-4" />
         <h2 className="text-2xl font-semibold mb-2">No saved listings</h2>
         <p className="text-gray-500 mb-4 text-center max-w-md">
           Start saving listings you&apos;re interested in to keep track of them
@@ -139,7 +137,7 @@ export default function SavedListingsPage() {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-18">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-          <Heart className="h-7 w-7 fill-red-500 text-red-500" />
+          <Bookmark className="h-7 w-7 fill-primary text-primary" />
           Saved Listings
         </h1>
         <p className="text-gray-500">
