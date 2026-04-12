@@ -335,7 +335,6 @@ export function ListingDetail({ listing }: ListingDetailProps) {
   const isUpcoming = now < startDate;
   const isEnded = now > endDate;
 
-  // ✅ CORRECT: Only allow bidding when ALL conditions are met
   const canBid = isApproved && isOpenBidding && isAuctionLive && isWithinDateRange;
 
   const isEndingSoon = timeLeft > 0 && timeLeft < 24 * 60 * 60 * 1000;
@@ -349,11 +348,34 @@ export function ListingDetail({ listing }: ListingDetailProps) {
   const fullAddress = listing.land?.address || [listing.land?.village, listing.land?.district, listing.land?.state, listing.land?.pincode].filter(Boolean).join(", ");
   const hasLocationData = !!(listing.land?.latitude && listing.land?.longitude) || formattedLocation !== "Location not specified";
 
+  // ============= CHECK INITIAL SAVE STATUS =============
+  useEffect(() => {
+    async function checkSavedStatus() {
+      try {
+        const res = await fetch("/api/marketplace/saved");
+        if (res.ok) {
+          const data = await res.json();
+          const saved = data.saved?.some(
+            (item: { listingId: string }) => item.listingId === listing.id
+          );
+          setIsSaved(saved || false);
+        }
+      } catch (error) {
+        // Silent fail - button will show unsaved state
+        console.error("Failed to check saved status:", error);
+      }
+    }
+
+    checkSavedStatus();
+  }, [listing.id]);
+
+  // ============= TIMER EFFECT =============
   useEffect(() => {
     const timer = setInterval(() => setTimeLeft((prev) => Math.max(0, prev - 1000)), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  // ============= HANDLERS =============
   const handleViewOnMap = useCallback(() => {
     const coords = listing.land?.latitude && listing.land?.longitude;
     const url = coords ? `https://www.google.com/maps?q=${listing.land.latitude},${listing.land.longitude}` : formattedLocation !== "Location not specified" ? `https://www.google.com/maps/search/${encodeURIComponent(formattedLocation)}` : null;
@@ -382,7 +404,10 @@ export function ListingDetail({ listing }: ListingDetailProps) {
 
   const handleSave = (saved: boolean) => {
     setIsSaved(saved);
-    toast({ title: saved ? "Added to saved" : "Removed from saved", description: saved ? "Listing saved to your collection" : "Listing removed from your saved items" });
+    toast({ 
+      title: saved ? "Added to saved" : "Removed from saved", 
+      description: saved ? "Listing saved to your collection" : "Listing removed from your saved items" 
+    });
   };
 
   const nextImage = () => { setImageDirection(1); setCurrentImageIndex((prev) => (prev + 1) % allImages.length); setIsImageLoading(true); };
@@ -407,9 +432,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
     }
   };
 
-  // ============= RENDER ACTION BUTTON WITH FULL VALIDATION =============
   const renderActionButton = () => {
-    // ✅ Case 1: Fully validated - can bid
     if (canBid) {
       return (
         <Button asChild size="lg" className="inline-flex items-center gap-3 px-5 h-12 rounded-full bg-green-600 hover:bg-green-700 text-white shadow-[0_8px_20px_rgba(34,197,94,0.3)] hover:shadow-[0_12px_30px_rgba(34,197,94,0.4)] transition-all duration-300 hover:-translate-y-0.5">
@@ -421,7 +444,6 @@ export function ListingDetail({ listing }: ListingDetailProps) {
       );
     }
 
-    // ❌ Case 2: Not approved by admin
     if (!isApproved) {
       return (
         <Button size="lg" disabled className="inline-flex items-center gap-3 px-5 h-12 rounded-full bg-yellow-100 text-yellow-700 cursor-not-allowed border border-yellow-200">
@@ -431,7 +453,6 @@ export function ListingDetail({ listing }: ListingDetailProps) {
       );
     }
 
-    // ❌ Case 3: Not an auction listing
     if (!isOpenBidding) {
       return (
         <Button size="lg" disabled className="inline-flex items-center gap-3 px-5 h-12 rounded-full bg-gray-100 text-gray-500 cursor-not-allowed">
@@ -441,7 +462,6 @@ export function ListingDetail({ listing }: ListingDetailProps) {
       );
     }
 
-    // ❌ Case 4: Auction not started yet (Upcoming)
     if (isUpcoming) {
       const daysUntilStart = Math.ceil((startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       return (
@@ -452,7 +472,6 @@ export function ListingDetail({ listing }: ListingDetailProps) {
       );
     }
 
-    // ❌ Case 5: Auction ended
     if (isEnded) {
       return (
         <Button size="lg" disabled className="inline-flex items-center gap-3 px-5 h-12 rounded-full bg-gray-100 text-gray-500 cursor-not-allowed">
@@ -462,7 +481,6 @@ export function ListingDetail({ listing }: ListingDetailProps) {
       );
     }
 
-    // ❌ Case 6: Auction paused or not live
     if (!isAuctionLive) {
       return (
         <Button size="lg" disabled className="inline-flex items-center gap-3 px-5 h-12 rounded-full bg-orange-100 text-orange-700 cursor-not-allowed border border-orange-200">
@@ -472,7 +490,6 @@ export function ListingDetail({ listing }: ListingDetailProps) {
       );
     }
 
-    // Fallback
     return (
       <Button size="lg" disabled className="inline-flex items-center gap-3 px-5 h-12 rounded-full bg-gray-100 text-gray-500 cursor-not-allowed">
         <span className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-200"><AlertCircle className="h-4 w-4" /></span>
@@ -481,7 +498,6 @@ export function ListingDetail({ listing }: ListingDetailProps) {
     );
   };
 
-  // ============= RENDER STATUS BADGE =============
   const renderStatusBadge = () => {
     if (canBid) {
       return (
@@ -575,9 +591,17 @@ export function ListingDetail({ listing }: ListingDetailProps) {
                 <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">{listing.title}</motion.h1>
                 <div className="flex gap-2">
                   <motion.div whileHover={hoverGlow} whileTap={tapScale}>
-                    <Button variant="outline" size="icon" onClick={handleShare} disabled={isSharing} className="rounded-full">{isSharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}</Button>
+                    <Button variant="outline" size="icon" onClick={handleShare} disabled={isSharing} className="rounded-full">
+                      {isSharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+                    </Button>
                   </motion.div>
-                  <SavedButton listingId={listing.id} initialSaved={isSaved} onToggle={handleSave} size="icon" className="rounded-full" />
+                  <SavedButton 
+                    listingId={listing.id} 
+                    initialSaved={isSaved} 
+                    onToggle={handleSave} 
+                    size="icon" 
+                    className="rounded-full"
+                  />
                 </div>
               </div>
               {hasLocationData && <MapButtons onDirections={handleGetDirections} onMap={handleViewOnMap} />}

@@ -1,12 +1,11 @@
-// app/(marketplace)/page.tsx
 "use client";
 
 import { useState } from "react";
 import { ListingGrid } from "./_components/ListingGrid";
-import { 
-  ListingFiltersSidebar, 
-  ActiveFilters, 
-  MarketplaceHeader 
+import {
+  ListingFiltersSidebar,
+  ActiveFilters,
+  MarketplaceHeader,
 } from "./_components/ListingFiltersSidebar";
 import { useMarketplace } from "@/hooks/useMarketplace";
 import { Button } from "@/components/ui/button";
@@ -27,38 +26,14 @@ function MarketplaceSkeleton() {
           <div className="h-10 w-10 bg-gray-200 rounded-md animate-pulse lg:hidden" />
         </div>
       </div>
-      <div className="flex gap-6 lg:gap-8">
-        <div className="hidden lg:block w-64 xl:w-72 flex-shrink-0">
-          <div className="sticky top-24 space-y-6">
-            <div className="h-6 w-24 bg-gray-200 rounded-md animate-pulse" />
-            <div className="space-y-4">
-              <div className="h-10 w-full bg-gray-200 rounded-md animate-pulse" />
-              <div className="h-20 w-full bg-gray-200 rounded-md animate-pulse" />
-            </div>
-          </div>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-[400px] bg-gray-200 rounded-lg animate-pulse" />
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
 
 export default function MarketplacePage() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  
-  // ✅ FIXED: Use lazy initial state instead of useEffect
-  const [mounted] = useState(() => {
-    if (typeof window !== "undefined") {
-      return true;
-    }
-    return false;
-  });
+
+  const isClient = typeof window !== "undefined";
 
   const {
     listings,
@@ -82,7 +57,7 @@ export default function MarketplacePage() {
     setFilters(newFilters);
   };
 
-  if (!mounted) {
+  if (!isClient) {
     return <MarketplaceSkeleton />;
   }
 
@@ -133,7 +108,7 @@ export default function MarketplacePage() {
             />
           )}
         </div>
-      </div>  
+      </div>
     </div>
   );
 }
