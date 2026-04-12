@@ -47,11 +47,11 @@ interface FilterContentProps {
 }
 
 function FilterContent({ filters, onChange }: FilterContentProps) {
+  const [mounted] = useState(() => typeof window !== "undefined");
   const [priceRange, setPriceRange] = useState<[number, number]>([
     filters.minPrice || 0,
     filters.maxPrice || 1000000,
   ]);
-
   const [sizeRange, setSizeRange] = useState<[number, number]>([
     filters.minSize || 0,
     filters.maxSize || 1000,
@@ -71,6 +71,36 @@ function FilterContent({ filters, onChange }: FilterContentProps) {
     if (key === "sortBy") return false;
     return value !== undefined && value !== null && value !== "";
   });
+
+  if (!mounted) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="h-7 w-20 bg-gray-200 rounded-md animate-pulse" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-5 w-20 bg-gray-200 rounded-md animate-pulse" />
+          <div className="h-10 w-full bg-gray-200 rounded-md animate-pulse" />
+        </div>
+        <Separator />
+        <div className="space-y-4">
+          <div className="h-5 w-24 bg-gray-200 rounded-md animate-pulse" />
+          <div className="h-6 w-full bg-gray-200 rounded-md animate-pulse" />
+        </div>
+        <Separator />
+        <div className="space-y-4">
+          <div className="h-5 w-20 bg-gray-200 rounded-md animate-pulse" />
+          <div className="h-6 w-full bg-gray-200 rounded-md animate-pulse" />
+        </div>
+        <Separator />
+        <div className="space-y-3">
+          <div className="h-5 w-16 bg-gray-200 rounded-md animate-pulse" />
+          <div className="h-10 w-full bg-gray-200 rounded-md animate-pulse" />
+          <div className="h-10 w-full bg-gray-200 rounded-md animate-pulse" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -176,24 +206,24 @@ function FilterContent({ filters, onChange }: FilterContentProps) {
         <div className="flex items-center space-x-2">
           <input
             type="checkbox"
-            id="irrigation"
+            id="irrigation-sidebar"
             checked={filters.irrigation || false}
             onChange={(e) => handleChange("irrigation", e.target.checked)}
             className="rounded border-gray-300 h-4 w-4"
           />
-          <Label htmlFor="irrigation" className="text-sm font-normal cursor-pointer">
+          <Label htmlFor="irrigation-sidebar" className="text-sm font-normal cursor-pointer">
             Irrigation Available
           </Label>
         </div>
         <div className="flex items-center space-x-2">
           <input
             type="checkbox"
-            id="verifiedOnly"
+            id="verifiedOnly-sidebar"
             checked={filters.verifiedOnly || false}
             onChange={(e) => handleChange("verifiedOnly", e.target.checked)}
             className="rounded border-gray-300 h-4 w-4"
           />
-          <Label htmlFor="verifiedOnly" className="text-sm font-normal cursor-pointer">
+          <Label htmlFor="verifiedOnly-sidebar" className="text-sm font-normal cursor-pointer">
             Verified Owners Only
           </Label>
         </div>
@@ -212,7 +242,8 @@ export function ListingFiltersSidebar({
   onMobileOpenChange,
   variant = "desktop",
 }: ListingFiltersSidebarProps) {
-  
+  const [mounted] = useState(() => typeof window !== "undefined");
+
   // Mobile Sheet Version
   if (variant === "mobile" && onMobileOpenChange) {
     const activeFilterCount = Object.entries(filters).filter(([key, value]) => {
@@ -248,6 +279,34 @@ export function ListingFiltersSidebar({
   }
 
   // Desktop Sidebar Version
+  if (!mounted) {
+    return (
+      <aside className="hidden lg:block w-64 xl:w-72 flex-shrink-0">
+        <div className="sticky top-24">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="h-7 w-20 bg-gray-200 rounded-md animate-pulse" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-5 w-20 bg-gray-200 rounded-md animate-pulse" />
+              <div className="h-10 w-full bg-gray-200 rounded-md animate-pulse" />
+            </div>
+            <Separator />
+            <div className="space-y-4">
+              <div className="h-5 w-24 bg-gray-200 rounded-md animate-pulse" />
+              <div className="h-6 w-full bg-gray-200 rounded-md animate-pulse" />
+            </div>
+            <Separator />
+            <div className="space-y-4">
+              <div className="h-5 w-20 bg-gray-200 rounded-md animate-pulse" />
+              <div className="h-6 w-full bg-gray-200 rounded-md animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </aside>
+    );
+  }
+
   return (
     <aside className="hidden lg:block w-64 xl:w-72 flex-shrink-0">
       <div className="sticky top-24">
@@ -268,10 +327,17 @@ interface ActiveFiltersProps {
 }
 
 export function ActiveFilters({ filters, onRemoveFilter, onClearAll, formatNumber }: ActiveFiltersProps) {
+  // FIX: Use lazy initial state instead of useEffect
+  const [mounted] = useState(() => typeof window !== "undefined");
+
   const activeFilters = Object.entries(filters).filter(([key, value]) => {
     if (key === "sortBy") return false;
     return value !== undefined && value !== null && value !== "";
   });
+
+  if (!mounted) {
+    return null;
+  }
 
   if (activeFilters.length === 0) return null;
 
@@ -365,7 +431,7 @@ export function ActiveFilters({ filters, onRemoveFilter, onClearAll, formatNumbe
 }
 
 // ============================================================
-// HEADER COMPONENT (Search + Sort)
+// HEADER COMPONENT (Search + Sort) - WITH HYDRATION FIX
 // ============================================================
 interface MarketplaceHeaderProps {
   filters: MarketplaceFilters;
@@ -380,9 +446,29 @@ export function MarketplaceHeader({
   mobileFiltersOpen,
   onMobileFiltersOpenChange,
 }: MarketplaceHeaderProps) {
+  // FIX: Use lazy initial state instead of useEffect
+  const [mounted] = useState(() => typeof window !== "undefined");
+
   const handleSortChange = (value: string) => {
     onFiltersChange({ ...filters, sortBy: value as MarketplaceFilters["sortBy"] });
   };
+
+  // Return skeleton during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-1">
+          <div className="h-9 w-48 bg-gray-200 rounded-md animate-pulse" />
+          <div className="h-5 w-80 bg-gray-200 rounded-md mt-2 animate-pulse" />
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="h-10 flex-1 min-w-[200px] sm:min-w-[250px] md:w-80 bg-gray-200 rounded-md animate-pulse" />
+          <div className="h-10 w-[140px] sm:w-[180px] bg-gray-200 rounded-md animate-pulse" />
+          <div className="h-10 w-10 bg-gray-200 rounded-md animate-pulse lg:hidden" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
