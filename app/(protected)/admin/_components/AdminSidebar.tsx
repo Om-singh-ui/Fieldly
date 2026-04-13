@@ -70,7 +70,7 @@ export function AdminSidebar({ adminRole }: AdminSidebarProps) {
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/20 dark:border-gray-800">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/20 dark:border-gray-800 mt-6">
           <span className="text-sm font-semibold tracking-wide text-gray-700 dark:text-gray-200">
             Admin Panel
           </span>
