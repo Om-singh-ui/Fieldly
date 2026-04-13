@@ -69,6 +69,7 @@ import {
   StopCircle,
   TrendingUp,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -136,7 +137,7 @@ interface ListingsFilters {
 
 type BulkAction = "approve" | "reject" | "close" | "activate" | "cancel";
 type ReviewAction = "APPROVE" | "REJECT";
-type AuctionAction = "LIVE" | "PAUSED" | "CLOSED";
+type AuctionAction = "UPCOMING" | "LIVE" | "PAUSED" | "CLOSED";
 
 // ============================================
 // CONSTANTS
@@ -176,6 +177,7 @@ const AVAILABLE_STATUSES = [
   { value: "EXPIRED", label: "Expired", icon: Calendar, description: "End date passed" },
 ] as const;
 
+
 const VALID_TRANSITIONS: Record<string, readonly string[]> = {
   DRAFT: ["PENDING_APPROVAL", "CANCELLED"],
   PENDING_APPROVAL: ["ACTIVE", "DRAFT", "CANCELLED"],
@@ -207,6 +209,37 @@ const LISTING_TYPE_BADGE_CONFIG: Record<string, { label: string; color: string }
   OPEN_BIDDING: { label: "Bidding", color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" },
   FIXED_PRICE: { label: "Fixed", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
   NEGOTIABLE: { label: "Negotiable", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
+};
+
+const AUCTION_ACTION_CONFIG: Record<AuctionAction, { title: string; description: string; variant: "default" | "outline" | "destructive"; icon: React.ElementType; color: string }> = {
+  UPCOMING: {
+    title: "Set as Upcoming",
+    description: "Listing will be visible in marketplace but bidding is not yet open.",
+    variant: "outline",
+    icon: Calendar,
+    color: "text-blue-600",
+  },
+  LIVE: {
+    title: "Make LIVE for Bidding",
+    description: "Listing will be visible and farmers can place bids immediately.",
+    variant: "default",
+    icon: PlayCircle,
+    color: "text-green-600",
+  },
+  PAUSED: {
+    title: "Pause Auction",
+    description: "Listing will be hidden from marketplace temporarily. You can resume later.",
+    variant: "outline",
+    icon: PauseCircle,
+    color: "text-amber-600",
+  },
+  CLOSED: {
+    title: "Close Auction",
+    description: "Auction will end. Listing will be hidden from marketplace.",
+    variant: "destructive",
+    icon: StopCircle,
+    color: "text-red-600",
+  },
 };
 
 // ============================================
@@ -350,7 +383,12 @@ export default function AdminListingsPage() {
 
   async function handleAuctionStatusChange() {
     if (!selectedListing) return;
-    const messages = { LIVE: "Auction is now LIVE!", PAUSED: "Auction paused", CLOSED: "Auction closed" };
+    const messages: Record<AuctionAction, string> = {
+      UPCOMING: "Auction set to Upcoming",
+      LIVE: "Auction is now LIVE!",
+      PAUSED: "Auction paused",
+      CLOSED: "Auction closed",
+    };
     await handleApiAction(
       "/api/admin/listings/auction-status",
       { listingId: selectedListing.id, auctionStatus: auctionAction, reason: auctionReason },
@@ -425,19 +463,28 @@ export default function AdminListingsPage() {
     return <Badge className={config.color}>{config.label}</Badge>;
   };
 
-  const getAvailableStatuses = (currentStatus: string): readonly typeof AVAILABLE_STATUSES[number][] => {
+  const getAvailableStatuses = (currentStatus: string) => {
     const allowedTransitions = VALID_TRANSITIONS[currentStatus] || [];
     return AVAILABLE_STATUSES.filter(s => allowedTransitions.includes(s.value));
   };
 
-  const canMakeLive = (listing: AdminListing) => 
-    listing.status === "ACTIVE" && listing.listingType === "OPEN_BIDDING" && listing.auctionStatus !== "LIVE" && listing.auctionStatus !== "CLOSED";
-
-  const canPauseAuction = (listing: AdminListing) => 
-    listing.status === "ACTIVE" && listing.listingType === "OPEN_BIDDING" && listing.auctionStatus === "LIVE";
-
-  const canCloseAuction = (listing: AdminListing) => 
-    listing.status === "ACTIVE" && listing.listingType === "OPEN_BIDDING" && (listing.auctionStatus === "LIVE" || listing.auctionStatus === "PAUSED");
+  const getAvailableAuctionActions = (listing: AdminListing): AuctionAction[] => {
+    if (listing.status !== "ACTIVE" || listing.listingType !== "OPEN_BIDDING") return [];
+    
+    const actions: AuctionAction[] = [];
+    const current = listing.auctionStatus;
+    
+    // Always allow UPCOMING if not already
+    if (current !== "UPCOMING") actions.push("UPCOMING");
+    // Allow LIVE if not already LIVE
+    if (current !== "LIVE") actions.push("LIVE");
+    // Allow PAUSE if currently LIVE
+    if (current === "LIVE") actions.push("PAUSED");
+    // Allow CLOSE if LIVE or PAUSED
+    if (current === "LIVE" || current === "PAUSED") actions.push("CLOSED");
+    
+    return actions;
+  };
 
   const isAllSelected = listings.length > 0 && selectedListings.size === listings.length;
 
@@ -638,24 +685,15 @@ export default function AdminListingsPage() {
                       openDialog("status", listing);
                     }}
                     onChangeStatus={() => openDialog("status", listing)}
-                    onMakeLive={() => {
-                      setAuctionAction("LIVE");
-                      openDialog("auction", listing);
-                    }}
-                    onPauseAuction={() => {
-                      setAuctionAction("PAUSED");
-                      openDialog("auction", listing);
-                    }}
-                    onCloseAuction={() => {
-                      setAuctionAction("CLOSED");
+                    onAuctionAction={(action) => {
+                      setSelectedListing(listing);
+                      setAuctionAction(action);
                       openDialog("auction", listing);
                     }}
                     getStatusBadge={getStatusBadge}
                     getAuctionStatusBadge={getAuctionStatusBadge}
                     getListingTypeBadge={getListingTypeBadge}
-                    canMakeLive={canMakeLive(listing)}
-                    canPauseAuction={canPauseAuction(listing)}
-                    canCloseAuction={canCloseAuction(listing)}
+                    getAvailableAuctionActions={getAvailableAuctionActions}
                   />
                 ))
               )}
@@ -774,15 +812,11 @@ interface ListingRowProps {
   onReject: () => void;
   onClose: () => void;
   onChangeStatus: () => void;
-  onMakeLive: () => void;
-  onPauseAuction: () => void;
-  onCloseAuction: () => void;
+  onAuctionAction: (action: AuctionAction) => void;
   getStatusBadge: (status: string) => React.ReactNode;
   getAuctionStatusBadge: (status?: string) => React.ReactNode;
   getListingTypeBadge: (type: string) => React.ReactNode;
-  canMakeLive: boolean;
-  canPauseAuction: boolean;
-  canCloseAuction: boolean;
+  getAvailableAuctionActions: (listing: AdminListing) => AuctionAction[];
 }
 
 function ListingRow({
@@ -794,17 +828,14 @@ function ListingRow({
   onReject,
   onClose,
   onChangeStatus,
-  onMakeLive,
-  onPauseAuction,
-  onCloseAuction,
+  onAuctionAction,
   getStatusBadge,
   getAuctionStatusBadge,
   getListingTypeBadge,
-  canMakeLive,
-  canPauseAuction,
-  canCloseAuction,
+  getAvailableAuctionActions,
 }: ListingRowProps) {
-  const hasAuctionActions = canMakeLive || canPauseAuction || canCloseAuction;
+  const auctionActions = getAvailableAuctionActions(listing);
+  const hasAuctionActions = auctionActions.length > 0;
   const hasStatusActions = listing.status === "PENDING_APPROVAL" || listing.status === "ACTIVE";
   
   return (
@@ -880,24 +911,16 @@ function ListingRow({
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="text-xs text-muted-foreground">Auction Actions</DropdownMenuLabel>
-                {canMakeLive && (
-                  <DropdownMenuItem onClick={onMakeLive}>
-                    <PlayCircle className="h-4 w-4 mr-2 text-green-600" />
-                    Make LIVE for Bidding
-                  </DropdownMenuItem>
-                )}
-                {canPauseAuction && (
-                  <DropdownMenuItem onClick={onPauseAuction}>
-                    <PauseCircle className="h-4 w-4 mr-2 text-amber-600" />
-                    Pause Auction
-                  </DropdownMenuItem>
-                )}
-                {canCloseAuction && (
-                  <DropdownMenuItem onClick={onCloseAuction}>
-                    <StopCircle className="h-4 w-4 mr-2 text-red-600" />
-                    Close Auction
-                  </DropdownMenuItem>
-                )}
+                {auctionActions.map((action) => {
+                  const config = AUCTION_ACTION_CONFIG[action];
+                  const Icon = config.icon;
+                  return (
+                    <DropdownMenuItem key={action} onClick={() => onAuctionAction(action)}>
+                      <Icon className={`h-4 w-4 mr-2 ${config.color}`} />
+                      {config.title}
+                    </DropdownMenuItem>
+                  );
+                })}
               </>
             )}
             
@@ -1032,7 +1055,7 @@ function ReviewDialog({
           </DialogTitle>
           <DialogDescription>
             {reviewAction === "APPROVE"
-              ? "This listing will be published. You can make it LIVE from the actions menu."
+              ? "This listing will be published. You can manage auction status from the actions menu."
               : "This listing will be rejected and hidden from farmers."}
           </DialogDescription>
         </DialogHeader>
@@ -1082,7 +1105,7 @@ interface StatusChangeDialogProps extends DialogBaseProps {
   setStatusChangeReason: (reason: string) => void;
   onConfirm: () => Promise<void>;
   getStatusBadge: (status: string) => React.ReactNode;
-  getAvailableStatuses: (currentStatus: string) => readonly typeof AVAILABLE_STATUSES[number][];
+  getAvailableStatuses: (currentStatus: string) => typeof AVAILABLE_STATUSES[number][];
 }
 
 function StatusChangeDialog({
@@ -1108,6 +1131,12 @@ function StatusChangeDialog({
           <div className="p-4 bg-muted rounded-lg">
             <p className="text-sm text-muted-foreground">Current:</p>
             <div className="mt-1">{selectedListing && getStatusBadge(selectedListing.status)}</div>
+            {selectedListing?.status === "ACTIVE" && (
+              <p className="text-xs text-amber-600 mt-2 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Note: Changing listing status does NOT affect auction status.
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>New Status</Label>
@@ -1233,12 +1262,7 @@ function AuctionStatusDialog({
   open, onOpenChange, selectedListing, auctionAction, auctionReason,
   setAuctionReason, onConfirm, getAuctionStatusBadge, loading,
 }: AuctionStatusDialogProps) {
-  const config = {
-    LIVE: { title: "Start Auction", description: "Farmers will be able to place bids.", variant: "default" as const, icon: PlayCircle, color: "text-green-600" },
-    PAUSED: { title: "Pause Auction", description: "Bidding will be temporarily stopped.", variant: "outline" as const, icon: PauseCircle, color: "text-amber-600" },
-    CLOSED: { title: "Close Auction", description: "No more bids will be accepted.", variant: "destructive" as const, icon: StopCircle, color: "text-red-600" },
-  }[auctionAction];
-  
+  const config = AUCTION_ACTION_CONFIG[auctionAction];
   const Icon = config.icon;
 
   return (
