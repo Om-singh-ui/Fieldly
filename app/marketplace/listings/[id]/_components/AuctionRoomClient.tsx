@@ -139,7 +139,7 @@ export function AuctionRoomClient({ listingId, initialData }: AuctionRoomClientP
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8 mt-11">
       {/* Error Banner */}
       {error && (
         <div className="mb-4 p-4 bg-destructive/10 border border-destructive rounded-lg flex items-center gap-2 text-destructive">
