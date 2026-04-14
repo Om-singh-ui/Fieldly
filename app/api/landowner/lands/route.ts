@@ -16,6 +16,55 @@ import { notifyMatchingFarmersAboutListing } from "@/services/notifications/noti
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export async function GET(req: NextRequest) {
+  try {
+    const searchParams = req.nextUrl.searchParams;
+    const ownerId = searchParams.get('ownerId');
+    const isActive = searchParams.get('isActive') === 'true';
+    const isArchived = searchParams.get('isArchived') === 'false';
+    
+    if (!ownerId) {
+      return NextResponse.json({ error: 'ownerId required' }, { status: 400 });
+    }
+    
+    // Find the LandownerProfile first
+    const landownerProfile = await prisma.landownerProfile.findUnique({
+      where: { userId: ownerId }
+    });
+    
+    if (!landownerProfile) {
+      return NextResponse.json({ lands: [] });
+    }
+    
+    const lands = await prisma.land.findMany({
+      where: {
+        landownerId: landownerProfile.id,
+        ...(isActive ? { isActive: true } : {}),
+        ...(isArchived ? { isArchived: false } : {})
+      },
+      select: {
+        id: true,
+        title: true,
+        size: true,
+        landType: true,
+        village: true,
+        district: true,
+        state: true,
+        minLeaseDuration: true,
+        maxLeaseDuration: true,
+        expectedRentMin: true,
+        expectedRentMax: true,
+        isActive: true,
+        isArchived: true
+      }
+    });
+    
+    return NextResponse.json({ lands });
+  } catch (error) {
+    console.error('[LANDS_GET]', error);
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -199,10 +248,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // NOTIFY MATCHING FARMERS (Fire and forget - don't block response)
+    // NOTIFY MATCHING FARMERS
     notifyMatchingFarmersAboutListing(result.land.id, result.listing.id)
       .then((notificationResult) => {
-        console.log(`✅ Notified ${notificationResult.notified} farmers about new listing`);
+        console.log(`Notified ${notificationResult.notified} farmers about new listing`);
       })
       .catch((error) => {
         console.error('Failed to notify farmers:', error);

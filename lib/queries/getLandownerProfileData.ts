@@ -7,12 +7,15 @@ export const getLandownerProfileData = cache(async (userId: string) => {
     where: { id: userId },
     select: {
       id: true,
+      clerkUserId: true,  
       name: true,
+      email: true,
       imageUrl: true,
       bio: true,
       state: true,
       district: true,
       createdAt: true,
+      role: true,         
 
       landownerProfile: {
         select: {
@@ -95,13 +98,14 @@ export const getLandownerProfileData = cache(async (userId: string) => {
 
   const totalReviews = user.reviewsReceived.length;
 
-  // Calculate response rate (mock for now - implement based on actual messaging data)
-  const responseRate = 98; // This should come from actual message response tracking
+  const responseRate = 98;
 
   return {
     user: {
       id: user.id,
+      clerkId: user.clerkUserId,
       name: user.name,
+      email: user.email,
       imageUrl: user.imageUrl,
       bio: user.bio,
       location:
@@ -110,6 +114,7 @@ export const getLandownerProfileData = cache(async (userId: string) => {
           : user.state || user.district || null,
       joinedAt: user.createdAt,
       isVerified: user.landownerProfile?.isVerified ?? false,
+      role: user.role,
       avgRating: avgRating ?? undefined,
       totalReviews,
     },
@@ -123,7 +128,6 @@ export const getLandownerProfileData = cache(async (userId: string) => {
       avgRating,
       totalReviews,
       responseRate,
-      // Trends would be calculated by comparing with previous period
       listingsTrend: 12,
       revenueTrend: 8,
     },
@@ -133,7 +137,7 @@ export const getLandownerProfileData = cache(async (userId: string) => {
       isUrgent: listing.endDate 
         ? new Date(listing.endDate).getTime() - new Date().getTime() < 7 * 24 * 60 * 60 * 1000
         : false,
-      maxBids: 50, // This should come from listing settings
+      maxBids: 50,
     })),
   };
 });

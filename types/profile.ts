@@ -1,12 +1,15 @@
 // types/profile.ts
 export interface ProfileUser {
   id: string;
+  clerkId?: string;
   name: string | null;
+  email?: string | null;
   imageUrl: string | null;
   bio: string | null;
   location: string | null;
   joinedAt: Date;
   isVerified: boolean;
+  role?: 'FARMER' | 'LANDOWNER' | 'ADMIN' | 'SUPER_ADMIN' | null;  
   avgRating?: number;
   totalReviews?: number;
 }
@@ -20,7 +23,6 @@ export interface ProfileStats {
   avgRating: number | null;
   totalReviews?: number;
   responseRate?: number;
-  // Trends
   listingsTrend?: number;
   leasesTrend?: number;
   revenueTrend?: number;
@@ -50,9 +52,28 @@ export interface ProfileListing {
   };
 }
 
-// Re-export all types as a namespace for convenience
 export type Profile = {
   user: ProfileUser;
   stats: ProfileStats;
   listings: ProfileListing[];
 };
+
+export interface AvailableLand {
+  id: string;
+  title: string;
+  size: number;
+  landType: string;
+  village: string | null;
+  district: string | null;
+  state: string | null;
+  minLeaseDuration: number;
+  maxLeaseDuration: number;
+  expectedRentMin: number | null;
+  expectedRentMax: number | null;
+}
+
+export interface ExistingApplication {
+  id: string;
+  status: string;
+  createdAt: Date;
+}

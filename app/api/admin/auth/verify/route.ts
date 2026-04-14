@@ -45,7 +45,7 @@ export async function GET() {
       );
     }
     
-    console.log("[Admin Verify] ✅ Admin verified");
+    console.log("[Admin Verify] Admin verified");
     return NextResponse.json({
       isAdmin: true,
       role: user.role,
