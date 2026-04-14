@@ -158,7 +158,7 @@ export async function notifyMatchingFarmersAboutListing(landId: string, listingI
 
     const result = await triggerBulkNotifications(notifications);
     
-    console.log(`✅ Notified ${result.sent} farmers about new listing (matched: ${matchingFarmers.length}, total: ${finalFarmers.length})`);
+    console.log(`Notified ${result.sent} farmers about new listing (matched: ${matchingFarmers.length}, total: ${finalFarmers.length})`);
     
     return { 
       success: true, 
@@ -346,7 +346,7 @@ export async function notifyApplicationStatusChange(
 
     const statusMessages: Record<string, { title: string; message: string; priority: NotificationPriority }> = {
       APPROVED: {
-        title: '✅ Application Approved!',
+        title: 'Application Approved!',
         message: `Your application for "${application.land.title}" has been approved! Lease agreement will be sent soon.`,
         priority: 'HIGH',
       },

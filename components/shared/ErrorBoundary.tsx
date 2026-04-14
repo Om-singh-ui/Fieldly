@@ -50,11 +50,6 @@ export class ErrorBoundary extends Component<Props, State> {
       error,
       errorInfo
     });
-
-    // Optional: Send to your logging service
-    // if (process.env.NODE_ENV === 'production') {
-    //   logErrorToService(error, errorInfo);
-    // }
   }
 
   handleReset = () => {

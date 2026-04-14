@@ -28,7 +28,12 @@ export default function RootLayout({
           <QueryProvider>
             <DashboardProvider>
               <HeaderRoot />
-              <main className="min-h-screen">{children}</main>
+              {/* ✅ FIXED: Added w-full and flex justify-center */}
+              <main className="min-h-screen w-full flex flex-col items-center">
+                <div className="w-full flex-1">
+                  {children}
+                </div>
+              </main>
               <FieldlyAssist />   
               <Footer />
               <Toaster position="top-right" richColors />

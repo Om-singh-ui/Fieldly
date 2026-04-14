@@ -21,7 +21,7 @@ async function setSuperAdmin(email: string) {
       },
     });
 
-    console.log(`✅ User ${email} is now a SUPER_ADMIN`);
+    console.log(` User ${email} is now a SUPER_ADMIN`);
     console.log(`   ID: ${updatedUser.id}`);
     console.log(`   Role: ${updatedUser.role}`);
   } catch (error) {

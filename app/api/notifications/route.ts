@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    console.log('✅ Notification created:', notification.id);
+    console.log('Notification created:', notification.id);
 
     return NextResponse.json(notification, { status: 201 });
   } catch (error) {
