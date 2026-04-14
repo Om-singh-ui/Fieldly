@@ -1,104 +1,162 @@
 // app/api/admin/applications/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/server/admin-guard";
-import { prisma } from "@/lib/prisma";
-import { logDetailedAction } from "@/lib/server/audit-logger";
-import { headers } from "next/headers";
-
-interface ApplicationWhereClause {
-  status?: string;
-  landownerId?: string;
-  farmerId?: string;
-  OR?: Array<Record<string, unknown>>;
-}
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
+import { prisma } from '@/lib/prisma'
+import { ApplicationStatus, Prisma } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   try {
-    const admin = await requireAdmin();
-    const headersList = await headers();
-
-    const searchParams = req.nextUrl.searchParams;
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const status = searchParams.get("status");
-    const landownerId = searchParams.get("landownerId");
-    const farmerId = searchParams.get("farmerId");
-    const search = searchParams.get("search");
-
-    const where: ApplicationWhereClause = {};
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     
-    if (status && status !== "all") where.status = status;
-    if (landownerId) where.landownerId = landownerId;
-    if (farmerId) where.farmerId = farmerId;
+    // Verify admin role
+    const admin = await prisma.user.findUnique({
+      where: { clerkUserId: userId },
+      select: { role: true }
+    })
+    
+    if (!admin || (admin.role !== 'ADMIN' && admin.role !== 'SUPER_ADMIN')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    
+    const searchParams = req.nextUrl.searchParams
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const search = searchParams.get('search') || undefined
+    const status = searchParams.get('status') as ApplicationStatus | 'all' | null
+    const sortBy = searchParams.get('sortBy') || 'createdAt'
+    const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc'
+    
+    const where: Prisma.ApplicationWhereInput = {}
+    
+    if (status && status !== 'all') {
+      where.status = status as ApplicationStatus
+    }
+    
     if (search) {
       where.OR = [
-        { land: { title: { contains: search, mode: "insensitive" as const } } },
-        { farmer: { name: { contains: search, mode: "insensitive" as const } } },
-      ];
+        { land: { title: { contains: search, mode: 'insensitive' } } },
+        { farmer: { name: { contains: search, mode: 'insensitive' } } },
+        // ✅ FIXED: Access user.name through landowner.user
+        { land: { landowner: { user: { name: { contains: search, mode: 'insensitive' } } } } },
+        { land: { village: { contains: search, mode: 'insensitive' } } },
+        { land: { district: { contains: search, mode: 'insensitive' } } },
+      ]
     }
-
+    
+    const orderBy: Prisma.ApplicationOrderByWithRelationInput = {}
+    if (sortBy === 'proposedRent') {
+      orderBy.proposedRent = sortOrder
+    } else if (sortBy === 'duration') {
+      orderBy.duration = sortOrder
+    } else {
+      orderBy.createdAt = sortOrder
+    }
+    
+    const skip = (page - 1) * limit
+    
     const [applications, total, stats] = await Promise.all([
       prisma.application.findMany({
-        where: where as Record<string, unknown>,
+        where,
         include: {
-          farmer: { select: { id: true, name: true, email: true } },
           land: {
+            include: {
+              // ✅ FIXED: Include user through landowner
+              landowner: {
+                include: {
+                  user: {
+                    select: { id: true, name: true, email: true }
+                  }
+                }
+              }
+            }
+          },
+          farmer: {
             select: {
               id: true,
-              title: true,
-              size: true,
-              village: true,
-              district: true,
-              landowner: { select: { user: { select: { name: true, email: true } } } },
-            },
+              name: true,
+              email: true,
+              farmerProfile: {
+                select: {
+                  primaryCrops: true,
+                  farmingExperience: true,
+                  isVerified: true
+                }
+              }
+            }
           },
-          listing: { select: { id: true, title: true, basePrice: true } },
+          listing: {
+            select: { id: true, title: true }
+          }
         },
-        orderBy: { createdAt: "desc" },
-        skip: (page - 1) * limit,
-        take: limit,
+        orderBy,
+        skip,
+        take: limit
       }),
-      prisma.application.count({ where: where as Record<string, unknown> }),
+      prisma.application.count({ where }),
+      prisma.application.aggregate({
+        where,
+        _sum: { proposedRent: true }
+      })
+    ])
+    
+    // Transform applications to match AdminApplication interface
+    const transformedApplications = applications.map(app => ({
+      ...app,
+      land: {
+        ...app.land,
+        landowner: {
+          id: app.land.landowner.user.id,
+          name: app.land.landowner.user.name,
+          email: app.land.landowner.user.email
+        }
+      }
+    }))
+    
+    // Get additional stats
+    const [pendingReview, approvedToday, byStatus] = await Promise.all([
+      prisma.application.count({
+        where: { status: { in: ['PENDING', 'UNDER_REVIEW'] } }
+      }),
+      prisma.application.count({
+        where: {
+          status: 'APPROVED',
+          reviewedAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) }
+        }
+      }),
       prisma.application.groupBy({
-        by: ["status"],
-        where: where as Record<string, unknown>,
-        _count: true,
-      }),
-    ]);
-
-    await logDetailedAction({
-      adminId: admin.id,
-      action: "VIEW_APPLICATIONS",
-      entity: "APPLICATION",
-      metadata: {
-        filters: { status, landownerId, farmerId, search },
-        ipAddress: headersList.get("x-forwarded-for") || "unknown",
-      },
-    });
-
+        by: ['status'],
+        _count: { status: true }
+      })
+    ])
+    
+    const statusCounts: Record<string, number> = {}
+    byStatus.forEach(s => { statusCounts[s.status] = s._count.status })
+    
     return NextResponse.json({
-      applications,
+      applications: transformedApplications,
       stats: {
         total,
-        byStatus: stats.reduce((acc, curr) => {
-          acc[curr.status] = curr._count;
-          return acc;
-        }, {} as Record<string, number>),
+        byStatus: statusCounts,
+        totalValue: stats._sum.proposedRent || 0,
+        pendingReview,
+        approvedToday,
+        avgResponseTime: 0
       },
       pagination: {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1,
-      },
-    });
+        totalPages: Math.ceil(total / limit)
+      }
+    })
   } catch (error) {
-    console.error("Applications fetch error:", error);
+    console.error('[ADMIN_APPLICATIONS_GET]', error)
     return NextResponse.json(
-      { error: "Failed to fetch applications" },
+      { error: 'Internal server error' },
       { status: 500 }
-    );
+    )
   }
 }
