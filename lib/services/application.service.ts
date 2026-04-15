@@ -104,11 +104,7 @@ export class ApplicationService {
     const land = await prisma.land.findUnique({
       where: { id: data.landId },
       include: {
-        landowner: {
-          include: {
-            user: true, 
-          },
-        },
+        landowner: true,
       },
     });
 
@@ -185,11 +181,7 @@ export class ApplicationService {
         include: {
           land: {
             include: {
-              landowner: {
-                include: {
-                  user: true,
-                },
-              },
+              landowner: true,
             },
           },
           farmer: true,
@@ -220,17 +212,34 @@ export class ApplicationService {
       return app;
     });
 
-    // 8. Send notification using server action
-    await createNotification({
-      userId: land.landowner.user.id, 
-      type: "APPLICATION",
-      title: "New Lease Application Received",
-      message: `${farmer.name} has applied to lease "${land.title}"`,
-      entityType: "Application",
-      entityId: application.id,
-      actionUrl: `/landowner/applications/${application.id}`,
-      priority: "MEDIUM",
-    });
+    // 8. Send notification to landowner
+    try {
+      // Get the landowner user (land.landownerId is the user ID)
+      const landownerUser = await prisma.user.findUnique({
+        where: { id: land.landownerId },
+        select: { id: true, name: true },
+      });
+
+      if (landownerUser) {
+        const notificationResult = await createNotification({
+          userId: landownerUser.id,
+          type: "APPLICATION",
+          title: "📋 New Lease Application Received",
+          message: `${farmer.name} has applied to lease "${land.title}". Proposed rent: ${data.proposedRent ? `₹${data.proposedRent.toLocaleString('en-IN')}` : 'Not specified'}.`,
+          entityType: "Application",
+          entityId: application.id,
+          actionUrl: `/applications/${application.id}`,
+          priority: "HIGH",
+        });
+
+        console.log(`✅ Notification sent to landowner (${landownerUser.id}):`, notificationResult);
+      } else {
+        console.warn(`⚠️ Could not find landowner user for landownerId: ${land.landownerId}`);
+      }
+    } catch (notificationError) {
+      console.error('❌ Failed to send landowner notification:', notificationError);
+      // Don't throw - application was created successfully
+    }
 
     return application;
   }
@@ -248,11 +257,7 @@ export class ApplicationService {
       include: {
         land: {
           include: {
-            landowner: {
-              include: {
-                user: true, // Include user
-              },
-            },
+            landowner: true,
           },
         },
         farmer: true,
@@ -263,8 +268,8 @@ export class ApplicationService {
       throw new AppError("Application not found", 404);
     }
 
-    // Check against landowner.user.id
-    if (application.land.landowner.user.id !== reviewerId) {
+    // Check if reviewer is the landowner
+    if (application.land.landownerId !== reviewerId) {
       throw new AppError("Unauthorized to review this application", 403);
     }
 
@@ -332,30 +337,40 @@ export class ApplicationService {
       return app;
     });
 
-    // Send notifications using server action
-    await createNotification({
-      userId: application.farmerId,
-      type: "APPLICATION",
-      title: `Application ${data.status.toLowerCase()}`,
-      message:
-        data.status === "APPROVED"
+    // Send notifications
+    try {
+      // 1. Notify farmer
+      const farmerNotification = await createNotification({
+        userId: application.farmerId,
+        type: "APPLICATION",
+        title: data.status === "APPROVED" 
+          ? "✅ Application Approved!" 
+          : "❌ Application Not Selected",
+        message: data.status === "APPROVED"
           ? `Great news! Your application for "${application.land.title}" has been approved. Please review and sign the lease agreement.`
-          : `Your application for "${application.land.title}" was not accepted at this time.`,
-      entityType: "Application",
-      entityId: applicationId,
-      actionUrl: `/applications/${applicationId}`,
-      priority: "MEDIUM",
-    });
+          : `Your application for "${application.land.title}" was not accepted at this time.${sanitizedNotes ? ` Notes: ${sanitizedNotes}` : ''}`,
+        entityType: "Application",
+        entityId: applicationId,
+        actionUrl: `/applications/${applicationId}`,
+        priority: "HIGH",
+      });
+      console.log(`✅ Notification sent to farmer (${application.farmerId}):`, farmerNotification);
 
-    await createNotification({
-      userId: reviewerId,
-      type: "APPLICATION",
-      title: `Application ${data.status.toLowerCase()}`,
-      message: `You have ${data.status.toLowerCase()} the application for "${application.land.title}".`,
-      entityType: "Application",
-      entityId: applicationId,
-      priority: "MEDIUM",
-    });
+      // 2. Notify landowner (reviewer confirmation)
+      const landownerNotification = await createNotification({
+        userId: reviewerId,
+        type: "APPLICATION",
+        title: `Application ${data.status.toLowerCase()}`,
+        message: `You have ${data.status.toLowerCase()} the application from ${application.farmer.name} for "${application.land.title}".`,
+        entityType: "Application",
+        entityId: applicationId,
+        actionUrl: `/applications/${applicationId}`,
+        priority: "MEDIUM",
+      });
+      console.log(`✅ Notification sent to landowner (${reviewerId}):`, landownerNotification);
+    } catch (notificationError) {
+      console.error('❌ Failed to send review notifications:', notificationError);
+    }
 
     return updated;
   }
@@ -369,11 +384,7 @@ export class ApplicationService {
       include: {
         land: {
           include: {
-            landowner: {
-              include: {
-                user: true, // Include user
-              },
-            },
+            landowner: true,
           },
         },
         farmer: true,
@@ -417,16 +428,22 @@ export class ApplicationService {
       return app;
     });
 
-    // Send notification to landowner.user.id
-    await createNotification({
-      userId: application.land.landowner.user.id,
-      type: "APPLICATION",
-      title: "Application Withdrawn",
-      message: `${application.farmer.name} has withdrawn their application for "${application.land.title}".`,
-      entityType: "Application",
-      entityId: applicationId,
-      priority: "MEDIUM",
-    });
+    // Send notification to landowner
+    try {
+      const landownerNotification = await createNotification({
+        userId: application.land.landownerId,
+        type: "APPLICATION",
+        title: "↩️ Application Withdrawn",
+        message: `${application.farmer.name} has withdrawn their application for "${application.land.title}".`,
+        entityType: "Application",
+        entityId: applicationId,
+        actionUrl: `/applications/${applicationId}`,
+        priority: "MEDIUM",
+      });
+      console.log(`✅ Withdrawal notification sent to landowner (${application.land.landownerId}):`, landownerNotification);
+    } catch (notificationError) {
+      console.error('❌ Failed to send withdrawal notification:', notificationError);
+    }
 
     return updated;
   }
@@ -451,7 +468,7 @@ export class ApplicationService {
     if (role === "FARMER") {
       where.farmerId = userId;
     } else {
-      where.land = { landowner: { userId } }; 
+      where.land = { landownerId: userId };
     }
 
     if (filters?.status?.length) {
@@ -481,17 +498,13 @@ export class ApplicationService {
           land: {
             include: {
               landowner: {
-                include: {
-                  user: {
-                    select: {
-                      id: true,
-                      name: true,
-                      email: true,
-                      imageUrl: true,
-                      state: true,
-                      district: true,
-                    },
-                  },
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  imageUrl: true,
+                  state: true,
+                  district: true,
                 },
               },
             },
@@ -543,18 +556,14 @@ export class ApplicationService {
         land: {
           include: {
             landowner: {
-              include: {
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    imageUrl: true,
-                    phone: true,
-                    state: true,
-                    district: true,
-                  },
-                },
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                imageUrl: true,
+                phone: true,
+                state: true,
+                district: true,
               },
             },
             images: {
@@ -599,7 +608,7 @@ export class ApplicationService {
     }
 
     const isFarmer = application.farmerId === userId;
-    const isLandowner = application.land.landowner.user.id === userId; 
+    const isLandowner = application.land.landowner.id === userId;
     const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
     if (!isFarmer && !isLandowner && !isAdmin) {
