@@ -315,7 +315,11 @@ export function ApplicationForm({ land, onSuccess, onCancel, prefilledData }: Ap
               Cancel
             </Button>
           )}
-          <Button type="submit" disabled={isSubmitting} className="flex-1">
+          <Button 
+            type="submit" 
+            disabled={isSubmitting} 
+            className="flex-1 bg-black text-white hover:bg-gray-800"
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
