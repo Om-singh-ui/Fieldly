@@ -5,35 +5,20 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    const session = await auth();
+    const { userId } = await auth();
     
-    if (!session?.userId) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { clerkUserId: session.userId },
-      select: { id: true }
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    const unreadCount = await prisma.notification.count({
+    const count = await prisma.notification.count({
       where: {
-        userId: user.id,
-        isRead: false
-      }
+        userId,
+        isRead: false,
+      },
     });
 
-    const response = NextResponse.json({ 
-      unreadCount,
-      userId: user.id 
-    });
-    
-    response.headers.set('Cache-Control', 'no-store');
-    return response;
+    return NextResponse.json({ count });
   } catch (error) {
     console.error('Error fetching notification count:', error);
     return NextResponse.json(
