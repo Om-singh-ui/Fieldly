@@ -1,10 +1,11 @@
 // app/(protected)/applications/new/page.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { 
   CreateApplicationInput, 
@@ -31,8 +32,33 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowLeft, Loader2, IndianRupee, Calendar, FileText, MessageSquare } from 'lucide-react'
+import { 
+  ArrowLeft, 
+  Loader2, 
+  IndianRupee, 
+  Calendar, 
+  FileText, 
+  MessageSquare,
+  MapPin,
+  Sprout,
+  Clock,
+  TrendingUp,
+  Shield,
+  ChevronRight,
+  CheckCircle2,
+  Eye,
+  X
+} from 'lucide-react'
 import Link from 'next/link'
+import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog'
 
 interface Land {
   id: string
@@ -53,12 +79,37 @@ interface Land {
 
 const DURATION_OPTIONS = [3, 6, 12, 24, 36, 60]
 
-export default function NewApplicationPage() {
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15
+    }
+  }
+}
+
+function NewApplicationContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [selectedLand, setSelectedLand] = useState<Land | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoadingLand, setIsLoadingLand] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
   
   const landId = searchParams.get('landId')
   const ownerId = searchParams.get('ownerId')
@@ -71,7 +122,8 @@ export default function NewApplicationPage() {
       proposedRent: undefined,
       cropPlan: '',
       message: ''
-    }
+    },
+    mode: 'onChange'
   })
   
   const watchDuration = form.watch('duration')
@@ -145,10 +197,17 @@ export default function NewApplicationPage() {
   if (isLoadingLand) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#b7cf8a] to-[#8fb855] rounded-full blur-xl opacity-20 pointer-events-none" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#8fb855] relative" />
+          </div>
           <p className="text-muted-foreground">Loading land details...</p>
-        </div>
+        </motion.div>
       </div>
     )
   }
@@ -184,223 +243,498 @@ export default function NewApplicationPage() {
   }
   
   return (
-    <div className="min-h-screen py-8 mt-16">
-      <div className="container max-w-4xl mx-auto px-4 sm:px-6">
-        {/* Header */}
-        <div className="mb-8">
+    <div className="min-h-screen py-8 mt-16 bg-gradient-to-br">
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Animated Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
           <Link 
             href={ownerId ? `/profile/${ownerId}` : "/marketplace"}
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4 group"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
+            <ArrowLeft className="h-4 w-4 mr-1 group-hover:-translate-x-1 transition-transform" />
             {ownerId ? 'Back to Profile' : 'Back to Marketplace'}
           </Link>
           
-          <h1 className="text-3xl font-bold">New Application</h1>
-          <p className="text-muted-foreground mt-2">
-            Submit your application to lease land. All communication is platform-protected.
-          </p>
-        </div>
-        
-        <ContactProtectionBanner />
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Applying for</CardTitle>
-                <CardDescription>You are submitting an application for this land</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-start gap-4">
-                  <div className="h-16 w-16 bg-muted rounded-lg flex items-center justify-center shrink-0">
-                    <span className="text-xl">🌾</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold truncate">{selectedLand.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {[selectedLand.village, selectedLand.district, selectedLand.state].filter(Boolean).join(', ')}
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
-                      <div>
-                        <span className="text-xs text-muted-foreground">Size</span>
-                        <p className="text-sm font-medium">{selectedLand.size} acres</p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-muted-foreground">Land Type</span>
-                        <p className="text-sm font-medium">{selectedLand.landType}</p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-muted-foreground">Allowed Duration</span>
-                        <p className="text-sm font-medium">
-                          {selectedLand.minLeaseDuration}-{selectedLand.maxLeaseDuration} months
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Application Details</CardTitle>
-                <CardDescription>
-                  Provide details about your lease proposal
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="duration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Lease Duration
-                      </FormLabel>
-                      <Select 
-                        onValueChange={(v) => field.onChange(parseInt(v))}
-                        defaultValue={field.value.toString()}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select duration" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {DURATION_OPTIONS.map((months) => (
-                            <SelectItem 
-                              key={months} 
-                              value={months.toString()}
-                              disabled={months < selectedLand.minLeaseDuration || months > selectedLand.maxLeaseDuration}
-                            >
-                              {months} months {months === 12 ? '(1 year)' : months === 24 ? '(2 years)' : ''}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="proposedRent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <IndianRupee className="h-4 w-4" />
-                        Proposed Monthly Rent (₹)
-                      </FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="e.g., 15000" 
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                          value={field.value ?? ''}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        {selectedLand.expectedRentMin && selectedLand.expectedRentMax ? (
-                          <span>Expected range: ₹{selectedLand.expectedRentMin.toLocaleString('en-IN')} - ₹{selectedLand.expectedRentMax.toLocaleString('en-IN')}</span>
-                        ) : selectedLand.expectedRentMin ? (
-                          <span>Minimum expected: ₹{selectedLand.expectedRentMin.toLocaleString('en-IN')}</span>
-                        ) : (
-                          <span>Optional - Leave empty if flexible</span>
-                        )}
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {calculateTotalValue() && (
-                  <div className="p-3 bg-muted rounded-lg">
-                    <p className="text-sm">
-                      <span className="text-muted-foreground">Total Lease Value:</span>{' '}
-                      <span className="font-semibold">
-                        ₹{calculateTotalValue()?.toLocaleString('en-IN')}
-                      </span>
-                    </p>
-                  </div>
-                )}
-                
-                <FormField
-                  control={form.control}
-                  name="cropPlan"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        Crop Plan
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Describe what crops you plan to grow..."
-                          className="min-h-[120px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="message"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4" />
-                        Additional Message (Optional)
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Any additional information..."
-                          className="min-h-[100px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-            
-            <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-              <p className="text-sm text-amber-800 dark:text-amber-200">
-                <strong>⚠️ Important:</strong> Do not include phone numbers, email addresses, 
-                or social media handles in your application.
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-br from-[#b7cf8a]/20 to-[#8fb855]/20 rounded-xl">
+              <Sprout className="h-6 w-6 text-[#8fb855]" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900  bg-clip-text text-gray-900">
+                New Application
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Submit your application to lease land. All communication is platform-protected.
               </p>
             </div>
-            
-            <div className="flex gap-3">
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={() => router.back()}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting} className="flex-1">
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  'Submit Application'
-                )}
-              </Button>
-            </div>
+          </div>
+        </motion.div>
+        
+        {/* Contact Protection Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <ContactProtectionBanner />
+        </motion.div>
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6">
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+            >
+              {/* Left Column - Land Details */}
+              <motion.div variants={itemVariants} className="lg:col-span-1">
+                <Card className="sticky top-24 border-0 shadow-xl overflow-hidden">
+                  {/* FIXED: Added pointer-events-none */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#b7cf8a]/5 to-transparent pointer-events-none" />
+                  <CardHeader className="pb-3 relative z-10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className="bg-[#b7cf8a] text-white hover:bg-[#b7cf8a]">
+                        Selected Land
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-xl flex items-start gap-3">
+                      <div className="h-12 w-12 bg-gradient-to-br from-[#b7cf8a] to-[#8fb855] rounded-xl flex items-center justify-center shrink-0 shadow-lg">
+                        <span className="text-2xl">🌾</span>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-gray-900">{selectedLand.title}</h3>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                          <MapPin className="h-3 w-3" />
+                          <span className="truncate">
+                            {[selectedLand.village, selectedLand.district, selectedLand.state].filter(Boolean).join(', ')}
+                          </span>
+                        </div>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="relative z-10">
+                    <div className="space-y-4">
+                      {/* Land Stats Grid */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <motion.div 
+                          whileHover={{ scale: 1.02 }}
+                          className="p-3 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-100"
+                        >
+                          <p className="text-xs text-muted-foreground mb-1">Size</p>
+                          <p className="text-lg font-semibold text-gray-900">{selectedLand.size} <span className="text-sm font-normal text-muted-foreground">acres</span></p>
+                        </motion.div>
+                        
+                        <motion.div 
+                          whileHover={{ scale: 1.02 }}
+                          className="p-3 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-100"
+                        >
+                          <p className="text-xs text-muted-foreground mb-1">Land Type</p>
+                          <p className="text-lg font-semibold text-gray-900">{selectedLand.landType}</p>
+                        </motion.div>
+                        
+                        <motion.div 
+                          whileHover={{ scale: 1.02 }}
+                          className="p-3 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-100 col-span-2"
+                        >
+                          <p className="text-xs text-muted-foreground mb-1">Lease Duration Range</p>
+                          <p className="text-lg font-semibold text-gray-900">
+                            {selectedLand.minLeaseDuration} - {selectedLand.maxLeaseDuration} <span className="text-sm font-normal text-muted-foreground">months</span>
+                          </p>
+                        </motion.div>
+                      </div>
+                      
+                      {/* Expected Rent */}
+                      {selectedLand.expectedRentMin && (
+                        <motion.div 
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200"
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <TrendingUp className="h-4 w-4 text-amber-600" />
+                            <p className="text-sm font-medium text-amber-900">Expected Rent Range</p>
+                          </div>
+                          <p className="text-2xl font-bold text-amber-900">
+                            ₹{selectedLand.expectedRentMin.toLocaleString('en-IN')}
+                            {selectedLand.expectedRentMax && (
+                              <> - ₹{selectedLand.expectedRentMax.toLocaleString('en-IN')}</>
+                            )}
+                            <span className="text-sm font-normal text-amber-700 ml-1">/month</span>
+                          </p>
+                        </motion.div>
+                      )}
+                      
+                      {/* Allowed Crops */}
+                      {selectedLand.allowedCropTypes && selectedLand.allowedCropTypes.length > 0 && (
+                        <div className="p-4 bg-gray-50 rounded-xl">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Allowed Crop Types</p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedLand.allowedCropTypes.map((crop) => (
+                              <Badge key={crop} variant="secondary" className="bg-white">
+                                {crop}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+              
+              {/* Right Column - Application Form */}
+              <motion.div variants={itemVariants} className="lg:col-span-2 space-y-6">
+                {/* Lease Details Card */}
+                <Card className="border-0 shadow-xl overflow-hidden">
+                  {/* FIXED: Added pointer-events-none */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent pointer-events-none" />
+                  <CardHeader className="relative z-10">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <div className="p-1.5 bg-blue-100 rounded-lg">
+                        <Calendar className="h-4 w-4 text-blue-600" />
+                      </div>
+                      Lease Proposal
+                    </CardTitle>
+                    <CardDescription>
+                      Set your preferred lease terms
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="relative z-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Duration Field */}
+                      <FormField
+                        control={form.control}
+                        name="duration"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              Lease Duration
+                            </FormLabel>
+                            <Select 
+                              onValueChange={(value) => field.onChange(parseInt(value))}
+                              value={field.value?.toString() || "12"}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="h-12 bg-white">
+                                  <SelectValue placeholder="Select duration" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {DURATION_OPTIONS.map((months) => (
+                                  <SelectItem 
+                                    key={months} 
+                                    value={months.toString()}
+                                    disabled={months < selectedLand.minLeaseDuration || months > selectedLand.maxLeaseDuration}
+                                  >
+                                    <div className="flex items-center justify-between w-full">
+                                      <span>{months} months</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {months === 12 ? '1 year' : months === 24 ? '2 years' : months === 36 ? '3 years' : months === 60 ? '5 years' : ''}
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {/* Rent Field */}
+                      <FormField
+                        control={form.control}
+                        name="proposedRent"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              <IndianRupee className="h-4 w-4 text-muted-foreground" />
+                              Proposed Monthly Rent (₹)
+                            </FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                                  ₹
+                                </div>
+                                <Input 
+                                  type="number" 
+                                  placeholder="e.g., 15000" 
+                                  className="pl-8 h-12 bg-white"
+                                  {...field}
+                                  onChange={(e) => {
+                                    const value = e.target.value ? parseFloat(e.target.value) : undefined
+                                    field.onChange(value)
+                                  }}
+                                  value={field.value ?? ''}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormDescription>
+                              {selectedLand.expectedRentMin && selectedLand.expectedRentMax ? (
+                                <span className="text-xs">Expected: ₹{selectedLand.expectedRentMin.toLocaleString('en-IN')} - ₹{selectedLand.expectedRentMax.toLocaleString('en-IN')}</span>
+                              ) : (
+                                <span className="text-xs">Optional - Leave empty if flexible</span>
+                              )}
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    {/* Total Value Display */}
+                    <AnimatePresence>
+                      {calculateTotalValue() && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-6"
+                        >
+                          <div className="p-4 bg-gradient-to-r from-[#b7cf8a]/10 to-[#8fb855]/10 rounded-xl border border-[#b7cf8a]/30">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="p-1.5 bg-[#b7cf8a]/20 rounded-lg">
+                                  <IndianRupee className="h-4 w-4 text-[#5a7a3a]" />
+                                </div>
+                                <span className="text-sm font-medium text-gray-700">Total Lease Value</span>
+                              </div>
+                              <motion.span 
+                                key={calculateTotalValue()}
+                                initial={{ scale: 1.2 }}
+                                animate={{ scale: 1 }}
+                                className="text-2xl font-bold text-[#5a7a3a]"
+                              >
+                                ₹{calculateTotalValue()?.toLocaleString('en-IN')}
+                              </motion.span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </CardContent>
+                </Card>
+                
+                {/* Crop Plan & Message Card */}
+                <Card className="border-0 shadow-xl overflow-hidden">
+                  {/* FIXED: Added pointer-events-none */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-transparent pointer-events-none" />
+                  <CardHeader className="relative z-10">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <div className="p-1.5 bg-emerald-100 rounded-lg">
+                        <FileText className="h-4 w-4 text-emerald-600" />
+                      </div>
+                      Additional Information
+                    </CardTitle>
+                    <CardDescription>
+                      Tell the landowner about your plans
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="relative z-10">
+                    <div className="grid grid-cols-1 gap-6">
+                      {/* Crop Plan */}
+                      <FormField
+                        control={form.control}
+                        name="cropPlan"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              <Sprout className="h-4 w-4 text-muted-foreground" />
+                              Crop Plan
+                            </FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Describe what crops you plan to grow, farming methods, and any sustainable practices..."
+                                className="min-h-[120px] bg-white resize-none"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Be specific about your farming approach to increase approval chances
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {/* Additional Message */}
+                      <FormField
+                        control={form.control}
+                        name="message"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                              Additional Message (Optional)
+                            </FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Any additional information you'd like to share with the landowner..."
+                                className="min-h-[100px] bg-white resize-none"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Security Notice */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="relative overflow-hidden rounded-xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4"
+                >
+                  {/* FIXED: Added pointer-events-none */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/20 rounded-full blur-2xl pointer-events-none" />
+                  <div className="relative flex items-start gap-3 z-10">
+                    <div className="p-2 bg-amber-100 rounded-full shrink-0">
+                      <Shield className="h-5 w-5 text-amber-700" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-semibold text-amber-900">
+                          Platform Protection Active
+                        </p>
+                        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-amber-700 hover:text-amber-900 hover:bg-amber-100"
+                            >
+                              <Eye className="h-3.5 w-3.5 mr-1" />
+                              Learn More
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center gap-2 text-xl">
+                                <Shield className="h-5 w-5 text-amber-600" />
+                                Platform Communication Protection
+                              </DialogTitle>
+                              <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                                <X className="h-4 w-4" />
+                                <span className="sr-only">Close</span>
+                              </DialogClose>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                              <p className="text-sm text-muted-foreground">
+                                Fieldly protects your privacy by masking all contact information 
+                                during the application process.
+                              </p>
+                              <div className="bg-amber-50 p-4 rounded-lg space-y-3">
+                                <p className="font-medium text-amber-900">What this means:</p>
+                                <ul className="space-y-2 text-sm text-amber-800">
+                                  <li className="flex items-start gap-2">
+                                    <CheckCircle2 className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                                    <span>Your phone number and email remain private</span>
+                                  </li>
+                                  <li className="flex items-start gap-2">
+                                    <CheckCircle2 className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                                    <span>All communication happens through our secure platform</span>
+                                  </li>
+                                  <li className="flex items-start gap-2">
+                                    <CheckCircle2 className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                                    <span>Contact details are only shared after application approval</span>
+                                  </li>
+                                  <li className="flex items-start gap-2">
+                                    <CheckCircle2 className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                                    <span>We monitor messages to prevent off-platform deals</span>
+                                  </li>
+                                </ul>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                This protection ensures a safe and transparent leasing process for everyone involved.
+                              </p>
+                            </div>
+                            <div className="flex justify-end">
+                              <Button 
+                                onClick={() => setDialogOpen(false)}
+                                className="bg-amber-600 hover:bg-amber-700 text-white"
+                              >
+                                Got it
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                      <p className="text-sm text-amber-700">
+                        <strong>⚠️ Important:</strong> Do not include phone numbers, email addresses, 
+                        or social media handles in your application.
+                      </p>
+                    </div>
+                    <CheckCircle2 className="h-5 w-5 text-amber-600 shrink-0" />
+                  </div>
+                </motion.div>
+                
+                {/* Action Buttons */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="flex gap-3 pt-4"
+                >
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    size="lg"
+                    onClick={() => router.back()}
+                    className="flex-1 md:flex-none"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    size="lg"
+                    className="flex-1 bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        Submit Application
+                        <ChevronRight className="h-4 w-4 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
+              </motion.div>
+            </motion.div>
           </form>
         </Form>
       </div>
     </div>
+  )
+}
+
+export default function NewApplicationPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-[#8fb855]" />
+          <p className="text-muted-foreground">Loading application form...</p>
+        </div>
+      </div>
+    }>
+      <NewApplicationContent />
+    </Suspense>
   )
 }
