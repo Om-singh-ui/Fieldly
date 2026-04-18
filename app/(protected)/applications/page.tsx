@@ -34,7 +34,7 @@ export default async function ApplicationsPage({
   const isFarmer = user.role === 'FARMER'
   
   return (
-    <div className="flex justify-center w-full">
+    <div className="flex justify-center w-full mt-16">
       <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">

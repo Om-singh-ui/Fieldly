@@ -4,7 +4,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { createNotification } from '@/actions/notifications/createNotification'
 
-// ✅ MUST use named export, NOT default export
+// MUST use named export, NOT default export
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ applicationId: string }> }
