@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
       where.OR = [
         { land: { title: { contains: search, mode: 'insensitive' } } },
         { farmer: { name: { contains: search, mode: 'insensitive' } } },
-        // ✅ FIXED: Access user.name through landowner.user
+        // FIXED: Access user.name through landowner.user
         { land: { landowner: { user: { name: { contains: search, mode: 'insensitive' } } } } },
         { land: { village: { contains: search, mode: 'insensitive' } } },
         { land: { district: { contains: search, mode: 'insensitive' } } },
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
         include: {
           land: {
             include: {
-              // ✅ FIXED: Include user through landowner
+              // FIXED: Include user through landowner
               landowner: {
                 include: {
                   user: {

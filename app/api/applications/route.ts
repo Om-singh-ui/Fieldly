@@ -6,6 +6,31 @@ import { ApplicationService } from '@/lib/services/application.service'
 import { createApplicationSchema } from '@/lib/validations/application.schema'
 import { ApplicationStatus } from '@prisma/client'
 
+// CONTACT BLOCKLIST
+const BLOCKED_PATTERNS = [
+  '@', 'gmail', 'yahoo', 'outlook', 'hotmail', 'email',
+  '.com', '.in', '.org', '.net', '.co',
+  'contact', 'call', 'text', 'reach', 'whatsapp', 'telegram',
+  'phone', 'mobile', 'number', '+91', '+1'
+]
+
+function hasContactInfo(text: string): boolean {
+  if (!text) return false
+  const lower = text.toLowerCase()
+  
+  // Check blocked keywords
+  if (BLOCKED_PATTERNS.some(p => lower.includes(p))) return true
+  
+  // Check phone numbers (10+ digits)
+  if (/\d{10,}/.test(text.replace(/\D/g, ''))) return true
+  
+  // Check spaced email
+  const spaceless = lower.replace(/\s+/g, '')
+  if (spaceless.includes('@') && spaceless.includes('.com')) return true
+  
+  return false
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { userId } = await auth()
@@ -59,7 +84,10 @@ export async function POST(req: NextRequest) {
         id: true, 
         role: true, 
         isOnboarded: true,
-        farmerProfile: true
+        name: true,
+        farmerProfile: {
+          select: { id: true }
+        }
       }
     })
     
@@ -88,22 +116,22 @@ export async function POST(req: NextRequest) {
       )
     }
     
-    const pendingCount = await prisma.application.count({
-      where: {
-        farmerId: user.id,
-        status: { in: ['PENDING', 'UNDER_REVIEW'] },
-        createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
-      }
-    })
+    const body = await req.json()
     
-    if (pendingCount >= 10) {
+    // ADDED: Contact information validation
+    if (hasContactInfo(body.cropPlan || '')) {
       return NextResponse.json(
-        { error: 'You have reached the maximum limit of pending applications (10)' },
+        { error: 'Crop plan contains contact information (email, phone, etc.). Please remove it.' },
         { status: 400 }
       )
     }
     
-    const body = await req.json()
+    if (hasContactInfo(body.message || '')) {
+      return NextResponse.json(
+        { error: 'Message contains contact information (email, phone, etc.). Please remove it.' },
+        { status: 400 }
+      )
+    }
     
     const validated = createApplicationSchema.safeParse(body)
     if (!validated.success) {
