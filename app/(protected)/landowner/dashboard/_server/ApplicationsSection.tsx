@@ -1,7 +1,8 @@
+// app/(protected)/landowner/dashboard/_server/ApplicationsSection.tsx
 import { prisma } from "@/lib/prisma";
 import {
   RecentApplications,
-  RecentApplication,
+  type RecentApplication,
 } from "../_components/RecentApplications";
 
 export async function ApplicationsSection({
@@ -9,6 +10,7 @@ export async function ApplicationsSection({
 }: {
   userId: string;
 }) {
+  // Get the database user ID from Clerk userId
   const user = await prisma.user.findUnique({
     where: { clerkUserId: userId },
     select: { id: true },
@@ -18,7 +20,11 @@ export async function ApplicationsSection({
 
   const apps = await prisma.application.findMany({
     where: {
-      land: { landownerId: user.id },
+      land: {
+        landowner: {
+          userId: user.id  // landowner -> userId
+        }
+      }
     },
     orderBy: { createdAt: "desc" },
     take: 5,
@@ -27,6 +33,11 @@ export async function ApplicationsSection({
       status: true,
       proposedRent: true,
       createdAt: true,
+      land: {
+        select: {
+          title: true,
+        },
+      },
       farmer: {
         select: {
           name: true,
@@ -36,6 +47,8 @@ export async function ApplicationsSection({
     },
   });
 
+  console.log(`📊 Found ${apps.length} applications for user ${user.id}`);
+
   const mapped: RecentApplication[] = apps.map((a) => ({
     id: a.id,
     farmerName: a.farmer.name,
@@ -43,6 +56,7 @@ export async function ApplicationsSection({
     proposedRent: a.proposedRent,
     status: a.status as RecentApplication["status"],
     createdAt: a.createdAt.toISOString(),
+    landTitle: a.land.title,
   }));
 
   return <RecentApplications applications={mapped} />;
