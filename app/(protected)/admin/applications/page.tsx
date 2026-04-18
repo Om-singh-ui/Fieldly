@@ -54,7 +54,6 @@ import {
   XCircle,
   MapPin,
   IndianRupee,
-  Calendar,
   Clock,
   FileText,
   Ban,
@@ -151,7 +150,6 @@ const STATUS_OPTIONS = [
   { value: "APPROVED", label: "Approved" },
   { value: "REJECTED", label: "Rejected" },
   { value: "WITHDRAWN", label: "Withdrawn" },
-  { value: "EXPIRED", label: "Expired" },
 ] as const;
 
 const SORT_OPTIONS = [
@@ -167,7 +165,6 @@ const STATUS_BADGE_CONFIG: Record<string, { variant: "default" | "secondary" | "
   APPROVED: { variant: "default", label: "Approved", icon: CheckCircle },
   REJECTED: { variant: "destructive", label: "Rejected", icon: XCircle },
   WITHDRAWN: { variant: "outline", label: "Withdrawn", icon: Ban },
-  EXPIRED: { variant: "secondary", label: "Expired", icon: Calendar },
 };
 
 // ============================================
@@ -198,7 +195,7 @@ export default function AdminApplicationsPage() {
   
   // Dialog states
   const [dialogState, setDialogState] = useState<{
-    type: "review" | "bulkReview" | "delete" | "view" | null;
+    type: "bulkReview" | "delete" | null;
     open: boolean;
   }>({ type: null, open: false });
   
@@ -283,11 +280,16 @@ export default function AdminApplicationsPage() {
     }
   };
 
+  // ✅ FIXED: Use admin bulk-review endpoint for single review too
   async function handleReviewApplication() {
     if (!selectedApplication) return;
     await handleApiAction(
-      `/api/applications/${selectedApplication.id}/review`,
-      { status: reviewAction, reviewNotes },
+      "/api/admin/applications/bulk-review",
+      { 
+        applicationIds: [selectedApplication.id], 
+        action: reviewAction, 
+        notes: reviewNotes 
+      },
       `Application ${reviewAction === "APPROVE" ? "approved" : "rejected"} successfully`
     );
   }
@@ -331,10 +333,6 @@ export default function AdminApplicationsPage() {
     setReviewAction("APPROVE");
   };
 
-  const openDialog = (type: "review" | "bulkReview" | "delete" | "view", application?: AdminApplication) => {
-    if (application) setSelectedApplication(application);
-    setDialogState({ type, open: true });
-  };
 
   const getStatusBadge = (status: string) => {
     const config = STATUS_BADGE_CONFIG[status] || { variant: "outline" as const, label: status, icon: FileText };
@@ -462,7 +460,7 @@ export default function AdminApplicationsPage() {
                   size="sm"
                   onClick={() => {
                     setReviewAction("APPROVE");
-                    openDialog("bulkReview");
+                    setDialogState({ type: "bulkReview", open: true });
                   }}
                   className="border-green-500 text-green-600 hover:bg-green-50"
                 >
@@ -474,7 +472,7 @@ export default function AdminApplicationsPage() {
                   size="sm"
                   onClick={() => {
                     setReviewAction("REJECT");
-                    openDialog("bulkReview");
+                    setDialogState({ type: "bulkReview", open: true });
                   }}
                   className="border-red-500 text-red-600 hover:bg-red-50"
                 >
@@ -484,7 +482,7 @@ export default function AdminApplicationsPage() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => openDialog("delete")}
+                  onClick={() => setDialogState({ type: "delete", open: true })}
                   className="border-red-500 text-red-600 hover:bg-red-50"
                 >
                   <Ban className="h-4 w-4 mr-1" />
@@ -528,18 +526,21 @@ export default function AdminApplicationsPage() {
                     application={application}
                     selected={selectedApplications.has(application.id)}
                     onSelect={handleSelectOne}
-                    onView={() => router.push(`/admin/applications/${application.id}`)}
+                    onView={() => router.push(`/applications/${application.id}`)}
                     onApprove={() => {
                       setSelectedApplication(application);
                       setReviewAction("APPROVE");
-                      openDialog("review", application);
+                      setDialogState({ type: "bulkReview", open: true });
                     }}
                     onReject={() => {
                       setSelectedApplication(application);
                       setReviewAction("REJECT");
-                      openDialog("review", application);
+                      setDialogState({ type: "bulkReview", open: true });
                     }}
-                    onDelete={() => openDialog("delete", application)}
+                    onDelete={() => {
+                      setSelectedApplication(application);
+                      setDialogState({ type: "delete", open: true });
+                    }}
                     getStatusBadge={getStatusBadge}
                   />
                 ))
@@ -559,26 +560,17 @@ export default function AdminApplicationsPage() {
       )}
 
       {/* Dialogs */}
-      <ReviewDialog
-        open={dialogState.type === "review" && dialogState.open}
-        onOpenChange={(open) => !open && resetDialogs()}
-        selectedApplication={selectedApplication}
-        reviewAction={reviewAction}
-        reviewNotes={reviewNotes}
-        setReviewNotes={setReviewNotes}
-        onConfirm={handleReviewApplication}
-        loading={actionLoading}
-      />
-
       <BulkReviewDialog
         open={dialogState.type === "bulkReview" && dialogState.open}
         onOpenChange={(open) => !open && resetDialogs()}
-        count={selectedCount}
+        count={selectedApplication ? 1 : selectedCount}
         reviewAction={reviewAction}
         reviewNotes={reviewNotes}
         setReviewNotes={setReviewNotes}
-        onConfirm={handleBulkReview}
+        onConfirm={selectedApplication ? handleReviewApplication : handleBulkReview}
         loading={actionLoading}
+        isSingle={!!selectedApplication}
+        application={selectedApplication}
       />
 
       <DeleteDialog
@@ -840,118 +832,90 @@ interface DialogBaseProps {
   loading?: boolean;
 }
 
-interface ReviewDialogProps extends DialogBaseProps {
-  selectedApplication: AdminApplication | null;
-  reviewAction: ReviewAction;
-  reviewNotes: string;
-  setReviewNotes: (notes: string) => void;
-  onConfirm: () => Promise<void>;
-}
-
-function ReviewDialog({ 
-  open, onOpenChange, selectedApplication, reviewAction, reviewNotes, setReviewNotes, onConfirm, loading 
-}: ReviewDialogProps) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {reviewAction === "APPROVE" ? "Approve Application" : "Reject Application"}
-          </DialogTitle>
-          <DialogDescription>
-            {reviewAction === "APPROVE"
-              ? "This will create a lease and notify the farmer."
-              : "This application will be rejected and the farmer will be notified."}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="p-4 bg-muted rounded-lg">
-            <p className="font-medium">{selectedApplication?.land.title}</p>
-            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-              <span>{selectedApplication?.farmer.name}</span>
-              <span>•</span>
-              <span>{selectedApplication?.duration} months</span>
-              {selectedApplication?.proposedRent && (
-                <>
-                  <span>•</span>
-                  <span>₹{selectedApplication.proposedRent.toLocaleString()}/mo</span>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>{reviewAction === "APPROVE" ? "Notes (Optional)" : "Reason for Rejection"}</Label>
-            <Textarea
-              placeholder={reviewAction === "APPROVE" ? "Add any notes..." : "Explain why this application is being rejected..."}
-              value={reviewNotes}
-              onChange={(e) => setReviewNotes(e.target.value)}
-              rows={3}
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            Cancel
-          </Button>
-          <Button 
-            variant={reviewAction === "APPROVE" ? "default" : "destructive"} 
-            onClick={onConfirm}
-            disabled={loading || (reviewAction === "REJECT" && !reviewNotes)}
-          >
-            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {reviewAction === "APPROVE" ? "Approve" : "Reject"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 interface BulkReviewDialogProps extends DialogBaseProps {
   count: number;
   reviewAction: ReviewAction;
   reviewNotes: string;
   setReviewNotes: (notes: string) => void;
   onConfirm: () => Promise<void>;
+  isSingle?: boolean;
+  application?: AdminApplication | null;
 }
 
 function BulkReviewDialog({
   open, onOpenChange, count, reviewAction, reviewNotes, setReviewNotes, onConfirm, loading,
+  isSingle, application
 }: BulkReviewDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg w-[calc(100%-2rem)] mx-auto max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>
-            Bulk {reviewAction === "APPROVE" ? "Approve" : "Reject"} Applications
+            {isSingle 
+              ? (reviewAction === "APPROVE" ? "Approve Application" : "Reject Application")
+              : `Bulk ${reviewAction === "APPROVE" ? "Approve" : "Reject"} Applications`
+            }
           </DialogTitle>
           <DialogDescription>
-            This will {reviewAction === "APPROVE" ? "approve" : "reject"} {count} selected applications.
-            {reviewAction === "APPROVE" && " Leases will be created for each approved application."}
+            {isSingle
+              ? (reviewAction === "APPROVE"
+                  ? "This will create a lease and notify the farmer."
+                  : "This application will be rejected and the farmer will be notified.")
+              : `This will ${reviewAction === "APPROVE" ? "approve" : "reject"} ${count} selected applications.`
+            }
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          {isSingle && application && (
+            <div className="p-4 bg-muted rounded-lg">
+              <p className="font-medium break-words">{application.land.title}</p>
+              <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-muted-foreground">
+                <span className="break-words">{application.farmer.name}</span>
+                <span>•</span>
+                <span>{application.duration} months</span>
+                {application.proposedRent && (
+                  <>
+                    <span>•</span>
+                    <span className="whitespace-nowrap">₹{application.proposedRent.toLocaleString()}/mo</span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          
           <div className="space-y-2">
-            <Label>{reviewAction === "APPROVE" ? "Notes (Optional)" : "Reason for Rejection"}</Label>
+            <Label className="text-sm font-medium">
+              {reviewAction === "APPROVE" ? "Notes (Optional)" : "Reason for Rejection"}
+            </Label>
             <Textarea
-              placeholder={reviewAction === "APPROVE" ? "Add any notes..." : "Explain why these applications are being rejected..."}
+              placeholder={reviewAction === "APPROVE" ? "Add any notes..." : "Explain why this application is being rejected..."}
               value={reviewNotes}
               onChange={(e) => setReviewNotes(e.target.value)}
-              rows={3}
+              rows={4}
+              className="resize-none w-full"
             />
+            {reviewAction === "REJECT" && !reviewNotes && (
+              <p className="text-xs text-destructive mt-1">
+                Please provide a reason for rejection
+              </p>
+            )}
           </div>
         </div>
-        <DialogFooter>
+        
+        <DialogFooter className="px-6 py-4 border-t mt-auto">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancel
           </Button>
           <Button 
             variant={reviewAction === "APPROVE" ? "default" : "destructive"} 
             onClick={onConfirm}
-            disabled={loading || (reviewAction === "REJECT" && !reviewNotes)}
+            disabled={loading || (reviewAction === "REJECT" && !reviewNotes.trim())}
+            className="min-w-[80px]"
           >
             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {reviewAction === "APPROVE" ? "Approve" : "Reject"} {count} Applications
+            {reviewAction === "APPROVE" ? "Approve" : "Reject"}
+            {!isSingle && ` ${count} Applications`}
           </Button>
         </DialogFooter>
       </DialogContent>

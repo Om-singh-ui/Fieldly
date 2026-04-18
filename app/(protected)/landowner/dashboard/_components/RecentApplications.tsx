@@ -24,7 +24,6 @@ export interface RecentApplication {
   landTitle?: string;
 }
 
-// ✅ FIXED: Accept applications as prop
 interface Props {
   applications: RecentApplication[];
 }
@@ -51,7 +50,7 @@ export const RecentApplications = memo(function RecentApplications({
     return (
       <Card
         className="
-          rounded-3xl
+          h-full rounded-3xl
           border border-white/40 dark:border-white/10
           bg-white/80 dark:bg-gray-900/80
           backdrop-blur-xl
@@ -76,14 +75,14 @@ export const RecentApplications = memo(function RecentApplications({
   return (
     <Card
       className="
-        rounded-3xl
+        h-full rounded-3xl
         border border-white/40 dark:border-white/10
         bg-white/80 dark:bg-gray-900/80
         backdrop-blur-xl
         shadow-[0_18px_48px_rgba(0,0,0,0.10),0_6px_16px_rgba(0,0,0,0.06)]
       "
     >
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-4 shrink-0">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           Recent Applications
           <Badge variant="secondary" className="ml-2">
@@ -92,9 +91,9 @@ export const RecentApplications = memo(function RecentApplications({
         </CardTitle>
       </CardHeader>
 
-      <CardContent>
-        <ScrollArea className="h-[400px] pr-4">
-          <div className="space-y-4">
+      <CardContent className="flex-1 min-h-0 p-0">
+        <ScrollArea className="h-full max-h-[calc(100vh-280px)] px-6 pb-6">
+          <div className="space-y-3">
             {applications.map((app, i) => (
               <motion.div
                 key={app.id}
@@ -103,30 +102,31 @@ export const RecentApplications = memo(function RecentApplications({
                 transition={{ delay: i * 0.05 }}
                 className="
                   group
-                  flex items-start gap-4
-                  p-4 rounded-2xl
+                  flex items-start gap-3
+                  p-4 rounded-xl
                   border border-gray-100 dark:border-gray-800
                   hover:shadow-md hover:-translate-y-0.5
                   transition-all cursor-pointer
+                  bg-white/50 dark:bg-gray-900/50
                 "
                 onClick={() => router.push(`/applications/${app.id}`)}
               >
-                <Avatar className="ring-2 ring-[#b7cf8a]/30 shrink-0">
+                <Avatar className="ring-2 ring-[#b7cf8a]/30 shrink-0 h-10 w-10">
                   <AvatarImage src={app.farmerImage ?? ""} />
-                  <AvatarFallback className="bg-[#b7cf8a]/20 text-[#5a6b3d]">
+                  <AvatarFallback className="bg-[#b7cf8a]/20 text-[#5a6b3d] text-sm">
                     {app.farmerName?.charAt(0)?.toUpperCase() ?? "F"}
                   </AvatarFallback>
                 </Avatar>
 
                 <div className="flex-1 space-y-1 min-w-0">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                       {app.farmerName}
                     </p>
 
                     <Badge
                       variant="outline"
-                      className={`${STATUS_STYLE[app.status]} font-medium text-xs ml-2 shrink-0`}
+                      className={`${STATUS_STYLE[app.status]} font-medium text-[10px] px-1.5 py-0 shrink-0`}
                     >
                       {app.status.replace("_", " ")}
                     </Badge>
@@ -134,23 +134,23 @@ export const RecentApplications = memo(function RecentApplications({
 
                   {app.landTitle && (
                     <p className="text-xs text-muted-foreground truncate">
-                      Land: {app.landTitle}
+                      {app.landTitle}
                     </p>
                   )}
 
-                  <p className="text-sm text-muted-foreground">
-                    Proposed Rent:{" "}
-                    {app.proposedRent != null ? (
-                      <span className="font-semibold text-[#b7cf8a]">
-                        ₹{app.proposedRent.toLocaleString("en-IN")}
-                      </span>
-                    ) : (
-                      "Not specified"
-                    )}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      Rent:{" "}
+                      {app.proposedRent != null ? (
+                        <span className="font-medium text-[#b7cf8a]">
+                          ₹{app.proposedRent.toLocaleString("en-IN")}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </p>
 
-                  <div className="flex items-center pt-1">
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-[10px] text-muted-foreground">
                       {formatDistanceToNowStrict(new Date(app.createdAt), {
                         addSuffix: true,
                       })}
@@ -161,7 +161,7 @@ export const RecentApplications = memo(function RecentApplications({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="opacity-80 group-hover:opacity-100 shrink-0"
+                  className="opacity-0 group-hover:opacity-100 shrink-0 h-7 px-2 text-xs"
                   onClick={(e) => {
                     e.stopPropagation();
                     router.push(`/applications/${app.id}`);
