@@ -10,6 +10,8 @@ import Link from 'next/link'
 import { ApplicationsList } from './_components/applications-list'
 import { ApplicationFilters } from './_components/application-filters'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ApplicationsPage({
   searchParams,
 }: {
@@ -36,7 +38,6 @@ export default async function ApplicationsPage({
   return (
     <div className="flex justify-center w-full mt-16">
       <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Applications</h1>
@@ -58,7 +59,6 @@ export default async function ApplicationsPage({
           )}
         </div>
         
-        {/* Tabs for filtering */}
         <Tabs defaultValue={params.tab || 'all'} className="space-y-6">
           <TabsList className="inline-flex w-auto overflow-x-auto">
             <TabsTrigger value="all">All</TabsTrigger>
@@ -69,12 +69,10 @@ export default async function ApplicationsPage({
           </TabsList>
           
           <div className="flex flex-col lg:flex-row gap-6">
-            {/* Filters Sidebar */}
             <aside className="w-full lg:w-64 shrink-0">
               <ApplicationFilters />
             </aside>
             
-            {/* Applications List */}
             <main className="flex-1 min-w-0">
               <Suspense fallback={<ApplicationsSkeleton />}>
                 <TabsContent value="all" className="mt-0">

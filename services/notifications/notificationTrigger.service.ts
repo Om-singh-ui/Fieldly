@@ -18,9 +18,6 @@ interface TriggerParams {
   priority?: NotificationPriority;
 }
 
-// ============================================
-// SINGLE NOTIFICATION
-// ============================================
 export async function triggerNotification(params: TriggerParams) {
   try {
     const result = await createNotification({
@@ -49,9 +46,6 @@ export async function triggerNotification(params: TriggerParams) {
   }
 }
 
-// ============================================
-// BULK NOTIFICATIONS
-// ============================================
 export async function triggerBulkNotifications(notifications: TriggerParams[]) {
   try {
     const results = await Promise.allSettled(
@@ -68,9 +62,6 @@ export async function triggerBulkNotifications(notifications: TriggerParams[]) {
   }
 }
 
-// ============================================
-// LAND LISTING - Notify Matching Farmers (with fallback)
-// ============================================
 export async function notifyMatchingFarmersAboutListing(landId: string, listingId: string) {
   try {
     const land = await prisma.land.findUnique({
@@ -85,7 +76,6 @@ export async function notifyMatchingFarmersAboutListing(landId: string, listingI
       return { success: false, error: 'Land or listing not found' };
     }
 
-    // Build where conditions for matching
     const sizeCondition = {
       requiredLandSize: {
         lte: land.size * 1.5,
@@ -105,13 +95,11 @@ export async function notifyMatchingFarmersAboutListing(landId: string, listingI
       ? { user: { state: land.state } }
       : null;
 
-    // Build OR conditions array
     const orConditions: Prisma.FarmerProfileWhereInput[] = [sizeCondition];
     if (cropCondition) orConditions.push(cropCondition);
     if (districtCondition) orConditions.push(districtCondition);
     if (stateCondition) orConditions.push(stateCondition);
 
-    // 🔧 FLEXIBLE MATCHING - Find farmers with ANY matching criteria
     const matchingFarmers = await prisma.user.findMany({
       where: {
         role: 'FARMER',
@@ -124,11 +112,10 @@ export async function notifyMatchingFarmersAboutListing(landId: string, listingI
       select: { id: true, name: true },
     });
 
-    // 🔧 FALLBACK: If no matching farmers, notify ALL onboarded farmers
     let finalFarmers: { id: string; name: string | null }[] = matchingFarmers;
     
     if (matchingFarmers.length === 0) {
-      console.log('⚠️ No matching farmers found, notifying all onboarded farmers as fallback');
+      console.log('No matching farmers found, notifying all onboarded farmers as fallback');
       finalFarmers = await prisma.user.findMany({
         where: {
           role: 'FARMER',
@@ -142,13 +129,12 @@ export async function notifyMatchingFarmersAboutListing(landId: string, listingI
       return { success: true, notified: 0, message: 'No farmers found to notify' };
     }
 
-    // Create notifications
     const notifications: TriggerParams[] = finalFarmers.map(farmer => ({
       userId: farmer.id,
       type: 'LISTING',
       title: matchingFarmers.length > 0 
-        ? '🌾 New Land Listing Matching Your Preferences!'
-        : '🌾 New Land Listing Available!',
+        ? 'New Land Listing Matching Your Preferences'
+        : 'New Land Listing Available',
       message: `${land.size} acres of ${land.landType.toLowerCase()} land available in ${land.village || 'your area'}, ${land.district || land.state || ''}. ${land.irrigationAvailable ? 'Irrigation available.' : ''} Click to view details.`,
       actionUrl: `/marketplace/listings/${listingId}`,
       entityType: 'LISTING',
@@ -173,9 +159,296 @@ export async function notifyMatchingFarmersAboutListing(landId: string, listingI
   }
 }
 
-// ============================================
-// APPLICATION - Notify Landowner
-// ============================================
+export async function notifyAuctionStatusChange(
+  listingId: string,
+  oldStatus: string,
+  newStatus: string,
+  reason?: string
+) {
+  try {
+    const listing = await prisma.landListing.findUnique({
+      where: { id: listingId },
+      include: {
+        land: { select: { title: true, size: true, landType: true } },
+        owner: { select: { id: true, name: true } },
+        bids: {
+          where: { status: 'ACTIVE' },
+          select: { farmerId: true },
+          distinct: ['farmerId'],
+        },
+        savedBy: {
+          select: { userId: true },
+        },
+      },
+    });
+
+    if (!listing) {
+      return { success: false, error: 'Listing not found' };
+    }
+
+    const bidderIds = listing.bids.map(b => b.farmerId);
+    const watcherIds = listing.savedBy.map(s => s.userId);
+    let allFarmerIds = [...new Set([...bidderIds, ...watcherIds])];
+
+    if (allFarmerIds.length === 0 && newStatus === 'LIVE') {
+      console.log(`No watchers/bidders for listing ${listingId}, notifying all onboarded farmers`);
+      
+      const allFarmers = await prisma.user.findMany({
+        where: {
+          role: 'FARMER',
+          isOnboarded: true,
+        },
+        select: { id: true, name: true },
+      });
+      
+      allFarmerIds = allFarmers.map(f => f.id);
+    }
+
+    if (allFarmerIds.length === 0) {
+      console.log(`No farmers to notify for auction status change on listing ${listingId}`);
+      return { success: true, notified: 0, message: 'No farmers to notify' };
+    }
+
+    const farmers = await prisma.user.findMany({
+      where: { id: { in: allFarmerIds } },
+      select: { id: true, name: true },
+    });
+
+    const statusMessages: Record<string, { title: string; message: string }> = {
+      LIVE: {
+        title: 'Auction is NOW LIVE',
+        message: `The auction for "${listing.land.title}" (${listing.land.size} acres ${listing.land.landType.toLowerCase()}) is now LIVE. Place your bids before it ends.`,
+      },
+      CLOSED: {
+        title: 'Auction Ended',
+        message: `The auction for "${listing.land.title}" has ended. Check the listing for final results.`,
+      },
+      SETTLED: {
+        title: 'Auction Settled',
+        message: `The auction for "${listing.land.title}" has been settled. ${listing.highestBid ? `Winning bid: Rs ${listing.highestBid.toLocaleString('en-IN')}` : ''}`,
+      },
+      PAUSED: {
+        title: 'Auction Paused',
+        message: `The auction for "${listing.land.title}" has been temporarily paused. ${reason ? `Reason: ${reason}` : 'We will notify you when it resumes.'}`,
+      },
+      FAILED: {
+        title: 'Auction Failed',
+        message: `The auction for "${listing.land.title}" has failed. ${reason ? `Reason: ${reason}` : 'The listing may be relisted later.'}`,
+      },
+    };
+
+    const msg = statusMessages[newStatus];
+    if (!msg) {
+      return { success: true, message: 'No notification needed for this status' };
+    }
+
+    const notifications: TriggerParams[] = farmers.map(farmer => ({
+      userId: farmer.id,
+      type: 'LISTING',
+      title: msg.title,
+      message: msg.message,
+      actionUrl: `/marketplace/listings/${listingId}`,
+      entityType: 'LISTING',
+      entityId: listingId,
+      priority: newStatus === 'LIVE' ? 'HIGH' : 'MEDIUM',
+    }));
+
+    const result = await triggerBulkNotifications(notifications);
+
+    console.log(`Notified ${result.sent} farmers about auction status change: ${oldStatus} to ${newStatus}`);
+
+    return {
+      success: true,
+      notified: result.sent,
+      oldStatus,
+      newStatus,
+      message: `Notified ${result.sent} farmers`,
+    };
+  } catch (error) {
+    console.error('Failed to notify auction status change:', error);
+    return { success: false, error: 'Failed to send notifications' };
+  }
+}
+
+export async function notifyAuctionStartingSoon(listingId: string) {
+  try {
+    const listing = await prisma.landListing.findUnique({
+      where: { id: listingId },
+      include: {
+        land: { select: { title: true, size: true, landType: true } },
+        savedBy: {
+          select: { userId: true },
+        },
+      },
+    });
+
+    if (!listing) {
+      return { success: false, error: 'Listing not found' };
+    }
+
+    const watcherIds = listing.savedBy.map(s => s.userId);
+
+    if (watcherIds.length === 0) {
+      return { success: true, notified: 0, message: 'No watchers to notify' };
+    }
+
+    const farmers = await prisma.user.findMany({
+      where: { id: { in: watcherIds } },
+      select: { id: true, name: true },
+    });
+
+    const timeUntilStart = listing.startDate.getTime() - Date.now();
+    const hoursUntilStart = Math.round(timeUntilStart / (1000 * 60 * 60));
+
+    const notifications: TriggerParams[] = farmers.map(farmer => ({
+      userId: farmer.id,
+      type: 'LISTING',
+      title: 'Auction Starting Soon',
+      message: `The auction for "${listing.land.title}" (${listing.land.size} acres) starts in about ${hoursUntilStart} hour${hoursUntilStart !== 1 ? 's' : ''}. Get ready to bid.`,
+      actionUrl: `/marketplace/listings/${listingId}`,
+      entityType: 'LISTING',
+      entityId: listingId,
+      priority: 'HIGH',
+    }));
+
+    const result = await triggerBulkNotifications(notifications);
+
+    console.log(`Notified ${result.sent} farmers about auction starting soon: ${listingId}`);
+
+    return { success: true, notified: result.sent };
+  } catch (error) {
+    console.error('Failed to notify auction starting soon:', error);
+    return { success: false, error: 'Failed to send notifications' };
+  }
+}
+
+export async function notifyAuctionEndingSoon(listingId: string) {
+  try {
+    const listing = await prisma.landListing.findUnique({
+      where: { id: listingId },
+      include: {
+        land: { select: { title: true, size: true, landType: true } },
+        bids: {
+          where: { status: 'ACTIVE' },
+          select: { farmerId: true },
+          distinct: ['farmerId'],
+        },
+        savedBy: {
+          select: { userId: true },
+        },
+      },
+    });
+
+    if (!listing) {
+      return { success: false, error: 'Listing not found' };
+    }
+
+    const bidderIds = listing.bids.map(b => b.farmerId);
+    const watcherIds = listing.savedBy.map(s => s.userId);
+    const allFarmerIds = [...new Set([...bidderIds, ...watcherIds])];
+
+    if (allFarmerIds.length === 0) {
+      return { success: true, notified: 0, message: 'No farmers to notify' };
+    }
+
+    const farmers = await prisma.user.findMany({
+      where: { id: { in: allFarmerIds } },
+      select: { id: true, name: true },
+    });
+
+    const timeLeft = listing.endDate.getTime() - Date.now();
+    const hoursLeft = Math.round(timeLeft / (1000 * 60 * 60));
+
+    const notifications: TriggerParams[] = farmers.map(farmer => ({
+      userId: farmer.id,
+      type: 'LISTING',
+      title: 'Auction Ending Soon',
+      message: `The auction for "${listing.land.title}" ends in about ${hoursLeft} hour${hoursLeft !== 1 ? 's' : ''}. ${bidderIds.includes(farmer.id) ? 'Make your final bid.' : 'Place your bid before it ends.'}`,
+      actionUrl: `/marketplace/listings/${listingId}`,
+      entityType: 'LISTING',
+      entityId: listingId,
+      priority: 'HIGH',
+    }));
+
+    const result = await triggerBulkNotifications(notifications);
+
+    console.log(`Notified ${result.sent} farmers about auction ending soon: ${listingId}`);
+
+    return { success: true, notified: result.sent };
+  } catch (error) {
+    console.error('Failed to notify auction ending soon:', error);
+    return { success: false, error: 'Failed to send notifications' };
+  }
+}
+
+export async function notifyFarmerOutbid(listingId: string, outbidFarmerId: string, newBidAmount: number) {
+  try {
+    const listing = await prisma.landListing.findUnique({
+      where: { id: listingId },
+      include: {
+        land: { select: { title: true } },
+      },
+    });
+
+    if (!listing) {
+      return { success: false, error: 'Listing not found' };
+    }
+
+    const farmer = await prisma.user.findUnique({
+      where: { id: outbidFarmerId },
+      select: { id: true, name: true },
+    });
+
+    if (!farmer) {
+      return { success: false, error: 'Farmer not found' };
+    }
+
+    return triggerNotification({
+      userId: outbidFarmerId,
+      type: 'BID',
+      title: 'You have Been Outbid',
+      message: `Someone placed a higher bid of Rs ${newBidAmount.toLocaleString('en-IN')} on "${listing.land.title}". Visit the listing to increase your bid.`,
+      actionUrl: `/marketplace/listings/${listingId}`,
+      entityType: 'LISTING',
+      entityId: listingId,
+      priority: 'HIGH',
+    });
+  } catch (error) {
+    console.error('Failed to notify outbid farmer:', error);
+    return { success: false, error: 'Failed to send notification' };
+  }
+}
+
+export async function notifyBidAccepted(listingId: string, winningFarmerId: string, winningAmount: number) {
+  try {
+    const listing = await prisma.landListing.findUnique({
+      where: { id: listingId },
+      include: {
+        land: { select: { title: true } },
+        owner: { select: { name: true } },
+      },
+    });
+
+    if (!listing) {
+      return { success: false, error: 'Listing not found' };
+    }
+
+    return triggerNotification({
+      userId: winningFarmerId,
+      type: 'BID',
+      title: 'Congratulations Your Bid Won',
+      message: `Your bid of Rs ${winningAmount.toLocaleString('en-IN')} for "${listing.land.title}" has been accepted. The landowner (${listing.owner.name}) will contact you to finalize the lease.`,
+      actionUrl: `/applications`,
+      entityType: 'LISTING',
+      entityId: listingId,
+      priority: 'HIGH',
+    });
+  } catch (error) {
+    console.error('Failed to notify bid accepted:', error);
+    return { success: false, error: 'Failed to send notification' };
+  }
+}
+
 export async function notifyLandownerAboutApplication(applicationId: string) {
   try {
     const application = await prisma.application.findUnique({
@@ -193,9 +466,9 @@ export async function notifyLandownerAboutApplication(applicationId: string) {
     return triggerNotification({
       userId: application.land.landowner.user.id,
       type: 'APPLICATION',
-      title: '📋 New Application Received!',
-      message: `${application.farmer.name} has applied for "${application.land.title}". Proposed rent: ₹${application.proposedRent?.toLocaleString() || 'N/A'}.`,
-      actionUrl: `/landowner/applications/${applicationId}`,
+      title: 'New Application Received',
+      message: `${application.farmer.name} has applied for "${application.land.title}". Proposed rent: Rs ${application.proposedRent?.toLocaleString() || 'N/A'}.`,
+      actionUrl: `/applications/${applicationId}`,
       entityType: 'APPLICATION',
       entityId: applicationId,
       priority: 'HIGH',
@@ -206,9 +479,6 @@ export async function notifyLandownerAboutApplication(applicationId: string) {
   }
 }
 
-// ============================================
-// BID - Notify Landowner + Outbid Farmers
-// ============================================
 export async function notifyAboutNewBid(bidId: string) {
   try {
     const bid = await prisma.bid.findUnique({
@@ -225,19 +495,17 @@ export async function notifyAboutNewBid(bidId: string) {
 
     const notifications: TriggerParams[] = [];
 
-    // Notify landowner
     notifications.push({
       userId: bid.listing.owner.id,
       type: 'BID',
-      title: '🔨 New Bid Placed!',
-      message: `${bid.farmer.name} placed a bid of ₹${bid.amount.toLocaleString()} on "${bid.listing.title}".`,
-      actionUrl: `/landowner/listings/${bid.listingId}/bids`,
+      title: 'New Bid Placed',
+      message: `${bid.farmer.name} placed a bid of Rs ${bid.amount.toLocaleString()} on "${bid.listing.title}".`,
+      actionUrl: `/marketplace/listings/${bid.listingId}`,
       entityType: 'BID',
       entityId: bidId,
       priority: 'HIGH',
     });
 
-    // Find and notify outbid farmers
     const otherBids = await prisma.bid.findMany({
       where: {
         listingId: bid.listingId,
@@ -250,8 +518,8 @@ export async function notifyAboutNewBid(bidId: string) {
     const outbidNotifications = otherBids.map(b => ({
       userId: b.farmerId,
       type: 'BID' as NotificationType,
-      title: '⚠️ You\'ve Been Outbid!',
-      message: `Someone placed a higher bid of ₹${bid.amount.toLocaleString()} on "${bid.listing.title}".`,
+      title: 'You have Been Outbid',
+      message: `Someone placed a higher bid of Rs ${bid.amount.toLocaleString()} on "${bid.listing.title}".`,
       actionUrl: `/marketplace/listings/${bid.listingId}`,
       entityType: 'BID',
       entityId: bidId,
@@ -273,9 +541,6 @@ export async function notifyAboutNewBid(bidId: string) {
   }
 }
 
-// ============================================
-// LEASE - Notify Both Parties
-// ============================================
 export async function notifyLeaseCreated(leaseId: string) {
   try {
     const lease = await prisma.lease.findUnique({
@@ -295,9 +560,9 @@ export async function notifyLeaseCreated(leaseId: string) {
       {
         userId: lease.farmerId,
         type: 'LEASE',
-        title: '🎉 Lease Agreement Created!',
+        title: 'Lease Agreement Created',
         message: `Lease agreement for "${lease.land.title}" has been created. Please review and sign.`,
-        actionUrl: `/farmer/leases/${leaseId}`,
+        actionUrl: `/applications/${lease.id}`,
         entityType: 'LEASE',
         entityId: leaseId,
         priority: 'HIGH',
@@ -305,9 +570,9 @@ export async function notifyLeaseCreated(leaseId: string) {
       {
         userId: lease.ownerId,
         type: 'LEASE',
-        title: '📄 Lease Agreement Ready',
-        message: `Lease agreement for "${lease.land.title}" is ready. Waiting for farmer's signature.`,
-        actionUrl: `/landowner/leases/${leaseId}`,
+        title: 'Lease Agreement Ready',
+        message: `Lease agreement for "${lease.land.title}" is ready. Waiting for farmer signature.`,
+        actionUrl: `/applications/${lease.id}`,
         entityType: 'LEASE',
         entityId: leaseId,
         priority: 'MEDIUM',
@@ -326,9 +591,6 @@ export async function notifyLeaseCreated(leaseId: string) {
   }
 }
 
-// ============================================
-// APPLICATION STATUS CHANGE - Notify Farmer
-// ============================================
 export async function notifyApplicationStatusChange(
   applicationId: string,
   _oldStatus: string,
@@ -346,17 +608,17 @@ export async function notifyApplicationStatusChange(
 
     const statusMessages: Record<string, { title: string; message: string; priority: NotificationPriority }> = {
       APPROVED: {
-        title: 'Application Approved!',
-        message: `Your application for "${application.land.title}" has been approved! Lease agreement will be sent soon.`,
+        title: 'Application Approved',
+        message: `Your application for "${application.land.title}" has been approved. Lease agreement will be sent soon.`,
         priority: 'HIGH',
       },
       REJECTED: {
-        title: '❌ Application Not Selected',
+        title: 'Application Not Selected',
         message: `Unfortunately, your application for "${application.land.title}" was not selected this time.`,
         priority: 'MEDIUM',
       },
       UNDER_REVIEW: {
-        title: '🔍 Application Under Review',
+        title: 'Application Under Review',
         message: `Your application for "${application.land.title}" is being reviewed by the landowner.`,
         priority: 'LOW',
       },
@@ -369,10 +631,10 @@ export async function notifyApplicationStatusChange(
 
     return triggerNotification({
       userId: application.farmerId,
-      type: 'APPLICATION',
+      type: 'APPLICATION',  
       title: msg.title,
       message: msg.message,
-      actionUrl: `/farmer/applications/${applicationId}`,
+      actionUrl: `/applications/${applicationId}`,
       entityType: 'APPLICATION',
       entityId: applicationId,
       priority: msg.priority,
@@ -383,9 +645,6 @@ export async function notifyApplicationStatusChange(
   }
 }
 
-// ============================================
-// PAYMENT - Notify Landowner
-// ============================================
 export async function notifyPaymentReceived(paymentId: string) {
   try {
     const payment = await prisma.payment.findUnique({
@@ -403,9 +662,9 @@ export async function notifyPaymentReceived(paymentId: string) {
     return triggerNotification({
       userId: payment.lease.ownerId,
       type: 'PAYMENT',
-      title: '💰 Payment Received!',
-      message: `Payment of ₹${payment.amount.toLocaleString()} received for lease #${payment.leaseId?.slice(-8)}.`,
-      actionUrl: `/landowner/payments/${paymentId}`,
+      title: 'Payment Received',
+      message: `Payment of Rs ${payment.amount.toLocaleString()} received for lease ending ${payment.leaseId?.slice(-8)}.`,
+      actionUrl: `/applications/${payment.leaseId}`,
       entityType: 'PAYMENT',
       entityId: paymentId,
       priority: 'MEDIUM',

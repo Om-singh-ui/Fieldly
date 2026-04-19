@@ -280,7 +280,6 @@ export default function AdminApplicationsPage() {
     }
   };
 
-  // ✅ FIXED: Use admin bulk-review endpoint for single review too
   async function handleReviewApplication() {
     if (!selectedApplication) return;
     await handleApiAction(

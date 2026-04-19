@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { logDetailedAction } from "@/lib/server/audit-logger";
 import { headers } from "next/headers";
 import { ListingStatus, NotificationType } from "@prisma/client";
+import { notifyMatchingFarmersAboutListing } from "@/services/notifications/notificationTrigger.service"; 
 
 export async function POST(req: NextRequest) {
   try {
@@ -49,20 +50,25 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Create notification for the owner - Fixed type issue
+    // Notify landowner
     await prisma.notification.create({
       data: {
         userId: currentListing.ownerId,
-        type: NotificationType.LISTING, // Use enum instead of string
+        type: NotificationType.LISTING,
         title: `Listing ${action === "APPROVE" ? "Approved" : "Rejected"}`,
         message: action === "APPROVE" 
           ? `Your listing "${currentListing.title}" has been approved and is now live.`
           : `Your listing "${currentListing.title}" has been rejected. ${notes ? `Reason: ${notes}` : ''}`,
-        actionUrl: `/dashboard/listings/${listingId}`,
+        actionUrl: `/marketplace/listings/${listingId}`,
         entityId: listingId,
         entityType: "LISTING",
       },
     });
+
+    // NOTIFY MATCHING FARMERS WHEN LISTING IS APPROVED
+    if (action === "APPROVE") {
+      await notifyMatchingFarmersAboutListing(currentListing.land.id, listingId);
+    }
 
     await logDetailedAction({
       adminId: admin.id,

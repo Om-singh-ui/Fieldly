@@ -15,7 +15,6 @@ export async function PUT(req: NextRequest) {
 
     console.log("Bulk status update request:", { listingIds, status, reason });
 
-    // Validate request
     if (!listingIds || !Array.isArray(listingIds) || listingIds.length === 0) {
       return NextResponse.json(
         { error: "listingIds array is required and must not be empty" },
@@ -30,7 +29,6 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Validate status is a valid ListingStatus
     const validStatuses = ["ACTIVE", "CLOSED", "CANCELLED", "EXPIRED", "DRAFT", "PENDING_APPROVAL"];
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
@@ -39,7 +37,6 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Get current listings to validate and for notifications
     const currentListings = await prisma.landListing.findMany({
       where: { id: { in: listingIds } },
       select: { 
@@ -58,7 +55,6 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Valid status transitions
     const VALID_TRANSITIONS: Record<string, string[]> = {
       DRAFT: ["PENDING_APPROVAL", "CANCELLED"],
       PENDING_APPROVAL: ["ACTIVE", "DRAFT", "CANCELLED"],
@@ -68,7 +64,6 @@ export async function PUT(req: NextRequest) {
       EXPIRED: ["ACTIVE"],
     };
 
-    // Filter listings that can be transitioned
     const validListingIds = currentListings
       .filter(listing => VALID_TRANSITIONS[listing.status]?.includes(status))
       .map(l => l.id);
@@ -80,7 +75,6 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Update all valid listings
     const prismaStatus = status as ListingStatus;
     
     const result = await prisma.landListing.updateMany({
@@ -91,14 +85,15 @@ export async function PUT(req: NextRequest) {
       },
     });
 
-    // Create notifications for affected owners
     const affectedListings = currentListings.filter(l => validListingIds.includes(l.id));
+    
+    
     const notifications = affectedListings.map(listing => ({
       userId: listing.ownerId,
       type: NotificationType.LISTING,
       title: "Listing Status Updated by Admin",
       message: `Your listing "${listing.title}" status has been changed to ${status}.${reason ? ` Reason: ${reason}` : ''}`,
-      actionUrl: `/dashboard/listings/${listing.id}`,
+      actionUrl: `/marketplace/listings/${listing.id}`, 
       entityId: listing.id,
       entityType: "LISTING",
     }));
@@ -109,7 +104,6 @@ export async function PUT(req: NextRequest) {
       });
     }
 
-    // Log the action
     await logDetailedAction({
       adminId: admin.id,
       action: "BULK_CHANGE_LISTING_STATUS",
@@ -137,4 +131,4 @@ export async function PUT(req: NextRequest) {
       { status: 500 }
     );
   }
-}   
+}

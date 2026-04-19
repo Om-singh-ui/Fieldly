@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No valid applications found' }, { status: 400 })
     }
     
-    // ✅ Shorter transaction - only database updates
+    // Shorter transaction - only database updates
     const results = await prisma.$transaction(async (tx) => {
       const updated = []
       
@@ -113,10 +113,10 @@ export async function POST(req: NextRequest) {
       
       return updated
     }, {
-      timeout: 15000  // ✅ Increase timeout to 15 seconds
+      timeout: 15000  // Increase timeout to 15 seconds
     })
     
-    // ✅ Send notifications OUTSIDE the transaction (non-blocking)
+    // Send notifications OUTSIDE the transaction (non-blocking)
     Promise.allSettled(
       applications.flatMap(app => [
         // Notify farmer

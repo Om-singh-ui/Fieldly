@@ -1,4 +1,4 @@
-// app/(marketplace)/_components/VerifiedBadge.tsx
+  // app/(marketplace)/_components/VerifiedBadge.tsx
 'use client'
 
 import { Badge } from '@/components/ui/badge'

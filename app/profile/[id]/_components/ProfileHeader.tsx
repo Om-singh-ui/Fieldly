@@ -144,8 +144,6 @@ export function ProfileHeader({ user, currentUserRole, currentUserId }: Props) {
 
   return (
     <>
-      {/* ✅ DEBUG BUTTON REMOVED - Ready for production */}
-
       <motion.section
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -211,7 +209,7 @@ export function ProfileHeader({ user, currentUserRole, currentUserId }: Props) {
             {/* RIGHT BUTTONS */}
             <div className="flex gap-3 shrink-0 mt-7 lg:mt-0">
               
-              {/* ✅ PRODUCTION REQUEST TO LEASE BUTTON */}
+              {/* PRODUCTION REQUEST TO LEASE BUTTON */}
               {isFarmer && isLandowner && !isOwnProfile && (
                 <motion.button
                   whileHover={{ scale: 1.02, y: -1 }}

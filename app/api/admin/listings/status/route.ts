@@ -6,7 +6,6 @@ import { logDetailedAction } from "@/lib/server/audit-logger";
 import { headers } from "next/headers";
 import { ListingStatus, NotificationType } from "@prisma/client";
 
-// Valid status transitions
 const VALID_TRANSITIONS: Record<string, string[]> = {
   DRAFT: ["PENDING_APPROVAL", "CANCELLED"],
   PENDING_APPROVAL: ["ACTIVE", "DRAFT", "CANCELLED"],
@@ -37,7 +36,6 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Listing not found" }, { status: 404 });
     }
 
-    // Validate status transition
     const allowedTransitions = VALID_TRANSITIONS[currentListing.status] || [];
     if (!allowedTransitions.includes(status)) {
       return NextResponse.json({ 
@@ -45,7 +43,6 @@ export async function PUT(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // Map to Prisma enum
     const prismaStatus = status as ListingStatus;
 
     const updatedListing = await prisma.landListing.update({
@@ -56,14 +53,14 @@ export async function PUT(req: NextRequest) {
       },
     });
 
-    // Create notification for the owner - Fixed type issue
+    
     await prisma.notification.create({
       data: {
         userId: currentListing.ownerId,
-        type: NotificationType.LISTING, // Use enum instead of string
+        type: NotificationType.LISTING,
         title: "Listing Status Updated",
         message: `Your listing "${currentListing.title}" status has been changed to ${status}. ${reason ? `Reason: ${reason}` : ''}`,
-        actionUrl: `/dashboard/listings/${listingId}`,
+        actionUrl: `/marketplace/listings/${listingId}`, 
         entityId: listingId,
         entityType: "LISTING",
       },
@@ -98,4 +95,4 @@ export async function PUT(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}
