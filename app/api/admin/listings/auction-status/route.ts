@@ -1,9 +1,11 @@
+// app/api/admin/listings/auction-status/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/server/admin-guard";
 import { prisma } from "@/lib/prisma";
 import { logDetailedAction } from "@/lib/server/audit-logger";
 import { headers } from "next/headers";
 import { AuctionStatus, NotificationType } from "@prisma/client";
+import { notifyAuctionStatusChange } from "@/services/notifications/notificationTrigger.service"; // ✅ 
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,10 +44,7 @@ export async function PUT(req: NextRequest) {
     });
 
     if (!currentListing) {
-      return NextResponse.json(
-        { error: "Listing not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Listing not found" }, { status: 404 });
     }
 
     if (auctionStatus === "LIVE" && currentListing.status !== "ACTIVE") {
@@ -60,6 +59,7 @@ export async function PUT(req: NextRequest) {
       data: { auctionStatus: auctionStatus as AuctionStatus },
     });
 
+    // Notify landowner
     await prisma.notification.create({
       data: {
         userId: currentListing.ownerId,
@@ -68,11 +68,26 @@ export async function PUT(req: NextRequest) {
         message: auctionStatus === "LIVE"
           ? `Your auction for "${currentListing.title}" is now LIVE! Farmers can place bids.`
           : `Auction status updated to ${auctionStatus}.${reason ? ` Reason: ${reason}` : ""}`,
-        actionUrl: `/dashboard/listings/${listingId}`,
+        actionUrl: `/marketplace/listings/${listingId}`,
         entityId: listingId,
         entityType: "LISTING",
       },
     });
+
+    // NOTIFY FARMERS (WATCHERS & BIDDERS) ABOUT AUCTION STATUS CHANGE
+    if (auctionStatus === "LIVE" || auctionStatus === "CLOSED" || auctionStatus === "SETTLED") {
+      const oldStatus = currentListing.auctionStatus || "UPCOMING";
+      console.log(`🔔 Triggering farmer notifications for auction status change: ${oldStatus} → ${auctionStatus}`);
+      
+      const notifyResult = await notifyAuctionStatusChange(
+        listingId, 
+        oldStatus, 
+        auctionStatus, 
+        reason
+      );
+      
+      console.log(`📢 Farmer notification result:`, notifyResult);
+    }
 
     await logDetailedAction({
       adminId: admin.id,

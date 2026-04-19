@@ -7,7 +7,7 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import type { Notification } from '@/types/notification.types';
-
+  
 export const FarmerNotificationBell: React.FC = () => {
   const { user } = useUser();
   const router = useRouter();

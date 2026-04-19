@@ -28,7 +28,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ✅ FIXED THEME MAPPING (TAILWIND SAFE) */
+/* FIXED THEME MAPPING (TAILWIND SAFE) */
 @theme inline {
   --color-background: rgb(var(--background));
   --color-foreground: rgb(var(--foreground));
