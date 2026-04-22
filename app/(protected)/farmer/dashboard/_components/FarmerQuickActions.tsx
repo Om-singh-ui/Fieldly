@@ -62,19 +62,19 @@ const ACTIONS: Action[] = [
   {
     label: "Find Land",
     icon: Search,
-    href: "/farmer/lands",
+    href: "/marketplace",
     description: "Browse lands",
   },
   {
     label: "New Application",
     icon: FileText,
-    href: "/farmer/applications/new",
+    href: "/applications/new",
     description: "Apply lease",
   },
   {
     label: "Applications",
     icon: ClipboardList,
-    href: "/farmer/applications",
+    href: "/applications",
     description: "Track requests",
   },
   {
