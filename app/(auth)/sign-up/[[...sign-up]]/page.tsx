@@ -13,9 +13,9 @@ export default function SignUpPage() {
       opacity: 1,
       transition: {
         staggerChildren: 0.1,
-        delayChildren: 0.1
-      }
-    }
+        delayChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants: Variants = {
@@ -25,9 +25,9 @@ export default function SignUpPage() {
       opacity: 1,
       transition: {
         duration: 0.4,
-        ease: "easeOut"
-      }
-    }
+        ease: "easeOut",
+      },
+    },
   };
 
   const imageVariants: Variants = {
@@ -37,9 +37,9 @@ export default function SignUpPage() {
       opacity: 1,
       transition: {
         duration: 0.6,
-        ease: "easeOut"
-      }
-    }
+        ease: "easeOut",
+      },
+    },
   };
 
   const cardVariants: Variants = {
@@ -51,16 +51,16 @@ export default function SignUpPage() {
         type: "spring",
         stiffness: 100,
         damping: 15,
-        delay: 0.2
-      }
-    }
+        delay: 0.2,
+      },
+    },
   };
 
   const points: string[] = [
     "Transparent land leasing with verified ownership",
     "Asset-backed agricultural investment returns",
     "No brokers trust-first, direct platform",
-    "Designed for landowners and modern farmers"
+    "Designed for landowners and modern farmers",
   ];
 
   return (
@@ -141,7 +141,7 @@ export default function SignUpPage() {
             variants={imageVariants}
           >
             <Image
-              src="/authbgjpg.jpg"
+              src="/authbg.jpg"
               alt="Cultivated farmland"
               fill
               priority
