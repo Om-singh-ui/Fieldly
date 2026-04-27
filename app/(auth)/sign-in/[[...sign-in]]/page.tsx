@@ -141,7 +141,7 @@ export default function SignInPage() {
             variants={imageVariants}
           >
             <Image
-              src="/authbgjpg.jpg"
+              src="/authbg.jpg"
               alt="Cultivated farmland"
               fill
               priority
