@@ -1,13 +1,19 @@
-# Contributing to Fieldly 🌱
+# Contributing to Fieldly
 
-Welcome, and thank you for your interest in contributing to **Fieldly**! We're building a revolutionary platform at the intersection of **regenerative agriculture** and **financial technology**, designed to empower farmers, connect institutional investors, and create a sustainable future. Your contributions—whether code, design, documentation, or ideas—play a crucial role in shaping that vision.
+Welcome, and thank you for your interest in contributing to **Fieldly**! We're building a revolutionary platform at the intersection of **regenerative agriculture** and **financial technology**, designed to empower farmers, connect institutional investors, and create a sustainable future. Your contributions whether code, design, documentation, or ideas play a crucial role in shaping that vision.
 
 This guide outlines how both new and experienced contributors can get involved: from reporting bugs and suggesting new features to improving documentation or contributing production-ready code. Whether you're fixing a typo or architecting a major feature, every contribution helps strengthen the Fieldly ecosystem.
 
 **Audience:** Developers, designers, financial analysts, agricultural experts, writers, and community members who want to help make Fieldly better.
 
+[![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen)](CONTRIBUTING.md)
+[![Code of Conduct](https://img.shields.io/badge/Code%20of%20Conduct-Contributor%20Covenant-ff69b4)](CODE_OF_CONDUCT.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-181717?logo=github)](https://github.com/Om-singh-ui/Fieldly/pulls)
+[![First Timers Friendly](https://img.shields.io/badge/First_Timers-Friendly-blue)](https://github.com/Om-singh-ui/Fieldly/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 
-## 📋 Table of Contents
+
+## Table of Contents
+
 - [Code of Conduct](#code-of-conduct)
 - [How Can I Contribute?](#how-can-i-contribute)
   - [Report a Bug](#report-a-bug)
@@ -25,144 +31,103 @@ This guide outlines how both new and experienced contributors can get involved: 
 - [Security & Responsible Disclosure](#security--responsible-disclosure)
 - [License and Copyright](#license-and-copyright)
 - [Acknowledgements & Contacts](#acknowledgements--contacts)
-- [Templates](#templates)
 
 
-## 📜 Code of Conduct
+## Code of Conduct
 
-This project follows a **Contributor Covenant (v2.1)** — we expect all community members to be professional, respectful, and inclusive. By participating, you agree to abide by this code. If you experience or witness unacceptable behavior, contact the maintainers immediately (see [Contacts](#acknowledgements--contacts)).
+This project follows the **Contributor Covenant (v2.1)** — we expect all community members to be professional, respectful, and inclusive. By participating, you agree to abide by this code. If you experience or witness unacceptable behavior, contact the maintainers immediately (see [Acknowledgements & Contacts](#acknowledgements--contacts)).
 
-**Our Pledge:**
-- Be respectful and considerate
-- Provide constructive feedback
-- Welcome newcomers and diverse perspectives
-- Focus on what's best for the community and end-users (farmers, investors)
-- Show empathy towards other community members
-
-**Unacceptable Behavior:**
-- Harassment or discrimination
-- Trolling or insulting comments
-- Personal or political attacks
-- Publishing others' private information
+[![Code of Conduct](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa)](CODE_OF_CONDUCT.md)
 
 
-## 🚀 How Can I Contribute?
+## How Can I Contribute?
 
-### 🐛 Report a Bug
-Found a bug in the platform? Help us fix it:
+### Report a Bug
 
-1. **Search existing issues** to avoid duplicates
-2. **Open a new issue** with the bug template
-3. **Include**:
-   - Clear title (what's broken)
+[![Bug Reports](https://img.shields.io/badge/Bug-Report-red)](https://github.com/Om-singh-ui/Fieldly/issues/new?template=bug_report.md)
+
+1. Check the [existing issues](https://github.com/Om-singh-ui/Fieldly/issues) to avoid duplicates
+2. Use the bug report template when creating a new issue
+3. Include:
+   - Clear description of the bug
    - Steps to reproduce
-   - Expected vs. actual behavior
-   - Environment (OS, Node version, browser, device)
-   - Relevant logs or screenshots
-   - User role (Farmer/Investor/Admin) if applicable
+   - Expected vs actual behavior
+   - Screenshots if applicable
+   - Environment details (OS, browser, Node version)
 
-**Label:** `bug`
+### Request a Feature
 
+[![Feature Requests](https://img.shields.io/badge/Feature-Request-blue)](https://github.com/Om-singh-ui/Fieldly/issues/new?template=feature_request.md)
 
-### 💡 Request a Feature
-Have an idea to improve Fieldly? We'd love to hear it:
+1. Check existing feature requests to avoid duplicates
+2. Use the feature request template
+3. Describe:
+   - The problem you're solving
+   - Your proposed solution
+   - Any alternatives considered
+   - Potential impact on the platform
 
-1. **Check existing discussions/issues** to see if it's already suggested
-2. **Create a feature request** using the template
-3. **Include**:
-   - Problem statement (what need does it address?)
-   - Proposed solution or user flow
-   - Who benefits (Farmers? Investors? Both?)
-   - Possible alternatives considered
-   - Any relevant research or examples
+### Improve Documentation
 
-**Label:** `enhancement`
+[![Documentation](https://img.shields.io/badge/Docs-Improvement-success)](https://github.com/Om-singh-ui/Fieldly/tree/main/docs)
 
+- Fix typos, improve clarity, or add examples
+- Translate documentation
+- Create tutorials or guides
+- Submit changes via pull request with the `documentation` label
 
-### 📚 Improve Documentation
-Documentation improvements are the easiest way to start contributing. Good documentation helps farmers access loans and investors understand opportunities.
+### Submit Code (PRs)
 
-Areas to contribute:
-- `/docs` folder
-- README files
-- API documentation
-- Code comments
-- User guides for farmers
-- Investor onboarding guides
-- Setup instructions
+[![Pull Requests](https://img.shields.io/badge/Pull_Requests-Review-6f42c1)](https://github.com/Om-singh-ui/Fieldly/pulls)
 
-**Process:**
-1. Fork the repo
-2. Make changes to relevant markdown files
-3. Add examples, clarify steps, or fix typos
-4. Submit a PR referencing the issue (if any)
+1. Fork the repository
+2. Create a feature branch
+3. Write clear, well-documented code
+4. Add tests if applicable
+5. Ensure all tests pass
+6. Submit a pull request using the PR template
 
-**Label:** `documentation`
+### Domain Expertise
 
+[![Domain Experts](https://img.shields.io/badge/Domain-Expertise-orange)](https://github.com/Om-singh-ui/Fieldly/discussions)
 
-### 💻 Submit Code (PRs)
-Ready to write some code? Follow these steps:
+We welcome contributions from:
+- Agricultural scientists and agronomists
+- Financial analysts and economists
+- Regenerative farming practitioners
+- Climate and environmental specialists
+- Supply chain and logistics experts
 
-1. **Fork the repository** and create a branch (see [Branching](#branching--workflow))
-2. **Implement focused changes** (one feature/fix per PR)
-3. **Add or update tests** where applicable
-4. **Run linters and tests locally**
-5. **Open a Pull Request** against `develop` with:
-   - Descriptive title following [commit conventions](#commit-message-convention)
-   - What problem the PR solves
-   - Notes on migration, breaking changes, or runtime impact
-   - Screenshots or screencasts for UI changes
-   - Link to related issue (if any)
+Contribute through discussions, whitepapers, or domain-specific documentation.
 
-**Label:** `needs-review`
+## Getting Started (Local Development)
 
-
-### 🌾 Domain Expertise
-Not a developer? You can still contribute valuable domain knowledge:
-
-- **Agricultural Experts:** Review features from a farmer's perspective
-- **Financial Analysts:** Validate loan calculations and investment models
-- **UX Designers:** Improve the user experience for both farmers and investors
-- **Content Writers:** Help craft clear, accessible copy
-- **Translators:** Help localize the platform for different regions
-
-Reach out via our community channels to get involved!
-
-
-## 🛠️ Getting Started (Local Development)
+[![Setup](https://img.shields.io/badge/Setup-Local_Development-0a0a0a)](https://github.com/Om-singh-ui/Fieldly#installation)
 
 ### Prerequisites
-- Node.js 18.x or higher (LTS recommended)
-- npm 9.x or higher / pnpm 8.x
-- Git
-- PostgreSQL 14+ (or Neon DB account)
-- Clerk account (for authentication)
 
-### Step-by-Step Setup
+| Tool | Version |
+|---|---|
+| Node.js | 18+ |
+| pnpm | 8+ |
+| PostgreSQL | 15+ |
+
+### Setup
 
 ```bash
-# 1. Clone your fork
+# Clone your fork
 git clone https://github.com/YOUR_USERNAME/Fieldly.git
 cd Fieldly
 
-# 2. Add upstream remote
-git remote add upstream https://github.com/Om-singh-ui/Fieldly.git
-
-# 3. Install dependencies
-npm install
-# or
+# Install dependencies
 pnpm install
 
-# 4. Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your credentials:
-# - Clerk API keys
-# - Database URL
-# - Other service credentials
+# Configure environment
+cp .env.example .env
 
-# 5. Run database migrations
-npm run db:migrate
-npm run db:seed  # Optional: seed with test data
+# Setup database
+pnpm prisma generate
+pnpm prisma migrate dev
 
-# 6. Start development server
-npm run dev
+# Start development server
+pnpm dev
