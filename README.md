@@ -187,16 +187,16 @@ Fieldly is built as a modular, event-driven system designed for scalability and 
 | React Hook Form | 7.71 | Form state management |
 | Zod | 4.3 | Schema validation |
 
-### Backend and Data
+### Backend & Infrastructure
 
-| Technology | Version | Purpose |
-|---|---|---|
-| Prisma | 6.19 | Type-safe ORM |
-| PostgreSQL | Latest | Primary relational database |
-| Supabase Storage | 2.99 | Media and document storage |
-| Upstash Redis | 1.37 | Serverless Redis for caching and rate limiting |
-| Pusher | 8.4 | Real-time WebSocket infrastructure |
-| Svix | 1.84 | Webhook management and delivery |
+| Technology | Purpose |
+|---|---|
+| Prisma ORM | Type-safe database access and query management |
+| PostgreSQL | Primary relational database |
+| Supabase Storage | Object storage for media and documents |
+| Upstash Redis | Caching, rate limiting, and transient state management |
+| Pusher | Real-time event synchronization via WebSockets |
+| Svix | Webhook delivery and event handling |
 
 ### Authentication
 
