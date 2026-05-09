@@ -273,6 +273,7 @@ packages:
   '@clerk/clerk-react@5.61.2':
     resolution: {integrity: sha512-hyesLJgGmIPmhUmZ5oevid4yv8N6+0cXfE3dfHDZ2WIRyjeAPRp/pqGr1t77Z1ruQo4dhp8vZZ6SdDrzzAsdkg==}
     engines: {node: '>=18.17.0'}
+    deprecated: 'This package is no longer supported. Please use @clerk/react instead. See the upgrade guide for more info: https://clerk.com/docs/guides/development/upgrading/upgrade-guides/core-3'
     peerDependencies:
       react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
       react-dom: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
@@ -300,6 +301,7 @@ packages:
   '@clerk/types@4.101.19':
     resolution: {integrity: sha512-O2ijkoQe2o4366WcVElJ+ylVMsJDK4H4rckNnpB4P/KTOz6N7mVufVOQe5DhAImWb1OWU/HgKreFZIIlFg+SLw==}
     engines: {node: '>=18.17.0'}
+    deprecated: 'This package is no longer supported. Please import types from @clerk/shared/types instead. See the upgrade guide for more info: https://clerk.com/docs/guides/development/upgrading/upgrade-guides/core-3'
 
   '@emnapi/core@1.8.1':
     resolution: {integrity: sha512-AvT9QFpxK0Zd8J0jopedNm+w/2fIzvtPKPjqyw9jwvBaReTTqPBk9Hixaz7KbjimP+QNz605/XnjFcDAL2pqBg==}
@@ -3564,6 +3566,7 @@ packages:
 
   uuid@10.0.0:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@13.0.0:
