@@ -37,4 +37,4 @@ jobs:
         run: pnpm prisma generate
 
       - name: Run Database Push
-        run: pnpm prisma db push --accept-data-loss
+        run: pnpm prisma migrate deploy
