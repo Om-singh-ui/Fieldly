@@ -2,20 +2,21 @@
 
 **Digital Farmland Leasing and Agricultural Intelligence Platform**
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.1-black?logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-6.19-2D3748?logo=prisma)](https://www.prisma.io/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwind-css)](https://tailwindcss.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791?logo=postgresql)](https://www.postgresql.org/)
-[![Upstash Redis](https://img.shields.io/badge/Upstash_Redis-Serverless-DC382D?logo=redis)](https://upstash.com/)
-[![Clerk](https://img.shields.io/badge/Clerk-Auth-6C47FF?logo=clerk)](https://clerk.com/)
-[![Pusher](https://img.shields.io/badge/Pusher-Realtime-300D4F?logo=pusher)](https://pusher.com/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Active_Development-blue)](https://github.com/Om-singh-ui/Fieldly)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)](https://www.prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis)](https://redis.io/)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-2088FF?logo=github-actions)](https://github.com/features/actions)
+[![Trivy](https://img.shields.io/badge/Security-Trivy-1904DA)](https://trivy.dev/)
 [![Architecture](https://img.shields.io/badge/Architecture-Event_Driven-black)](https://github.com/Om-singh-ui/Fieldly)
-[![Scalability](https://img.shields.io/badge/Scalable-Yes-success)](https://github.com/Om-singh-ui/Fieldly)
+[![Deployment](https://img.shields.io/badge/Deployment-Standalone_Runtime-success)](https://github.com/Om-singh-ui/Fieldly)
+[![Scalability](https://img.shields.io/badge/Scalable-Production_Ready-success)](https://github.com/Om-singh-ui/Fieldly)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![PRs](https://img.shields.io/badge/PRs-Welcome-brightgreen)](CONTRIBUTING.md)
+
 
 ## App Preview
 
@@ -307,6 +308,33 @@ The application will be available at:
 
 ```
 http://localhost:3000
+```
+### 🐳 Docker Setup
+
+#### Development Environment
+
+```bash
+# Start development containers
+docker compose -f docker-compose.dev.yml up --build
+
+# Run with attached logs
+docker compose -f docker-compose.dev.yml up --build --attach fieldly-app
+
+# Stop containers
+docker compose -f docker-compose.dev.yml down
+```
+
+#### Production Environment
+
+```bash
+# Build production containers
+docker compose build
+
+# Start production services
+docker compose up -d
+
+# Stop production services
+docker compose down
 ```
 ## Community
 
